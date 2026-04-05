@@ -1,18 +1,14 @@
-import type { ParsedJob } from '../../analysis/interfaces/analysis.types';
-
 /**
  * Evaluates the quality and trustworthiness of a job posting.
+ * Works directly from the raw job text so this step can run in parallel with the parse step.
  */
-export function jobTruthPrompt(job: ParsedJob, originalText: string): string {
+export function jobTruthPrompt(jobText: string): string {
   return `
 You are a job market analyst. Evaluate the quality and honesty of the following job posting.
 
-Parsed job data:
-${JSON.stringify(job, null, 2)}
-
-Original job text:
+Job text:
 """
-${originalText}
+${jobText}
 """
 
 Return ONLY a valid JSON object matching this exact shape (no markdown, no explanation):

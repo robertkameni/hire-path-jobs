@@ -1,12 +1,8 @@
 import type {
-  ParsedJob,
-  JobInsights,
-} from '../../analysis/interfaces/analysis.types';
-
-interface UserProfile {
-  role?: string;
-  skills?: string[];
-}
+    ParsedJob,
+    JobInsights,
+    UserProfile,
+} from '../interfaces/analysis.types';
 
 /**
  * Generates a targeted contact strategy based on the job and quality insights.

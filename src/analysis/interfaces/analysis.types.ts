@@ -1,3 +1,13 @@
+export interface UserProfile {
+  role?: string;
+  skills?: string[];
+}
+
+export interface AnalyzeJobInput {
+  jobText: string;
+  userProfile?: UserProfile;
+}
+
 export interface ParsedJob {
   title: string;
   company: string;

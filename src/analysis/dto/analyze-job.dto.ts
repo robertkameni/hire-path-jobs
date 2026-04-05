@@ -1,14 +1,13 @@
 import {
-  IsString,
-  IsNotEmpty,
+  IsUrl,
   IsOptional,
   IsArray,
+  IsString,
   ValidateNested,
-  MaxLength,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
-class UserProfileDto {
+export class UserProfileDto {
   @IsOptional()
   @IsString()
   role?: string;
@@ -16,14 +15,12 @@ class UserProfileDto {
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
-  skills?: string[];
+  skills?: Array<string>;
 }
 
 export class AnalyzeJobDto {
-  @IsString()
-  @IsNotEmpty()
-  @MaxLength(10000)
-  jobText!: string;
+  @IsUrl({ protocols: ['http', 'https'], require_protocol: true })
+  jobUrl!: string;
 
   @IsOptional()
   @ValidateNested()

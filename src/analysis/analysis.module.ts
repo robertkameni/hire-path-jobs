@@ -1,12 +1,12 @@
 import { Module } from '@nestjs/common';
-import { AnalysisController } from './analysis.controller';
+import { AnalysisController } from './controllers/analysis.controller';
 import { AnalysisService } from './analysis.service';
-import { AnalysisPipeline } from './analysis.pipeline';
-import { AiModule } from 'src/ai/ai.module';
+import { AiModule } from '../ai/ai.module';
+import { ScraperModule } from '../scraper/scraper.module';
 
 @Module({
-  imports: [AiModule],
+  imports: [AiModule, ScraperModule],
   controllers: [AnalysisController],
-  providers: [AnalysisService, AnalysisPipeline],
+  providers: [AnalysisService],
 })
 export class AnalysisModule {}

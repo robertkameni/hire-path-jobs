@@ -1,4 +1,9 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  OnModuleInit,
+  BadGatewayException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import OpenAI from 'openai';
 
@@ -11,15 +16,9 @@ export class AiService implements OnModuleInit {
   constructor(private readonly configService: ConfigService) {}
 
   onModuleInit() {
-    const apiKey = this.configService.get<string>('ai.geminiApiKey');
+    const apiKey = this.configService.get<string>('ai.geminiApiKey')!;
     this.model =
-      this.configService.get<string>('ai.model') ?? 'gemini-2.0-flash';
-
-    if (!apiKey) {
-      this.logger.warn(
-        'GEMINI_API_KEY is not set — AI calls will fail at runtime',
-      );
-    }
+      this.configService.get<string>('ai.model') ?? 'gemini-2.5-flash';
 
     this.client = new OpenAI({
       apiKey,
@@ -27,9 +26,13 @@ export class AiService implements OnModuleInit {
     });
   }
 
-  async generate(prompt: string): Promise<string> {
+  async generate(
+    prompt: string,
+    options?: { temperature?: number },
+  ): Promise<string> {
     this.logger.debug(`Calling Gemini model: ${this.model}`);
 
+    const temperature = options?.temperature ?? 0.2;
     const maxRetries = 3;
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
@@ -37,13 +40,15 @@ export class AiService implements OnModuleInit {
         const response = await this.client.chat.completions.create({
           model: this.model,
           messages: [{ role: 'user', content: prompt }],
-          temperature: 0.2,
+          temperature,
         });
 
         const content = response.choices[0]?.message?.content;
 
         if (!content) {
-          throw new Error('Gemini returned an empty response');
+          throw new BadGatewayException(
+            'AI provider returned an empty response',
+          );
         }
 
         return this.stripMarkdownFences(content);
@@ -62,18 +67,21 @@ export class AiService implements OnModuleInit {
           continue;
         }
 
-        throw err;
+        throw new BadGatewayException(
+          `AI provider error: ${
+            err instanceof Error ? err.message : String(err)
+          }`,
+        );
       }
     }
 
-    throw new Error('Max retries exceeded');
+    throw new BadGatewayException('AI provider max retries exceeded');
   }
 
   private stripMarkdownFences(text: string): string {
-    return text
-      .trim()
-      .replace(/^```(?:json)?\s*/i, '')
-      .replace(/\s*```$/, '')
-      .trim();
+    const trimmed = text.trim();
+    // If the entire response is wrapped in a single code block, extract just the inner content
+    const match = trimmed.match(/^```(?:\w+)?\s*\n([\s\S]*?)\n?```$/);
+    return match ? match[1].trim() : trimmed;
   }
 }

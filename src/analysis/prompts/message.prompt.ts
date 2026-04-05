@@ -1,12 +1,8 @@
 import type {
   ParsedJob,
   ContactStrategy,
-} from '../../analysis/interfaces/analysis.types';
-
-interface UserProfile {
-  role?: string;
-  skills?: string[];
-}
+  UserProfile,
+} from '../interfaces/analysis.types';
 
 /**
  * Generates a personalized outreach message for the job application.
