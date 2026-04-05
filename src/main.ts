@@ -1,5 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe, Logger } from '@nestjs/common';
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
 
@@ -30,6 +31,20 @@ async function bootstrap() {
 
   // Graceful shutdown
   app.enableShutdownHooks();
+
+  // Swagger setup
+  const spec = new DocumentBuilder()
+    .setTitle('hire-path-jobs')
+    .setDescription(
+      'Send a job posting URL and get back structured job data, ' +
+        'ghost risk analysis, competition level, contact strategy, and a ready-to-send outreach message.',
+    )
+    .setVersion('1.0')
+    .build();
+  const document = SwaggerModule.createDocument(app, spec);
+  SwaggerModule.setup('api/docs', app, document, {
+    jsonDocumentUrl: 'api/docs-json',
+  });
 
   const port = process.env.PORT ?? 3000;
   await app.listen(port);

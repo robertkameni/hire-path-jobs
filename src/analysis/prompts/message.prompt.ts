@@ -32,6 +32,7 @@ ${userProfile ? `Candidate profile:\n${JSON.stringify(userProfile, null, 2)}` : 
 - Open with a specific hook tied to the job or company — not "I am writing to express my interest"
 - Reference at least one concrete detail from the job posting (a technology, a project, a challenge) 
 - If userProfile is provided: weave in a specific skill or experience that directly matches the role
+- If the job lists multiple cities: pick the first one and reference it by name — do not say "one of the listed cities"
 - Close with a single, low-friction call to action ("Worth a 15-min call?" / "Happy to share examples")
 - Tone calibration:
   - "formal"   → structured sentences, no contractions, "I would be delighted to"

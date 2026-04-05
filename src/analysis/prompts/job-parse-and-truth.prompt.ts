@@ -110,6 +110,13 @@ reason: one sentence explaining the verdict.
   - Never use vague reassurances like "good opportunity" without citing specific evidence.
 
 ━━━ OUTPUT SHAPE ━━━
+
+For the "company" field:
+- If the employer is named directly in the posting → use that name
+- If posted by a recruiter/agency without naming the employer → use: "Undisclosed (via [Agency Name])"
+- If no company and no recruiter is mentioned → use: "Undisclosed"
+Never output "unknown" or null for company.
+
 {
   "job": {
     "title": "string",

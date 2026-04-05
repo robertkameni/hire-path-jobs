@@ -7,6 +7,7 @@ import {
   Inject,
   Logger,
 } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiBody, ApiResponse } from '@nestjs/swagger';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
 import { createHash } from 'crypto';
@@ -15,6 +16,7 @@ import { ScraperService } from '../../scraper/scraper.service';
 import { AnalyzeJobDto } from '../dto/analyze-job.dto';
 import type { AnalysisResult } from '../interfaces/analysis.types';
 
+@ApiTags('analysis')
 @Controller('analysis')
 export class AnalysisController {
   private readonly logger = new Logger(AnalysisController.name);
@@ -30,6 +32,32 @@ export class AnalysisController {
 
   @Post()
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Analyze a job posting',
+    description:
+      'Scrapes the job URL, then runs three Gemini calls to return structured job data, ' +
+      'quality insights (ghost risk, competition, verdict), a contact strategy, and a ready-to-send outreach message.',
+  })
+  @ApiBody({
+    type: AnalyzeJobDto,
+    examples: {
+      default: {
+        summary: 'Job URL only',
+        value: { jobUrl: 'https://example.com/jobs/your-role' },
+      },
+    },
+  })
+  @ApiResponse({ status: 200, description: 'Analysis completed successfully' })
+  @ApiResponse({
+    status: 400,
+    description: 'Validation error — invalid or missing jobUrl',
+  })
+  @ApiResponse({ status: 429, description: 'Rate limit exceeded' })
+  @ApiResponse({
+    status: 502,
+    description:
+      'SCRAPE_BLOCKED — site blocks bots | SCRAPE_FAILED — fetch error | AI_INVALID_JSON / AI_SCHEMA_ERROR — Gemini response invalid',
+  })
   async analyze(@Body() dto: AnalyzeJobDto): Promise<AnalysisResult> {
     const cacheKey = this.buildCacheKey(dto);
     const cached = await this.cacheManager.get<AnalysisResult>(cacheKey);

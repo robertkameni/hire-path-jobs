@@ -15,6 +15,25 @@ const MIN_TEXT_LENGTH = 100;
 // ~12 000 chars covers even the most verbose job posting (~2 400 words)
 const MAX_JOB_TEXT_CHARS = 12_000;
 
+// Domains known to block automated scraping — checked before any HTTP request
+const BLOCKED_DOMAINS = new Set([
+  'linkedin.com',
+  'www.linkedin.com',
+  'indeed.com',
+  'www.indeed.com',
+  'de.indeed.com',
+  'glassdoor.com',
+  'www.glassdoor.com',
+  'de.glassdoor.com',
+  'xing.com',
+  'www.xing.com',
+  'monster.com',
+  'www.monster.com',
+  'stepstone.de',
+  'www.stepstone.de',
+  'jobs.google.com',
+]);
+
 // Tags that never contain job description content
 const NOISE_TAGS = [
   'script',
@@ -41,6 +60,17 @@ export class ScraperService {
     this.logger.log(`Fetching job posting from: ${url}`);
 
     this.validateUrl(url);
+
+    // Pre-flight check: reject known bot-blocking domains immediately,
+    // before making any HTTP request or AI call.
+    const host = new URL(url).hostname.toLowerCase();
+    if (BLOCKED_DOMAINS.has(host)) {
+      throw new BadGatewayException({
+        error: 'SCRAPE_BLOCKED',
+        message:
+          'This site blocks automated access. We cannot fetch the job from this site automatically.',
+      });
+    }
 
     let html: string;
 
@@ -72,7 +102,7 @@ export class ScraperService {
         throw new BadGatewayException({
           error: 'SCRAPE_BLOCKED',
           message:
-            'This site blocks automated access. Please paste the job description manually.',
+            'This site blocks automated access. We cannot fetch the job from this site automatically.',
         });
       }
 

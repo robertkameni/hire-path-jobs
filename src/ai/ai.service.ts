@@ -46,7 +46,7 @@ export class AiService implements OnModuleInit {
     this.logger.debug(`Calling Gemini model: ${this.model}`);
 
     const temperature = options?.temperature ?? 0.2;
-    const maxRetries = 3;
+    const maxRetries = 4;
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
@@ -148,7 +148,7 @@ export class AiService implements OnModuleInit {
       err instanceof Error &&
       'status' in err &&
       (err as { status: number }).status === 429;
-    return isRateLimit ? attempt * 5_000 : attempt * 1_000;
+    return isRateLimit ? attempt * 15_000 : attempt * 1_000;
   }
 
   private describeError(err: unknown): string {
