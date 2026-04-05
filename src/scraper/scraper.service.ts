@@ -6,6 +6,14 @@ import {
 } from '@nestjs/common';
 import axios from 'axios';
 import * as cheerio from 'cheerio';
+import { Readability } from '@mozilla/readability';
+import { JSDOM } from 'jsdom';
+
+// Minimum acceptable character count for extracted job text
+const MIN_TEXT_LENGTH = 100;
+// Cap sent to AI to prevent prompt bloat from massive pages
+// ~12 000 chars covers even the most verbose job posting (~2 400 words)
+const MAX_JOB_TEXT_CHARS = 12_000;
 
 // Tags that never contain job description content
 const NOISE_TAGS = [
@@ -54,23 +62,58 @@ export class ScraperService {
       html = response.data;
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
-      throw new BadGatewayException(`Could not fetch the job URL: ${message}`);
+
+      // Detect sites that actively block scrapers (403, 401, 429, 503)
+      const status =
+        (err as { response?: { status?: number } })?.response?.status ?? 0;
+      const isBlocked = [401, 403, 429, 503].includes(status);
+
+      if (isBlocked) {
+        throw new BadGatewayException({
+          error: 'SCRAPE_BLOCKED',
+          message:
+            'This site blocks automated access. Please paste the job description manually.',
+        });
+      }
+
+      throw new BadGatewayException({
+        error: 'SCRAPE_FAILED',
+        message: `Could not fetch the job URL: ${message}`,
+      });
     }
 
-    const text = this.extractText(html);
+    // Strategy 1: cheerio selector-based extraction
+    let text = this.extractWithCheerio(html);
 
-    if (text.length < 100) {
-      throw new BadGatewayException(
-        'The page at the provided URL does not appear to contain a job description. ' +
-          'It may be JavaScript-rendered (e.g. LinkedIn) or behind a login wall.',
+    // Strategy 2: fallback to Mozilla Readability if cheerio yields too little
+    if (text.length < MIN_TEXT_LENGTH) {
+      this.logger.warn(
+        `Cheerio extracted only ${text.length} chars — trying Readability fallback`,
       );
+      text = this.extractWithReadability(html, url);
+    }
+
+    if (text.length < MIN_TEXT_LENGTH) {
+      throw new BadGatewayException({
+        error: 'SCRAPE_FAILED',
+        message:
+          'The page at the provided URL does not appear to contain a job description. ' +
+          'It may be JavaScript-rendered (e.g. LinkedIn) or behind a login wall.',
+      });
+    }
+
+    if (text.length > MAX_JOB_TEXT_CHARS) {
+      this.logger.warn(
+        `Job text truncated from ${text.length} to ${MAX_JOB_TEXT_CHARS} chars`,
+      );
+      text = text.slice(0, MAX_JOB_TEXT_CHARS);
     }
 
     this.logger.log(`Extracted ${text.length} characters from job page`);
     return text;
   }
 
-  private extractText(html: string): string {
+  private extractWithCheerio(html: string): string {
     const $ = cheerio.load(html);
 
     // Remove all noise elements in one pass
@@ -92,12 +135,28 @@ export class ScraperService {
       const el = $(selector).first();
       if (el.length) {
         const text = this.normalizeText(el.text());
-        if (text.length >= 100) return text;
+        if (text.length >= MIN_TEXT_LENGTH) return text;
       }
     }
 
     // Fall back to full body text
     return this.normalizeText($('body').text());
+  }
+
+  private extractWithReadability(html: string, url: string): string {
+    try {
+      const dom = new JSDOM(html, { url });
+      const reader = new Readability(dom.window.document);
+      const article = reader.parse();
+      if (article?.textContent) {
+        return this.normalizeText(article.textContent);
+      }
+    } catch (err: unknown) {
+      this.logger.warn(
+        `Readability fallback failed: ${err instanceof Error ? err.message : String(err)}`,
+      );
+    }
+    return '';
   }
 
   private normalizeText(raw: string): string {

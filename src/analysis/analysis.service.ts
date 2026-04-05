@@ -3,10 +3,16 @@ import {
   Logger,
   InternalServerErrorException,
 } from '@nestjs/common';
+import { ZodSchema } from 'zod';
 import { AiService } from '../ai/ai.service';
 import { jobParseAndTruthPrompt } from './prompts/job-parse-and-truth.prompt';
 import { contactStrategyPrompt } from './prompts/contact-strategy.prompt';
 import { messagePrompt } from './prompts/message.prompt';
+import {
+  ParsedJobAndInsightsSchema,
+  ContactStrategySchema,
+  OutreachMessageSchema,
+} from './schemas/analysis.schemas';
 import type {
   AnalyzeJobInput,
   ParsedJob,
@@ -47,14 +53,31 @@ export class AnalysisService {
     return { job, insights, strategy, message };
   }
 
-  private parseAiResponse<T>(raw: string, step: string): T {
+  private parseAiResponse<T>(
+    raw: string,
+    schema: ZodSchema<T>,
+    step: string,
+  ): T {
+    let parsed: unknown;
     try {
-      return JSON.parse(raw) as T;
+      parsed = JSON.parse(raw);
     } catch {
       throw new InternalServerErrorException(
         `AI returned invalid JSON at step: ${step}`,
       );
     }
+
+    const result = schema.safeParse(parsed);
+    if (!result.success) {
+      this.logger.error(
+        `AI response failed schema validation at step "${step}": ${result.error.message}`,
+      );
+      throw new InternalServerErrorException(
+        `AI response did not match expected schema at step: ${step}`,
+      );
+    }
+
+    return result.data;
   }
 
   private async parseJobAndTruth(
@@ -64,8 +87,9 @@ export class AnalysisService {
     const raw = await this.aiService.generate(jobParseAndTruthPrompt(jobText), {
       temperature: 0,
     });
-    return this.parseAiResponse<{ job: ParsedJob; insights: JobInsights }>(
+    return this.parseAiResponse(
       raw,
+      ParsedJobAndInsightsSchema,
       'parseJobAndTruth',
     );
   }
@@ -80,8 +104,9 @@ export class AnalysisService {
       contactStrategyPrompt(job, insights, userProfile),
       { temperature: 0.2 },
     );
-    return this.parseAiResponse<ContactStrategy>(
+    return this.parseAiResponse(
       raw,
+      ContactStrategySchema,
       'generateContactStrategy',
     );
   }
@@ -96,6 +121,6 @@ export class AnalysisService {
       messagePrompt(job, strategy, userProfile),
       { temperature: 0.4 },
     );
-    return this.parseAiResponse<OutreachMessage>(raw, 'generateMessage');
+    return this.parseAiResponse(raw, OutreachMessageSchema, 'generateMessage');
   }
 }

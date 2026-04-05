@@ -4,8 +4,10 @@ import {
   NestModule,
   RequestMethod,
 } from '@nestjs/common';
-import { APP_FILTER } from '@nestjs/core';
-import { ConfigModule } from '@nestjs/config';
+import { APP_FILTER, APP_GUARD } from '@nestjs/core';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { CacheModule } from '@nestjs/cache-manager';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import * as Joi from 'joi';
 import { AppController } from './controllers/app.controller';
 import { AnalysisModule } from './analysis/analysis.module';
@@ -24,6 +26,27 @@ import { CorrelationIdMiddleware } from './common/middleware/correlation-id.midd
         GEMINI_API_KEY: Joi.string().required(),
         GEMINI_MODEL: Joi.string().default('gemini-2.5-flash'),
         CORS_ORIGIN: Joi.string().default('*'),
+        CACHE_TTL_SECONDS: Joi.number().default(86400),
+        CACHE_MAX_ITEMS: Joi.number().default(500),
+        THROTTLE_TTL_SECONDS: Joi.number().default(60),
+        THROTTLE_LIMIT: Joi.number().default(10),
+      }),
+    }),
+    ThrottlerModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => [
+        {
+          ttl: config.get<number>('THROTTLE_TTL_SECONDS', 60) * 1000,
+          limit: config.get<number>('THROTTLE_LIMIT', 10),
+        },
+      ],
+    }),
+    CacheModule.registerAsync({
+      isGlobal: true,
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        ttl: config.get<number>('CACHE_TTL_SECONDS', 86400) * 1000,
+        max: config.get<number>('CACHE_MAX_ITEMS', 500),
       }),
     }),
     AnalysisModule,
@@ -33,6 +56,10 @@ import { CorrelationIdMiddleware } from './common/middleware/correlation-id.midd
     {
       provide: APP_FILTER,
       useClass: AllExceptionsFilter,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
     },
   ],
 })

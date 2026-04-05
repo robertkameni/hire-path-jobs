@@ -12,7 +12,7 @@ export interface ParsedJob {
   title: string;
   company: string;
   location: string;
-  salary?: string;
+  salary?: string | null;
   skills: string[];
   requirements: string[];
   responsibilities: string[];
@@ -21,10 +21,20 @@ export interface ParsedJob {
 
 export interface JobInsights {
   competitionLevel: 'low' | 'medium' | 'high';
+  competitionReason: string;
+  competitionConfidence: number;
+  signalsLoweringCompetition: string[];
+  signalsRaisingCompetition: string[];
   ghostRisk: 'low' | 'medium' | 'high';
+  ghostRiskReason: string;
+  ghostRiskConfidence: number;
   salaryFairness: 'below-market' | 'market' | 'above-market' | 'unknown';
   redFlags: string[];
   positives: string[];
+  verdict: {
+    apply: boolean;
+    reason: string;
+  };
 }
 
 export interface ContactStrategy {

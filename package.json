@@ -14,24 +14,32 @@
     "start:prod": "node dist/main",
     "lint": "eslint \"{src,apps,libs,__tests__}/**/*.ts\" --fix",
     "test": "jest",
+    "test:integration": "jest --testRegex=\".integration\\.spec\\.ts$\" --forceExit --no-coverage",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand"
   },
   "dependencies": {
+    "@mozilla/readability": "^0.6.0",
+    "@nestjs/cache-manager": "^3.1.0",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.3",
     "@nestjs/core": "^11.0.1",
     "@nestjs/platform-express": "^11.0.1",
+    "@nestjs/throttler": "^6.5.0",
     "axios": "^1.14.0",
+    "cache-manager": "^7.2.8",
     "cheerio": "^1.2.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
     "helmet": "^8.1.0",
     "joi": "^18.1.2",
+    "jsdom": "^29.0.1",
     "openai": "^6.33.0",
+    "p-limit": "^5.0.0",
     "reflect-metadata": "^0.2.2",
-    "rxjs": "^7.8.1"
+    "rxjs": "^7.8.1",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
@@ -42,6 +50,7 @@
     "@types/cheerio": "^0.22.35",
     "@types/express": "^5.0.0",
     "@types/jest": "^30.0.0",
+    "@types/jsdom": "^28.0.1",
     "@types/node": "^24.0.0",
     "eslint": "^9.18.0",
     "eslint-config-prettier": "^10.0.1",
@@ -67,7 +76,11 @@
     "roots": [
       "<rootDir>/__tests__"
     ],
-    "testRegex": ".*\\.spec\\.ts$",
+    "testRegex": "(?<!\\.integration)\\.spec\\.ts$",
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "\\\\.integration\\\\.spec\\\\.ts$"
+    ],
     "transform": {
       "^.+\\.(t|j)s$": "ts-jest"
     },

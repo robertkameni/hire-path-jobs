@@ -3,6 +3,11 @@ import { BadRequestException, BadGatewayException } from '@nestjs/common';
 import { ScraperService } from '../../src/scraper/scraper.service';
 import axios from 'axios';
 
+// jsdom is a pure-ESM dependency chain — mock it so Jest (CommonJS mode) can load
+jest.mock('jsdom', () => ({
+  JSDOM: jest.fn().mockImplementation(() => ({ window: { document: {} } })),
+}));
+
 // Mock axios at module level
 jest.mock('axios');
 const mockedAxios = jest.mocked(axios);
