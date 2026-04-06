@@ -52,5 +52,10 @@ export const OutreachMessageSchema = z.object({
   tone: z.enum(['formal', 'friendly', 'direct']),
 });
 
+export const StrategyAndMessageSchema = z.object({
+  strategy: ContactStrategySchema,
+  message: OutreachMessageSchema,
+});
+
 /** Re-export longString for use in other schema files if needed */
 export { longString };

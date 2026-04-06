@@ -2,12 +2,10 @@ import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { ZodSchema } from 'zod';
 import { AiService } from '../../ai/ai.service';
 import { jobParseAndTruthPrompt } from '../prompts/job-parse-and-truth.prompt';
-import { contactStrategyPrompt } from '../prompts/contact-strategy.prompt';
-import { messagePrompt } from '../prompts/message.prompt';
+import { strategyAndMessagePrompt } from '../prompts/strategy-and-message.prompt';
 import {
   ParsedJobAndInsightsSchema,
-  ContactStrategySchema,
-  OutreachMessageSchema,
+  StrategyAndMessageSchema,
 } from '../schemas/analysis.schemas';
 import type {
   AnalyzeJobInput,
@@ -85,44 +83,27 @@ export class AnalysisService {
 
     const { job, insights } = parseResult.data;
 
-    // ── Step 2: Contact strategy (soft failure → rule-based fallback) ──────────────────
-    const strategyResult = await this.runStep('contactStrategy', () =>
-      this.generateContactStrategy(job, insights, input.userProfile),
+    // ── Step 2: Contact strategy + outreach message (single AI call) ─────────────────
+    const strategyAndMessageResult = await this.runStep(
+      'strategyAndMessage',
+      () => this.generateStrategyAndMessage(job, insights, input.userProfile),
     );
 
-    timings.contactStrategy = strategyResult.durationMs;
-    const strategy = strategyResult.fallback ? null : strategyResult.data;
+    timings.strategyAndMessage = strategyAndMessageResult.durationMs;
 
-    if (strategyResult.fallback) {
+    let strategy: ContactStrategy | null = null;
+    let message: OutreachMessage;
+
+    if (strategyAndMessageResult.fallback) {
       fallbacks.push({
-        step: 'contactStrategy',
-        reason: strategyResult.error ?? 'Strategy step failed',
+        step: 'strategyAndMessage',
+        reason:
+          strategyAndMessageResult.error ?? 'Strategy+message step failed',
       });
-    }
-
-    // ── Step 3: Outreach message (skipped if strategy unavailable; soft failure → template fallback) ─
-    let message: OutreachMessage | null = null;
-    if (strategy !== null) {
-      const messageResult = await this.runStep('outreachMessage', () =>
-        this.generateMessage(job, strategy, input.userProfile),
-      );
-
-      timings.outreachMessage = messageResult.durationMs;
-      message = messageResult.fallback
-        ? buildFallbackMessage(job)
-        : messageResult.data;
-
-      if (messageResult.fallback) {
-        fallbacks.push({
-          step: 'outreachMessage',
-          reason: messageResult.error ?? 'Message step failed',
-        });
-      }
+      message = buildFallbackMessage(job);
     } else {
-      fallbacks.push({
-        step: 'outreachMessage',
-        reason: 'Skipped — contact strategy unavailable',
-      });
+      strategy = strategyAndMessageResult.data.strategy;
+      message = strategyAndMessageResult.data.message;
     }
 
     this.logger.event('pipeline_complete', {
@@ -216,31 +197,19 @@ export class AnalysisService {
     );
   }
 
-  private async generateContactStrategy(
+  private async generateStrategyAndMessage(
     job: ParsedJob,
     insights: JobInsights,
     userProfile?: UserProfile,
-  ): Promise<ContactStrategy> {
+  ): Promise<{ strategy: ContactStrategy; message: OutreachMessage }> {
     const raw = await this.aiService.generate(
-      contactStrategyPrompt(job, insights, userProfile),
-      { temperature: 0.2 },
+      strategyAndMessagePrompt(job, insights, userProfile),
+      { temperature: 0.3 },
     );
     return this.parseAiResponse(
       raw,
-      ContactStrategySchema,
-      'generateContactStrategy',
+      StrategyAndMessageSchema,
+      'generateStrategyAndMessage',
     );
-  }
-
-  private async generateMessage(
-    job: ParsedJob,
-    strategy: ContactStrategy,
-    userProfile?: UserProfile,
-  ): Promise<OutreachMessage> {
-    const raw = await this.aiService.generate(
-      messagePrompt(job, strategy, userProfile),
-      { temperature: 0.4 },
-    );
-    return this.parseAiResponse(raw, OutreachMessageSchema, 'generateMessage');
   }
 }
