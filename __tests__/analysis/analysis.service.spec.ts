@@ -197,7 +197,7 @@ describe('AnalysisService', () => {
       expect(result.job).toBeNull();
     });
 
-    it('returns partial with rule-based strategy when step 2 fails schema', async () => {
+    it('returns partial with null strategy when step 2 fails schema', async () => {
       const badStrategy = JSON.stringify({ targetRole: 'only field' }); // missing required keys
       await build([
         JSON.stringify({ job: VALID_JOB, insights: VALID_INSIGHTS }),
@@ -207,7 +207,8 @@ describe('AnalysisService', () => {
       const result = await service.analyze({ jobText: 'job text' });
       expect(result.status).toBe('partial');
       expect(result.job).not.toBeNull();
-      expect(result.strategy).not.toBeNull(); // rule-based fallback
+      expect(result.strategy).toBeNull();
+      expect(result.message).toBeNull(); // skipped — strategy unavailable
       expect(result.fallbacks.some((f) => f.step === 'contactStrategy')).toBe(
         true,
       );
