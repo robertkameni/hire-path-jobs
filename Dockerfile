@@ -1,10 +1,8 @@
 # ── Stage 1: build ────────────────────────────────────────────────────────────
-FROM node:22-alpine AS builder
+# node:24-alpine ships with npm v11, matching the version used to generate package-lock.json
+FROM node:24-alpine AS builder
 
 WORKDIR /app
-
-# Upgrade npm to match local version used to generate package-lock.json
-RUN npm install -g npm@11
 
 COPY package*.json ./
 RUN npm ci
@@ -16,7 +14,7 @@ RUN npm run build
 RUN npm prune --omit=dev
 
 # ── Stage 2: runtime ──────────────────────────────────────────────────────────
-FROM node:22-alpine AS runner
+FROM node:24-alpine AS runner
 
 WORKDIR /app
 
