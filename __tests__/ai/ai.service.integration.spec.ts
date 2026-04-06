@@ -1,6 +1,6 @@
 /**
  * Integration tests for AiService — these make REAL network calls to the
- * Gemini API and require a valid GEMINI_API_KEY in the environment or .env.
+ * Gemini API and require a valid GEMINI_API_KEY_BACKEND in the environment or .env.
  *
  * Run with: npm run test:integration
  */
@@ -16,13 +16,13 @@ jest.mock('p-limit', () => ({
   default: jest.fn().mockReturnValue((fn: () => unknown) => fn()),
 }));
 
-const API_KEY = process.env.GEMINI_API_KEY;
+const API_KEY = process.env.GEMINI_API_KEY_BACKEND;
 
 const describeIf = API_KEY
   ? describe
   : describe.skip.bind(
       describe,
-      'AiService integration (GEMINI_API_KEY not set — skipped)',
+      'AiService integration (GEMINI_API_KEY_BACKEND not set — skipped)',
     );
 
 describeIf('AiService — real Gemini API', () => {

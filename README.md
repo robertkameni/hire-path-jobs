@@ -61,7 +61,7 @@ npm install
 Create a `.env` file in the project root:
 
 ```env
-GEMINI_API_KEY=your_api_key_here
+GEMINI_API_KEY_BACKEND=your_api_key_here
 GEMINI_MODEL=gemini-2.5-flash   # optional, this is the default
 ```
 
@@ -90,7 +90,7 @@ The server starts at `http://localhost:3000`.
 
 ```json
 {
-  "jobUrl": "https://example.com/job/some-role",
+  "jobUrl": "https://example.com/job/some-role"
 }
 ```
 
@@ -210,7 +210,7 @@ The scraper fetches server-rendered HTML and strips noise (scripts, nav, footer,
 # unit tests (mocked AI + scraper)
 npm test
 
-# integration tests (real Gemini API calls — requires GEMINI_API_KEY)
+# integration tests (real Gemini API calls — requires GEMINI_API_KEY_BACKEND)
 npm run test:integration
 
 # watch mode
@@ -226,16 +226,16 @@ Unit tests cover: `AiService` (retry, timeout, fences), `AnalysisService` (pipel
 
 ## Environment variables
 
-| Variable               | Required | Default            | Description                                         |
-| ---------------------- | -------- | ------------------ | --------------------------------------------------- |
-| `GEMINI_API_KEY`       | Yes      | —                  | Your Google Gemini API key                          |
-| `GEMINI_MODEL`         | No       | `gemini-2.5-flash` | Gemini model to use                                 |
-| `PORT`                 | No       | `3000`             | Server port                                         |
-| `CORS_ORIGIN`          | No       | `*`                | Allowed CORS origin                                 |
-| `CACHE_TTL_SECONDS`    | No       | `86400`            | How long to cache results (seconds). Default = 24 h |
-| `CACHE_MAX_ITEMS`      | No       | `500`              | Maximum number of results to keep in memory         |
-| `THROTTLE_TTL_SECONDS` | No       | `60`               | Rate limit window in seconds                        |
-| `THROTTLE_LIMIT`       | No       | `10`               | Max requests per IP per window                      |
+| Variable                 | Required | Default            | Description                                         |
+| ------------------------ | -------- | ------------------ | --------------------------------------------------- |
+| `GEMINI_API_KEY_BACKEND` | Yes      | —                  | Your Google Gemini API key                          |
+| `GEMINI_MODEL`           | No       | `gemini-2.5-flash` | Gemini model to use                                 |
+| `PORT`                   | No       | `3000`             | Server port                                         |
+| `CORS_ORIGIN`            | No       | `*`                | Allowed CORS origin                                 |
+| `CACHE_TTL_SECONDS`      | No       | `86400`            | How long to cache results (seconds). Default = 24 h |
+| `CACHE_MAX_ITEMS`        | No       | `500`              | Maximum number of results to keep in memory         |
+| `THROTTLE_TTL_SECONDS`   | No       | `60`               | Rate limit window in seconds                        |
+| `THROTTLE_LIMIT`         | No       | `10`               | Max requests per IP per window                      |
 
 ---
 
@@ -299,7 +299,7 @@ npm install
 Create a `.env` file in the project root:
 
 ```env
-GEMINI_API_KEY=your_api_key_here
+GEMINI_API_KEY_BACKEND=your_api_key_here
 GEMINI_MODEL=gemini-2.5-flash   # optional, this is the default
 ```
 
@@ -417,16 +417,16 @@ npm run test:cov
 
 ## Environment variables
 
-| Variable               | Required | Default            | Description                                         |
-| ---------------------- | -------- | ------------------ | --------------------------------------------------- |
-| `GEMINI_API_KEY`       | Yes      | —                  | Your Google Gemini API key                          |
-| `GEMINI_MODEL`         | No       | `gemini-2.5-flash` | Gemini model to use                                 |
-| `PORT`                 | No       | `3000`             | Server port                                         |
-| `CORS_ORIGIN`          | No       | `*`                | Allowed CORS origin                                 |
-| `CACHE_TTL_SECONDS`    | No       | `86400`            | How long to cache results (seconds). Default = 24 h |
-| `CACHE_MAX_ITEMS`      | No       | `500`              | Maximum number of results to keep in memory         |
-| `THROTTLE_TTL_SECONDS` | No       | `60`               | Rate limit window in seconds                        |
-| `THROTTLE_LIMIT`       | No       | `10`               | Max requests per IP per window                      |
+| Variable                 | Required | Default            | Description                                         |
+| ------------------------ | -------- | ------------------ | --------------------------------------------------- |
+| `GEMINI_API_KEY_BACKEND` | Yes      | —                  | Your Google Gemini API key                          |
+| `GEMINI_MODEL`           | No       | `gemini-2.5-flash` | Gemini model to use                                 |
+| `PORT`                   | No       | `3000`             | Server port                                         |
+| `CORS_ORIGIN`            | No       | `*`                | Allowed CORS origin                                 |
+| `CACHE_TTL_SECONDS`      | No       | `86400`            | How long to cache results (seconds). Default = 24 h |
+| `CACHE_MAX_ITEMS`        | No       | `500`              | Maximum number of results to keep in memory         |
+| `THROTTLE_TTL_SECONDS`   | No       | `60`               | Rate limit window in seconds                        |
+| `THROTTLE_LIMIT`         | No       | `10`               | Max requests per IP per window                      |
 
 ---
 

@@ -23,7 +23,7 @@ import { CorrelationIdMiddleware } from './common/middleware/correlation-id.midd
           .valid('development', 'production', 'test')
           .default('development'),
         PORT: Joi.number().default(3000),
-        GEMINI_API_KEY: Joi.string().required(),
+        GEMINI_API_KEY_BACKEND: Joi.string().required(),
         GEMINI_MODEL: Joi.string().default('gemini-2.5-flash'),
         AI_TIMEOUT_MS: Joi.number().default(45_000),
         AI_CONCURRENCY: Joi.number().default(5),
