@@ -14,10 +14,10 @@ import { StructuredLogger } from '../common/logger/structured.logger';
 @Injectable()
 export class AiService implements OnModuleInit {
   private readonly logger = new StructuredLogger(AiService.name);
-  private client: OpenAI;
-  private model: string;
-  private timeoutMs: number;
-  private limit: ReturnType<typeof pLimit>;
+  private client!: OpenAI;
+  private model!: string;
+  private timeoutMs!: number;
+  private limit!: ReturnType<typeof pLimit>;
   private readonly circuitBreaker = new CircuitBreaker(5, 30_000);
 
   constructor(private readonly configService: ConfigService) {}

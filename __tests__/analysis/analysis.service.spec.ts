@@ -1,6 +1,5 @@
-/* eslint-disable @typescript-eslint/unbound-method */
 import { Test, TestingModule } from '@nestjs/testing';
-import { AnalysisService } from '../../src/analysis/analysis.service';
+import { AnalysisService } from '../../src/analysis/services/analysis.service';
 import { AiService } from '../../src/ai/ai.service';
 import type { AnalysisResult } from '../../src/analysis/interfaces/analysis.types';
 

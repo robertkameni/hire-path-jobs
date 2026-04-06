@@ -1,14 +1,14 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { ZodSchema } from 'zod';
-import { AiService } from '../ai/ai.service';
-import { jobParseAndTruthPrompt } from './prompts/job-parse-and-truth.prompt';
-import { contactStrategyPrompt } from './prompts/contact-strategy.prompt';
-import { messagePrompt } from './prompts/message.prompt';
+import { AiService } from '../../ai/ai.service';
+import { jobParseAndTruthPrompt } from '../prompts/job-parse-and-truth.prompt';
+import { contactStrategyPrompt } from '../prompts/contact-strategy.prompt';
+import { messagePrompt } from '../prompts/message.prompt';
 import {
   ParsedJobAndInsightsSchema,
   ContactStrategySchema,
   OutreachMessageSchema,
-} from './schemas/analysis.schemas';
+} from '../schemas/analysis.schemas';
 import type {
   AnalyzeJobInput,
   ParsedJob,
@@ -18,9 +18,9 @@ import type {
   AnalysisResult,
   FallbackInfo,
   UserProfile,
-} from './interfaces/analysis.types';
-import type { StepResult } from './pipeline/pipeline-step.interface';
-import { StructuredLogger } from '../common/logger/structured.logger';
+} from '../interfaces/analysis.types';
+import type { StepResult } from '../pipeline/pipeline-step.interface';
+import { StructuredLogger } from '../../common/logger/structured.logger';
 
 /** Returned when the parse step itself fails — all downstream steps become null. */
 function buildParseFailureResult(

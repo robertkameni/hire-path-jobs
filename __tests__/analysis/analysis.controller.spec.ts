@@ -1,9 +1,8 @@
-/* eslint-disable @typescript-eslint/unbound-method */
 import { Test, TestingModule } from '@nestjs/testing';
 import { HttpException, NotFoundException } from '@nestjs/common';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { AnalysisController } from '../../src/analysis/controllers/analysis.controller';
-import { AnalysisService } from '../../src/analysis/analysis.service';
+import { AnalysisService } from '../../src/analysis/services/analysis.service';
 import { ScraperService } from '../../src/scraper/scraper.service';
 import { JobsService } from '../../src/analysis/jobs/jobs.service';
 import type { AnalysisResult } from '../../src/analysis/interfaces/analysis.types';
