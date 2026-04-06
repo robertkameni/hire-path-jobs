@@ -31,7 +31,7 @@ export class UserProfileDto {
 export class AnalyzeJobDto {
   @ApiProperty({
     example: 'https://jobs.lever.co/acme/123',
-    description: 'Publicly accessible URL of a job posting to analyze',
+    description: 'Publicly accessible URL of the job posting to analyze.',
   })
   @IsUrl({ protocols: ['http', 'https'], require_protocol: true })
   jobUrl!: string;

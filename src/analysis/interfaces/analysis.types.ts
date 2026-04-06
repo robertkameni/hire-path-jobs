@@ -6,6 +6,8 @@ export interface UserProfile {
 export interface AnalyzeJobInput {
   jobText: string;
   userProfile?: UserProfile;
+  /** Propagated from JobsService for structured log correlation. */
+  jobId?: string;
 }
 
 export interface ParsedJob {
@@ -50,9 +52,25 @@ export interface OutreachMessage {
   tone: 'formal' | 'friendly' | 'direct';
 }
 
+export interface FallbackInfo {
+  step: string;
+  reason: string;
+}
+
+/**
+ * Returned by every analysis run.
+ * status='complete' — all steps succeeded.
+ * status='partial'  — one or more steps failed; failed fields are null and
+ *                     fallbacks[] describes what was substituted.
+ */
 export interface AnalysisResult {
-  job: ParsedJob;
-  insights: JobInsights;
-  strategy: ContactStrategy;
-  message: OutreachMessage;
+  job: ParsedJob | null;
+  insights: JobInsights | null;
+  strategy: ContactStrategy | null;
+  message: OutreachMessage | null;
+  status: 'complete' | 'partial';
+  fallbacks: FallbackInfo[];
+  /** Raw scraped text — present only when the parse step itself failed. */
+  /** Wall-clock milliseconds per pipeline step for observability. */
+  timings: Record<string, number>;
 }

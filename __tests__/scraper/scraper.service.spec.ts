@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { BadRequestException, BadGatewayException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { ScraperService } from '../../src/scraper/scraper.service';
 import axios from 'axios';
 
@@ -17,7 +18,17 @@ describe('ScraperService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [ScraperService],
+      providers: [
+        ScraperService,
+        {
+          provide: ConfigService,
+          useValue: {
+            get: jest
+              .fn()
+              .mockImplementation((_key: string, def: unknown) => def),
+          },
+        },
+      ],
     }).compile();
 
     service = module.get<ScraperService>(ScraperService);

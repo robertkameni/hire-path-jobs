@@ -8,12 +8,7 @@ import axios from 'axios';
 import * as cheerio from 'cheerio';
 import { Readability } from '@mozilla/readability';
 import { JSDOM } from 'jsdom';
-
-// Minimum acceptable character count for extracted job text
-const MIN_TEXT_LENGTH = 100;
-// Cap sent to AI to prevent prompt bloat from massive pages
-// ~12 000 chars covers even the most verbose job posting (~2 400 words)
-const MAX_JOB_TEXT_CHARS = 12_000;
+import { ConfigService } from '@nestjs/config';
 
 // Domains known to block automated scraping — checked before any HTTP request
 const BLOCKED_DOMAINS = new Set([
@@ -55,6 +50,19 @@ const NOISE_TAGS = [
 @Injectable()
 export class ScraperService {
   private readonly logger = new Logger(ScraperService.name);
+  private readonly minTextLength: number;
+  private readonly maxTextChars: number;
+
+  constructor(private readonly configService: ConfigService) {
+    this.minTextLength = this.configService.get<number>(
+      'SCRAPER_MIN_TEXT_LENGTH',
+      100,
+    );
+    this.maxTextChars = this.configService.get<number>(
+      'SCRAPER_MAX_TEXT_CHARS',
+      12_000,
+    );
+  }
 
   async fetchJobText(url: string): Promise<string> {
     this.logger.log(`Fetching job posting from: ${url}`);
@@ -116,14 +124,14 @@ export class ScraperService {
     let text = this.extractWithCheerio(html);
 
     // Strategy 2: fallback to Mozilla Readability if cheerio yields too little
-    if (text.length < MIN_TEXT_LENGTH) {
+    if (text.length < this.minTextLength) {
       this.logger.warn(
         `Cheerio extracted only ${text.length} chars — trying Readability fallback`,
       );
       text = this.extractWithReadability(html, url);
     }
 
-    if (text.length < MIN_TEXT_LENGTH) {
+    if (text.length < this.minTextLength) {
       throw new BadGatewayException({
         error: 'SCRAPE_FAILED',
         message:
@@ -132,11 +140,11 @@ export class ScraperService {
       });
     }
 
-    if (text.length > MAX_JOB_TEXT_CHARS) {
+    if (text.length > this.maxTextChars) {
       this.logger.warn(
-        `Job text truncated from ${text.length} to ${MAX_JOB_TEXT_CHARS} chars`,
+        `Job text truncated from ${text.length} to ${this.maxTextChars} chars`,
       );
-      text = text.slice(0, MAX_JOB_TEXT_CHARS);
+      text = text.slice(0, this.maxTextChars);
     }
 
     this.logger.log(`Extracted ${text.length} characters from job page`);
@@ -165,7 +173,7 @@ export class ScraperService {
       const el = $(selector).first();
       if (el.length) {
         const text = this.normalizeText(el.text());
-        if (text.length >= MIN_TEXT_LENGTH) return text;
+        if (text.length >= this.minTextLength) return text;
       }
     }
 

@@ -1,5 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { BadGatewayException, RequestTimeoutException } from '@nestjs/common';
+import {
+  BadGatewayException,
+  RequestTimeoutException,
+  ServiceUnavailableException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AiService } from '../../src/ai/ai.service';
 import OpenAI from 'openai';
@@ -236,6 +240,64 @@ describe('AiService', () => {
         BadGatewayException,
       );
       expect(mockCreate).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  // ── circuit breaker ─────────────────────────────────────────────────────────
+
+  describe('generate — circuit breaker', () => {
+    it('throws ServiceUnavailableException when circuit is open', async () => {
+      mockCreate.mockRejectedValue(buildOpenAiError(503));
+
+      jest.useFakeTimers();
+
+      // 5 concurrent failures exhaust retries and trip the breaker
+      const failureAssertions = Array.from({ length: 5 }, (_, i) =>
+        expect(service.generate(`prompt-${i}`)).rejects.toThrow(
+          BadGatewayException,
+        ),
+      );
+      await jest.runAllTimersAsync();
+      await Promise.all(failureAssertions);
+
+      jest.useRealTimers();
+
+      // Circuit is OPEN — next call blocked without hitting the API
+      await expect(service.generate('tripped')).rejects.toThrow(
+        ServiceUnavailableException,
+      );
+      // 5 generate calls × 3 retries each = 15 total API calls
+      expect(mockCreate).toHaveBeenCalledTimes(15);
+    });
+
+    it('closes again after a successful probe during half-open', async () => {
+      mockCreate.mockRejectedValue(buildOpenAiError(503));
+
+      jest.useFakeTimers();
+
+      // Trip the circuit with 5 failures
+      const failureAssertions = Array.from({ length: 5 }, (_, i) =>
+        expect(service.generate(`trip-${i}`)).rejects.toThrow(
+          BadGatewayException,
+        ),
+      );
+      await jest.runAllTimersAsync();
+      await Promise.all(failureAssertions);
+
+      // Advance fake clock past the 30s cooldown
+      // Jest's fake Date.now() advances alongside the timer clock
+      jest.advanceTimersByTime(31_000);
+
+      // Probe while still in fake-timer mode — circuit is HALF-OPEN, should pass
+      mockCreate.mockResolvedValue(buildChatResponse('recovered'));
+      const probeResult = await service.generate('probe');
+      expect(probeResult).toBe('recovered');
+
+      jest.useRealTimers();
+
+      // Circuit is now CLOSED — normal calls work
+      mockCreate.mockResolvedValue(buildChatResponse('normal'));
+      await expect(service.generate('normal')).resolves.toBe('normal');
     });
   });
 });

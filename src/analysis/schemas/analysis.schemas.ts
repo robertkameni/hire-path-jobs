@@ -1,31 +1,36 @@
 import { z } from 'zod';
 
+/** Shared constraints */
+const shortString = z.string().min(1).max(500);
+const longString = z.string().min(1).max(2_000);
+const stringArray = z.array(shortString).max(30);
+
 export const ParsedJobSchema = z.object({
-  title: z.string(),
-  company: z.string(),
-  location: z.string(),
-  salary: z.string().nullable().optional(),
-  skills: z.array(z.string()),
-  requirements: z.array(z.string()),
-  responsibilities: z.array(z.string()),
+  title: shortString,
+  company: shortString,
+  location: shortString,
+  salary: z.string().max(200).nullable().optional(),
+  skills: stringArray,
+  requirements: stringArray,
+  responsibilities: stringArray,
   remote: z.boolean().optional(),
 });
 
 export const JobInsightsSchema = z.object({
   competitionLevel: z.enum(['low', 'medium', 'high']),
-  competitionReason: z.string(),
+  competitionReason: shortString,
   competitionConfidence: z.number().int().min(0).max(100),
-  signalsLoweringCompetition: z.array(z.string()),
-  signalsRaisingCompetition: z.array(z.string()),
+  signalsLoweringCompetition: stringArray,
+  signalsRaisingCompetition: stringArray,
   ghostRisk: z.enum(['low', 'medium', 'high']),
-  ghostRiskReason: z.string(),
+  ghostRiskReason: shortString,
   ghostRiskConfidence: z.number().int().min(0).max(100),
   salaryFairness: z.enum(['below-market', 'market', 'above-market', 'unknown']),
-  redFlags: z.array(z.string()),
-  positives: z.array(z.string()),
+  redFlags: stringArray,
+  positives: stringArray,
   verdict: z.object({
     apply: z.boolean(),
-    reason: z.string(),
+    reason: shortString,
   }),
 });
 
@@ -35,14 +40,17 @@ export const ParsedJobAndInsightsSchema = z.object({
 });
 
 export const ContactStrategySchema = z.object({
-  targetRole: z.string(),
-  contactChannels: z.array(z.string()),
-  talkingPoints: z.array(z.string()),
-  timing: z.string(),
+  targetRole: shortString,
+  contactChannels: z.array(shortString).min(1).max(10),
+  talkingPoints: z.array(shortString).min(1).max(10),
+  timing: shortString,
 });
 
 export const OutreachMessageSchema = z.object({
-  subject: z.string(),
-  body: z.string(),
+  subject: z.string().min(1).max(200),
+  body: z.string().min(20).max(2_000),
   tone: z.enum(['formal', 'friendly', 'direct']),
 });
+
+/** Re-export longString for use in other schema files if needed */
+export { longString };

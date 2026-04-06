@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/unbound-method */
 import { Test, TestingModule } from '@nestjs/testing';
-import { InternalServerErrorException } from '@nestjs/common';
 import { AnalysisService } from '../../src/analysis/analysis.service';
 import { AiService } from '../../src/ai/ai.service';
 import type { AnalysisResult } from '../../src/analysis/interfaces/analysis.types';
@@ -57,7 +56,7 @@ const VALID_MESSAGE = {
   tone: 'friendly' as const,
 };
 
-function buildValidAiResponses() {
+function buildValidAiResponses(): string[] {
   return [
     JSON.stringify({ job: VALID_JOB, insights: VALID_INSIGHTS }),
     JSON.stringify(VALID_STRATEGY),
@@ -65,16 +64,14 @@ function buildValidAiResponses() {
   ];
 }
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
 function buildMockAiService(responses: string[]): jest.Mocked<AiService> {
   let callIndex = 0;
   return {
-    generate: jest.fn().mockImplementation(() => {
-      return Promise.resolve(responses[callIndex++] ?? '{}');
-    }),
+    generate: jest
+      .fn()
+      .mockImplementation(() =>
+        Promise.resolve(responses[callIndex++] ?? '{}'),
+      ),
   } as unknown as jest.Mocked<AiService>;
 }
 
@@ -88,11 +85,9 @@ describe('AnalysisService', () => {
 
   async function build(aiResponses: string[]) {
     aiService = buildMockAiService(aiResponses);
-
     const module: TestingModule = await Test.createTestingModule({
       providers: [AnalysisService, { provide: AiService, useValue: aiService }],
     }).compile();
-
     service = module.get<AnalysisService>(AnalysisService);
   }
 
@@ -102,7 +97,6 @@ describe('AnalysisService', () => {
     it('returns all four top-level keys', async () => {
       await build(buildValidAiResponses());
       const result = await service.analyze({ jobText: 'some job text' });
-
       expect(result).toHaveProperty('job');
       expect(result).toHaveProperty('insights');
       expect(result).toHaveProperty('strategy');
@@ -112,7 +106,6 @@ describe('AnalysisService', () => {
     it('calls AiService.generate exactly 3 times', async () => {
       await build(buildValidAiResponses());
       await service.analyze({ jobText: 'some job text' });
-
       expect(aiService.generate).toHaveBeenCalledTimes(3);
     });
 
@@ -120,7 +113,6 @@ describe('AnalysisService', () => {
       await build(buildValidAiResponses());
       const jobText = 'unique job description string';
       await service.analyze({ jobText });
-
       const firstCallArg = aiService.generate.mock.calls[0][0];
       expect(firstCallArg).toContain(jobText);
     });
@@ -129,8 +121,6 @@ describe('AnalysisService', () => {
       await build(buildValidAiResponses());
       const userProfile = { role: 'Backend Engineer', skills: ['TypeScript'] };
       await service.analyze({ jobText: 'job text', userProfile });
-
-      // Strategy and message prompts receive the profile
       const strategyCallArg = aiService.generate.mock.calls[1][0];
       expect(strategyCallArg).toContain('Backend Engineer');
     });
@@ -138,7 +128,7 @@ describe('AnalysisService', () => {
     it('returns correct job title from AI response', async () => {
       await build(buildValidAiResponses());
       const result = await service.analyze({ jobText: 'job text' });
-      expect(result.job.title).toBe('Senior TypeScript Engineer');
+      expect(result.job?.title).toBe('Senior TypeScript Engineer');
     });
 
     it('returns insights with verdict', async () => {
@@ -146,7 +136,7 @@ describe('AnalysisService', () => {
       const result: AnalysisResult = await service.analyze({
         jobText: 'job text',
       });
-      expect(result.insights.verdict).toEqual({
+      expect(result.insights?.verdict).toEqual({
         apply: true,
         reason: expect.any(String),
       });
@@ -155,10 +145,10 @@ describe('AnalysisService', () => {
     it('returns competition signals arrays', async () => {
       await build(buildValidAiResponses());
       const result = await service.analyze({ jobText: 'job text' });
-      expect(Array.isArray(result.insights.signalsLoweringCompetition)).toBe(
+      expect(Array.isArray(result.insights?.signalsLoweringCompetition)).toBe(
         true,
       );
-      expect(Array.isArray(result.insights.signalsRaisingCompetition)).toBe(
+      expect(Array.isArray(result.insights?.signalsRaisingCompetition)).toBe(
         true,
       );
     });
@@ -166,71 +156,90 @@ describe('AnalysisService', () => {
     it('returns numeric confidence values between 0 and 100', async () => {
       await build(buildValidAiResponses());
       const result = await service.analyze({ jobText: 'job text' });
-      expect(result.insights.competitionConfidence).toBeGreaterThanOrEqual(0);
-      expect(result.insights.competitionConfidence).toBeLessThanOrEqual(100);
-      expect(result.insights.ghostRiskConfidence).toBeGreaterThanOrEqual(0);
-      expect(result.insights.ghostRiskConfidence).toBeLessThanOrEqual(100);
+      expect(result.insights?.competitionConfidence).toBeGreaterThanOrEqual(0);
+      expect(result.insights?.competitionConfidence).toBeLessThanOrEqual(100);
+      expect(result.insights?.ghostRiskConfidence).toBeGreaterThanOrEqual(0);
+      expect(result.insights?.ghostRiskConfidence).toBeLessThanOrEqual(100);
+    });
+
+    it('returns status=complete and empty fallbacks on full success', async () => {
+      await build(buildValidAiResponses());
+      const result = await service.analyze({ jobText: 'job text' });
+      expect(result.status).toBe('complete');
+      expect(result.fallbacks).toHaveLength(0);
     });
   });
 
-  // ── invalid JSON from AI ───────────────────────────────────────────────────
+  // ── step failures — partial results ─────────────────────────────────────────
+  // Steps no longer throw. Errors return AnalysisResult with status='partial'.
 
-  describe('analyze — invalid AI JSON', () => {
-    it('throws InternalServerErrorException when AI returns non-JSON', async () => {
+  describe('analyze — step failures return partial results', () => {
+    it('returns partial with null fields when step 1 returns non-JSON', async () => {
       await build(['not valid json at all', '', '']);
-      await expect(service.analyze({ jobText: 'job text' })).rejects.toThrow(
-        InternalServerErrorException,
-      );
+      const result = await service.analyze({ jobText: 'raw job text' });
+      expect(result.status).toBe('partial');
+      expect(result.job).toBeNull();
+      expect(result.insights).toBeNull();
+      expect(result.strategy).toBeNull();
+      expect(result.message).toBeNull();
+      expect(result.fallbacks).toHaveLength(1);
+      expect(result.fallbacks[0].step).toBe('parseJobAndTruth');
     });
 
-    it('throws InternalServerErrorException when AI JSON fails schema (step 1)', async () => {
+    it('returns partial with null fields when step 1 JSON fails schema', async () => {
       const badStep1 = JSON.stringify({
         job: { title: 'Only title' },
         insights: {},
       });
       await build([badStep1, '', '']);
-      await expect(service.analyze({ jobText: 'job text' })).rejects.toThrow(
-        InternalServerErrorException,
-      );
+      const result = await service.analyze({ jobText: 'job text' });
+      expect(result.status).toBe('partial');
+      expect(result.job).toBeNull();
     });
 
-    it('throws InternalServerErrorException when step 2 response fails schema', async () => {
-      const badStrategy = JSON.stringify({ targetRole: 'only field' }); // missing keys
+    it('returns partial with rule-based strategy when step 2 fails schema', async () => {
+      const badStrategy = JSON.stringify({ targetRole: 'only field' }); // missing required keys
       await build([
         JSON.stringify({ job: VALID_JOB, insights: VALID_INSIGHTS }),
         badStrategy,
-        '',
+        JSON.stringify(VALID_MESSAGE),
       ]);
-      await expect(service.analyze({ jobText: 'job text' })).rejects.toThrow(
-        InternalServerErrorException,
+      const result = await service.analyze({ jobText: 'job text' });
+      expect(result.status).toBe('partial');
+      expect(result.job).not.toBeNull();
+      expect(result.strategy).not.toBeNull(); // rule-based fallback
+      expect(result.fallbacks.some((f) => f.step === 'contactStrategy')).toBe(
+        true,
       );
     });
 
-    it('throws InternalServerErrorException when step 3 response fails schema', async () => {
+    it('returns partial with template message when step 3 fails schema', async () => {
       const badMessage = JSON.stringify({ subject: 'Hi' }); // missing body + tone
       await build([
         JSON.stringify({ job: VALID_JOB, insights: VALID_INSIGHTS }),
         JSON.stringify(VALID_STRATEGY),
         badMessage,
       ]);
-      await expect(service.analyze({ jobText: 'job text' })).rejects.toThrow(
-        InternalServerErrorException,
+      const result = await service.analyze({ jobText: 'job text' });
+      expect(result.status).toBe('partial');
+      expect(result.strategy).not.toBeNull(); // step 2 succeeded
+      expect(result.message).not.toBeNull(); // template fallback
+      expect(result.fallbacks.some((f) => f.step === 'outreachMessage')).toBe(
+        true,
       );
     });
 
-    it('strips markdown fences before schema validation', async () => {
-      // Simulates AI wrapping its JSON in ```json ... ```
-      const wrapped = `\`\`\`json\n${JSON.stringify({ job: VALID_JOB, insights: VALID_INSIGHTS })}\n\`\`\``;
+    it('returns partial when step 1 sees pre-fenced JSON (defense-in-depth)', async () => {
+      // AiService strips fences in production; this tests the runStep safety net
+      const fenced = `\`\`\`json\n${JSON.stringify({ job: VALID_JOB, insights: VALID_INSIGHTS })}\n\`\`\``;
       await build([
-        wrapped,
+        fenced,
         JSON.stringify(VALID_STRATEGY),
         JSON.stringify(VALID_MESSAGE),
       ]);
-      // AiService strips fences before returning — here we test the service
-      // handles already-stripped content (the real stripping happens in AiService)
-      await expect(service.analyze({ jobText: 'job text' })).rejects.toThrow(
-        InternalServerErrorException, // raw JSON.parse will fail on the fenced string
-      );
+      const result = await service.analyze({ jobText: 'job text' });
+      expect(result.status).toBe('partial');
+      expect(result.job).toBeNull();
     });
   });
 });
