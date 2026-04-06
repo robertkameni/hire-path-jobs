@@ -1,11 +1,10 @@
 # ── Stage 1: build ────────────────────────────────────────────────────────────
-# node:24-alpine ships with npm v11, matching the version used to generate package-lock.json
 FROM node:24-alpine AS builder
 
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm ci
+RUN npm install --ignore-scripts
 
 COPY . .
 RUN npm run build
