@@ -48,13 +48,11 @@ export class AnalysisController {
    * Poll GET /analysis/:id every 2–3 seconds until status is 'completed' or 'failed'.
    */
   @Post()
-  @HttpCode(HttpStatus.ACCEPTED)
+  @HttpCode(HttpStatus.OK)
   @ApiOperation({
-    summary: 'Submit a job posting for analysis',
+    summary: 'Analyze a job posting',
     description:
-      'Accepts a job URL. Returns a jobId immediately (HTTP 202). ' +
-      'The pipeline (scrape → 3 AI calls) runs asynchronously. ' +
-      'Poll GET /analysis/:id every 2–3 seconds for the result.',
+      'Accepts a job URL. Runs the full pipeline (scrape → 3 AI calls) synchronously and returns the result.',
   })
   @ApiBody({
     type: AnalyzeJobDto,
@@ -66,8 +64,8 @@ export class AnalysisController {
     },
   })
   @ApiResponse({
-    status: 202,
-    description: 'Job queued — returns jobId for polling',
+    status: 200,
+    description: 'Analysis complete',
     type: JobResponseDto,
   })
   @ApiResponse({
@@ -85,7 +83,6 @@ export class AnalysisController {
       );
     }
 
-    // Build a cache key from whatever input is present
     const cacheKey = this.buildCacheKey(dto);
     const cached = await this.cacheManager.get<AnalysisResult>(cacheKey);
 
@@ -96,18 +93,11 @@ export class AnalysisController {
     }
 
     const job = this.jobsService.create();
-    this.logger.event('pipeline_queued', { jobId: job.id });
+    this.logger.event('pipeline_start', { jobId: job.id });
 
-    // Fire-and-forget: kick off pipeline without awaiting
-    setImmediate(() => {
-      this.runPipeline(job.id, dto, cacheKey).catch((err: unknown) => {
-        this.logger.error(
-          `Unhandled pipeline error for job ${job.id}: ${err instanceof Error ? err.message : String(err)}`,
-        );
-      });
-    });
+    await this.runPipeline(job.id, dto, cacheKey);
 
-    return this.toDto(job);
+    return this.toDto(this.jobsService.get(job.id));
   }
 
   /**

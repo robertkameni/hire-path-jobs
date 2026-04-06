@@ -225,8 +225,8 @@ export class ScraperService {
         'Requests to local addresses are not allowed.',
       );
     }
-    // Block private CIDR ranges by hostname pattern
-    if (/^(10\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.)/.test(host)) {
+    // Block private CIDR ranges and cloud metadata endpoints (SSRF protection)
+    if (/^(10\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.|169\.254\.)/.test(host)) {
       throw new BadRequestException(
         'Requests to private network addresses are not allowed.',
       );
