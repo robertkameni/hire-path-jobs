@@ -1,0 +1,154 @@
+@if (!isEmpty()) {
+  <div class="flex flex-col items-center justify-center py-32 px-16">
+    <div class="text-center max-w-md">
+      <div
+        class="w-20 h-20 mx-auto mb-6 rounded-full bg-[#00c752]/10 flex items-center justify-center"
+      ></div>
+      <h3 class="text-2xl font-bold text-white mb-3">Ready to analyze</h3>
+      <p class="text-gray-400">
+        Paste a job posting URL above to get AI-powered insights, application strategies, and
+        outreach templates.
+      </p>
+    </div>
+  </div>
+} @else {
+  <div class="flex gap-8 px-16 py-12">
+    <!-- Left Column -->
+    <div class="flex flex-col gap-8 flex-1 max-w-200">
+      <!-- Strategy Card -->
+      <div class="p-8 bg-[#0a1a0d] border border-white/5 rounded-2xl">
+        <h2 class="text-2xl font-bold text-[#00c752] mb-6 flex items-center gap-2">
+          🎯 Recommended Strategy
+        </h2>
+        <div class="space-y-4">
+          <div class="p-4 bg-white/5 rounded-lg">
+            <h3 class="text-lg font-semibold text-white mb-2">1. Network First</h3>
+            <p class="text-gray-300 text-sm leading-relaxed">
+              This company values internal referrals. Connect with current employees on LinkedIn
+              before submitting your application. Focus on the engineering team.
+            </p>
+          </div>
+          <div class="p-4 bg-white/5 rounded-lg">
+            <h3 class="text-lg font-semibold text-white mb-2">2. Tailor Your Resume</h3>
+            <p class="text-gray-300 text-sm leading-relaxed">
+              Emphasize your experience with React, TypeScript, and AI/ML projects. They're
+              specifically looking for these skills based on the job description.
+            </p>
+          </div>
+          <div class="p-4 bg-white/5 rounded-lg">
+            <h3 class="text-lg font-semibold text-white mb-2">3. Follow Up Timeline</h3>
+            <p class="text-gray-300 text-sm leading-relaxed">
+              Apply Monday-Wednesday for best response rates. Follow up after 5-7 business days if
+              no response. This company typically responds within 2 weeks.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Message Card -->
+      <div class="p-8 bg-[#0a1a0d] border border-[#00c752]/40 rounded-2xl">
+        <h2 class="text-2xl font-bold text-white mb-6 flex items-center gap-2">
+          ✉️ Outreach Message
+        </h2>
+        <div class="space-y-4">
+          <div class="p-4 bg-[#00c752]/5 border border-[#00c752]/20 rounded-lg">
+            <p class="text-sm text-gray-400 mb-2">LinkedIn Connection Request:</p>
+            <p class="text-white text-sm leading-relaxed">
+              Hi [Name], I noticed you're on the engineering team at [Company]. I'm excited about
+              the [Job Title] role and would love to learn more about your experience working there.
+              Would you be open to a brief chat?
+            </p>
+          </div>
+          <div class="p-4 bg-[#00c752]/5 border border-[#00c752]/20 rounded-lg">
+            <p class="text-sm text-gray-400 mb-2">Application Email Subject:</p>
+            <p class="text-white text-sm font-medium leading-relaxed mb-3">
+              Experienced Full-Stack Developer + AI Enthusiast | [Job Title] Application
+            </p>
+            <p class="text-sm text-gray-400 mb-2">Email Body:</p>
+            <p class="text-white text-sm leading-relaxed">
+              Hello [Hiring Manager],
+              <br /><br />
+              I'm writing to express my strong interest in the [Job Title] position. With [X] years
+              of experience building scalable web applications using React and TypeScript, I'm
+              excited about the opportunity to contribute to [Company]'s mission.
+              <br /><br />
+              What caught my attention: [Specific detail from job posting or company mission]
+              <br /><br />
+              I'd welcome the opportunity to discuss how my background in [relevant skills] aligns
+              with your team's needs.
+              <br /><br />
+              Best regards,<br />
+              [Your Name]
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column -->
+    <div class="flex flex-col gap-8 w-120">
+      <!-- Ghost Risk Card -->
+      <div class="p-6 bg-white/3 rounded-2xl border border-white/5">
+        <div class="flex items-center gap-2 mb-4">
+          <span class="w-5 h-5 text-[#ffab00]">⚠️</span>
+          <h3 class="text-lg font-semibold text-[#ffab00]">High Ghost Risk</h3>
+        </div>
+        <p class="text-gray-300 text-sm leading-relaxed mb-4">
+          This company has a 68% ghost rate based on 247 reported applications. Consider alternative
+          outreach strategies.
+        </p>
+        <div class="flex items-center gap-2 text-sm text-gray-400">
+          <span class="w-4 h-4">⏱️</span>
+          <span>Avg response time: 21 days</span>
+        </div>
+      </div>
+
+      <!-- Company Insights -->
+      <div class="p-6 bg-white/3 rounded-2xl border border-white/5">
+        <h3 class="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+          <span class="w-5 h-5 text-[#00c752]">📈</span>
+          Company Insights
+        </h3>
+        <div class="space-y-3">
+          <div class="flex justify-between items-center">
+            <span class="text-sm text-gray-400">Application Success Rate</span>
+            <span class="text-sm font-semibold text-[#00c752]">12%</span>
+          </div>
+          <div class="w-full h-2 bg-white/5 rounded-full overflow-hidden">
+            <div class="h-full bg-[#00c752] w-[12%]"></div>
+          </div>
+          <div class="flex justify-between items-center pt-2">
+            <span class="text-sm text-gray-400">Hiring Activity</span>
+            <span class="text-sm font-semibold text-white">Active</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-sm text-gray-400">Open Positions</span>
+            <span class="text-sm font-semibold text-white">23</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Salary Insights -->
+      <div class="p-6 bg-white/3 rounded-2xl border border-white/5">
+        <h3 class="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+          <span class="w-5 h-5 text-[#00c752]">💲</span>
+          Salary Insights
+        </h3>
+        <div class="space-y-3">
+          <div class="flex justify-between items-center">
+            <span class="text-sm text-gray-400">Market Range</span>
+            <span class="text-sm font-semibold text-white">$120K - $180K</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-sm text-gray-400">Typical Offer</span>
+            <span class="text-sm font-semibold text-[#00c752]">$145K</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-sm text-gray-400">Your Target</span>
+            <span class="text-sm font-semibold text-white">$155K</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+}
