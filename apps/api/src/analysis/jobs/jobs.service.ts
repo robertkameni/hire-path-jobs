@@ -1,5 +1,4 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { randomUUID } from 'crypto';
 
 const JOB_TTL_MS = 30 * 60 * 1000;
 const MAX_JOBS = 1000;
@@ -9,19 +8,18 @@ const CLEANUP_INTERVAL_MS = 5 * 60 * 1000;
 export class JobsService {
   private logger = new Logger(JobsService.name);
   private store = new Map<string, any>();
-  private cleanupTimer: NodeJS.Timeout;
+  private cleanupTimer: ReturnType<typeof setInterval>;
 
   constructor() {
     this.cleanupTimer = setInterval(() => this.sweep(), CLEANUP_INTERVAL_MS);
-    this.cleanupTimer.unref?.();
   }
 
   create() {
     if (this.store.size >= MAX_JOBS) {
       this.evictOldest();
     }
-    const record = {
-      id: randomUUID(),
+    const record: any = {
+      id: crypto.randomUUID(),
       status: 'queued',
       createdAt: new Date(),
       updatedAt: new Date(),

@@ -136,7 +136,7 @@ export class AiService {
     if (!(err instanceof Error)) return false;
     if ('status' in err) {
       const status = err.status;
-      if (status === 429 || (status >= 500 && status < 600)) return true;
+      if (status === 429 || (Number(status) >= 500 && Number(status) < 600)) return true;
     }
     const retryCodes = ['ECONNRESET', 'ETIMEDOUT', 'ENOTFOUND', 'ECONNREFUSED'];
     if (

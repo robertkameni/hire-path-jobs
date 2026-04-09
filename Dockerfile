@@ -3,10 +3,12 @@ FROM node:24-alpine AS builder
 
 WORKDIR /app
 
-COPY package*.json ./
+# Install dependencies for the API workspace only (faster and avoids workspace YAML issues)
+COPY apps/api/package*.json ./
 RUN npm install --ignore-scripts
 
-COPY . .
+# Copy only the API source files and build
+COPY apps/api ./
 RUN npm run build
 
 # Prune dev dependencies
