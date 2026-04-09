@@ -9,3 +9,13 @@ dist
 .env
 .env.local
 .env.*.local
+
+apps/api/dist
+apps/api/node_modules
+apps/api/.tsbuildinfo
+
+apps/web/dist
+apps/web/.angular
+apps/web/node_modules
+apps/web/.tsbuildinfo
+apps/web/.vscode
