@@ -1,5 +1,6 @@
-import { Component, signal } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { AnalysisStore } from '../../store/analysis.store';
 
 @Component({
   selector: 'dev-results',
@@ -8,9 +9,13 @@ import { CommonModule } from '@angular/common';
   styleUrls: ['./results.scss'],
 })
 export class Results {
-  isEmpty = signal(true);
+  private store = inject(AnalysisStore);
+
+  isEmpty = computed(() => !this.store.result());
 
   toggle() {
-    this.isEmpty.set(!this.isEmpty());
+    // keep the original toggle behavior for dev/testing
+    if (this.isEmpty()) this.store.setResult({});
+    else this.store.setResult(null);
   }
 }

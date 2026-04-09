@@ -67,18 +67,21 @@ GEMINI_MODEL=gemini-2.5-flash   # optional, this is the default
 
 ---
 
-## Running the server
+## Running the server (development)
 
 ```bash
-# development (watch mode)
-npm run start:dev
+# start API (dev) from repo root — runs the API workspace dev script
+npm run start:api
 
-# production
-npm run build
-npm run start:prod
+# start web (dev) from repo root
+npm run start:web
+
+# alternative: start the API directly from the package
+cd apps/api
+npm run dev
 ```
 
-The server starts at `http://localhost:3000`.
+The API server is available at `http://localhost:3000` (API routes under `/api`).
 
 ---
 
@@ -305,18 +308,21 @@ GEMINI_MODEL=gemini-2.5-flash   # optional, this is the default
 
 ---
 
-## Running the server
+## Running the server (development)
 
 ```bash
-# development (watch mode)
-npm run start:dev
+# start API (dev) from repo root — runs the API workspace dev script
+npm run start:api
 
-# production
-npm run build
-npm run start:prod
+# start web (dev) from repo root
+npm run start:web
+
+# alternative: start the API directly from the package
+cd apps/api
+npm run dev
 ```
 
-The server starts at `http://localhost:3000`.
+The API server is available at `http://localhost:3000` (API routes under `/api`).
 
 ---
 

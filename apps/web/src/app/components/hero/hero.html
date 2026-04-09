@@ -5,10 +5,9 @@
 
   <div
     class="flex items-center gap-3 w-full max-w-175 h-16 px-4 bg-[#0a1a0d] border border-[#00c752]/30 rounded-xl shadow-[0_0_20px_rgba(0,199,82,0.2)]">
-    <input type="text" placeholder="Paste job posting URL here..."
+    <input #urlInput type="text" placeholder="Paste job posting URL here..."
       class="flex-1 bg-transparent text-white text-base outline-none placeholder:text-[#94a3b8]" />
-    <button
-      class="flex items-center gap-2 px-8 h-11 font-semibold bg-[#00c752] text-[#04110a] 
+    <button (click)="handleAnalyze(urlInput)" class="flex items-center gap-2 px-8 h-11 font-semibold bg-[#00c752] text-[#04110a] 
       rounded-lg hover:text-white transition-colors animate-pulse cursor-pointer">
       Analyze
     </button>
