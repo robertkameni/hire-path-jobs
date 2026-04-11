@@ -3,7 +3,8 @@
   "version": "0.0.1",
   "private": true,
   "workspaces": [
-    "apps/*"
+    "apps/*",
+    "libs/*"
   ],
   "scripts": {
     "start:api": "npm --workspace=apps/api run dev",
