@@ -1,21 +1,17 @@
-import { Component, computed, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, inject } from '@angular/core';
+import { CommonModule, NgClass } from '@angular/common';
 import { AnalysisStore } from '../../store/analysis.store';
 
 @Component({
   selector: 'dev-results',
-  imports: [CommonModule],
+  imports: [NgClass],
   templateUrl: './results.html',
   styleUrls: ['./results.scss'],
 })
 export class Results {
-  private store = inject(AnalysisStore);
+  store = inject(AnalysisStore);
 
-  isEmpty = computed(() => !this.store.result());
-
-  toggle() {
-    // keep the original toggle behavior for dev/testing
-    if (this.isEmpty()) this.store.setResult({});
-    else this.store.setResult(null);
+  getRiskClass(level: string | undefined): string {
+    return level === 'High' ? 'text-[#ffab00]' : 'text-[#00c752]';
   }
 }

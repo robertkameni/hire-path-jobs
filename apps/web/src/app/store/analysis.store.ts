@@ -2,12 +2,13 @@ import { inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { signalStore, withState, withMethods, patchState } from '@ngrx/signals';
+import { JobResult, JobResponse } from '@hire-path-jobs/shared-types';
 import { environment } from '../../environments/environment';
 
 type AnalysisState = {
   loading: boolean;
   lastError: string | null;
-  result: any | null;
+  result: JobResult | null;
 };
 
 const initialState: AnalysisState = {
@@ -19,22 +20,26 @@ const initialState: AnalysisState = {
 export const AnalysisStore = signalStore(
   { providedIn: 'root' },
   withState(initialState),
-  withMethods((store) => {
+  withMethods((store, http = inject(HttpClient)) => {
     const base = () => environment.apiBaseUrl.replace(/\/$/, '');
 
     return {
-      setResult(result: any) {
+      setResult(result: JobResult) {
         patchState(store, { result });
       },
       async submitJob(url: string) {
-        const http = inject(HttpClient);
         patchState(store, { loading: true, lastError: null });
         try {
-          const res = await firstValueFrom(http.post<any>(`${base()}/api/analysis`, { url }));
-          patchState(store, { result: res ?? null });
+          const res = await firstValueFrom(http.post<JobResponse>(`${base()}/analysis`, { jobUrl: url }));
+          if (res?.status === 'failed' && res.error) {
+            patchState(store, { result: null, lastError: res.error });
+          } else {
+            patchState(store, { result: res?.result ?? null });
+          }
           return res;
-        } catch (err: any) {
-          patchState(store, { lastError: err?.message ?? String(err) });
+        } catch (err: unknown) {
+          const message = err instanceof Error ? err.message : String(err);
+          patchState(store, { lastError: message });
           throw err;
         } finally {
           patchState(store, { loading: false });
@@ -42,14 +47,18 @@ export const AnalysisStore = signalStore(
       },
 
       async fetchJob(id: string) {
-        const http = inject(HttpClient);
         patchState(store, { loading: true, lastError: null });
         try {
-          const res = await firstValueFrom(http.get<any>(`${base()}/api/analysis/${id}`));
-          patchState(store, { result: res ?? null });
+          const res = await firstValueFrom(http.get<JobResponse>(`${base()}/analysis/${id}`));
+          if (res?.status === 'failed' && res.error) {
+            patchState(store, { result: null, lastError: res.error });
+          } else {
+            patchState(store, { result: res?.result ?? null });
+          }
           return res;
-        } catch (err: any) {
-          patchState(store, { lastError: err?.message ?? String(err) });
+        } catch (err: unknown) {
+          const message = err instanceof Error ? err.message : String(err);
+          patchState(store, { lastError: message });
           throw err;
         } finally {
           patchState(store, { loading: false });

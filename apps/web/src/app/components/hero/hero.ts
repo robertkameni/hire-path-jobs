@@ -8,16 +8,26 @@ import { AnalysisStore } from '../../store/analysis.store';
   styleUrl: './hero.scss',
 })
 export class Hero {
-  private store = inject(AnalysisStore);
+  store = inject(AnalysisStore);
 
-  async handleAnalyze(urlInput?: HTMLInputElement) {
-    const url = typeof urlInput === 'string' ? urlInput : urlInput?.value;
+  async handleAnalyze(urlInput: HTMLInputElement) {
+    const url = urlInput?.value.trim();
     if (!url) return;
     try {
-      await this.store.submitJob(url as string);
+      console.log('Sending URL to API:', url);
+      await this.store.submitJob(url);
+      urlInput.value = '';
     } catch (err) {
-      // errors are stored in the store; no-op here
       console.error('Analyze failed', err);
+    }
+  }
+
+  private isValidUrl(url: string): boolean {
+    try {
+      new URL(url);
+      return true;
+    } catch {
+      return false;
     }
   }
 }

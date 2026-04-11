@@ -19,3 +19,5 @@ apps/web/.angular
 apps/web/node_modules
 apps/web/.tsbuildinfo
 apps/web/.vscode
+
+.kilo/

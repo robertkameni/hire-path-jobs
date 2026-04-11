@@ -17,8 +17,8 @@ export class JobResponseDto {
   error?: string;
 
   @ApiProperty()
-  createdAt!: string;
+  createdAt: string;
 
   @ApiProperty()
-  updatedAt!: string;
+  updatedAt: string;
 }
