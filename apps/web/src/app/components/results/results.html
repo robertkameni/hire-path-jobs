@@ -1,155 +1,211 @@
-@if (store.loading()) {
-<div class="flex flex-col items-center justify-center py-12 px-16">
+@if (store.loading() || store.lastError() || !store.result()) {
+
+<div class="flex flex-col items-center justify-center py-10 px-4 sm:px-8 lg:px-16">
+
   <div class="text-center max-w-md">
-    <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-[#00c752]/10 flex items-center justify-center">
-      <span class="text-4xl animate-spin">⏳</span>
-    </div>
-    <h3 class="text-2xl font-bold text-white mb-3">Analyzing job posting...</h3>
-    <p class="text-gray-400">
+
+    <!-- STATUS INDICATOR -->
+    <dev-status-indicator [statusState]="store.loading() ? { state: 'loading' } :
+               store.lastError() ? { state: 'error' } : { state: 'idle' }">
+    </dev-status-indicator>
+
+    <!-- TITLE -->
+    <h3 class="text-xl sm:text-2xl font-bold text-white mb-3">
+      @if (store.loading()) {
+      Analyzing job posting...
+      } @else if (store.lastError()) {
+      Analysis failed
+      } @else {
+      Ready to analyze
+      }
+    </h3>
+
+    <!-- DESCRIPTION -->
+    <p class="text-gray-400 text-sm sm:text-base">
+
+      @if (store.loading()) {
       Our AI is extracting insights from the job posting. This may take a few moments.
+      }
+
+      @else if (store.lastError()) {
+      {{ store.lastError() }} Please try a different URL.
+      }
+
+      @else {
+      Paste a job posting URL above to get AI-powered insights, application strategies, and outreach templates.
+      }
+
     </p>
+
   </div>
+
 </div>
-} @else if (store.lastError()) {
-<div class="flex flex-col items-center justify-center py-12 px-16">
-  <div class="text-center max-w-md">
-    <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-red-600/10 flex items-center justify-center">
-      <span class="text-4xl">⚠️</span>
-    </div>
-    <h3 class="text-2xl font-bold text-white mb-3">Analysis failed</h3>
-    <p class="text-gray-300 mt-4">{{ store.lastError() }} Please Try a different URL.</p>
-  </div>
-</div>
-} @else if (!store.result()) {
-<div class="flex flex-col items-center justify-center py-12 px-16">
-  <div class="text-center max-w-md">
-    <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-[#00c752]/10 flex items-center justify-center"></div>
-    <h3 class="text-2xl font-bold text-white mb-3">Ready to analyze</h3>
-    <p class="text-gray-400">
-      Paste a job posting URL above to get AI-powered insights, application strategies, and
-      outreach templates.
-    </p>
-  </div>
-</div>
+
 } @else {
-<div class="flex gap-8 px-16 py-12">
-  <!-- Left Column -->
-  <div class="flex flex-col gap-8 flex-1 max-w-200">
-    <!-- Strategy Card -->
-    <div class="p-8 bg-[#0a1a0d] border border-white/5 rounded-2xl">
-      <h2 class="text-2xl font-bold text-[#00c752] mb-6 flex items-center gap-2">
+
+<!-- 🔥 MAIN WRAPPER -->
+<div class="flex flex-col lg:flex-row gap-6 lg:gap-8 px-4 sm:px-8 lg:px-16 py-8 lg:py-12">
+
+  <!-- LEFT COLUMN -->
+  <div class="flex flex-col gap-6 lg:gap-8 w-full lg:flex-1">
+
+    <!-- Strategy -->
+    <div class="p-5 sm:p-6 lg:p-8 bg-[#0a1a0d] border border-white/5 rounded-2xl">
+      <h2 class="text-xl sm:text-2xl font-bold text-[#00c752] mb-4 lg:mb-6 flex items-center gap-2">
         🎯 Recommended Strategy
       </h2>
-      <div class="space-y-4">
-        @if (store.result()?.strategy) {
-        <div class="p-4 bg-white/5 rounded-lg">
-          <h3 class="text-lg font-semibold text-white mb-2">{{ store.result()?.strategy?.targetRole }}</h3>
-          <p class="text-gray-300 text-sm mb-2">Contact channels:</p>
-          <ul class="list-disc list-inside text-sm text-gray-300 mb-3">
-            @for (ch of store.result()?.strategy?.contactChannels; track ch) {
-            <li>{{ ch }}</li>
-            }
-          </ul>
-          <p class="text-gray-300 text-sm mb-2">Talking points:</p>
-          <ul class="list-disc list-inside text-sm text-gray-300">
-            @for (pt of store.result()?.strategy?.talkingPoints; track pt) {
-            <li>{{ pt }}</li>
-            }
-          </ul>
-          <p class="text-gray-400 text-sm mt-3">Timing: {{ store.result()?.strategy?.timing }}</p>
-        </div>
-        }
+
+      @if (store.result()?.strategy) {
+      <div class="p-4 bg-white/5 rounded-lg">
+
+        <h3 class="text-base sm:text-lg font-semibold text-white mb-2">
+          {{ store.result()?.strategy?.targetRole }}
+        </h3>
+
+        <p class="text-gray-300 text-xs sm:text-sm mb-2">Contact channels:</p>
+        <ul class="space-y-1 text-sm text-gray-300 mb-3">
+          @for (ch of store.result()?.strategy?.contactChannels; track ch) {
+          <li>• {{ ch }}</li>
+          }
+        </ul>
+
+        <p class="text-gray-300 text-xs sm:text-sm mb-2">Talking points:</p>
+        <ul class="space-y-1 text-sm text-gray-300">
+          @for (pt of store.result()?.strategy?.talkingPoints; track pt) {
+          <li>• {{ pt }}</li>
+          }
+        </ul>
+
+        <p class="text-gray-400 text-xs sm:text-sm mt-3">
+          Timing: {{ store.result()?.strategy?.timing }}
+        </p>
+
       </div>
+      }
     </div>
 
-    <!-- Message Card -->
-    <div class="p-8 bg-[#0a1a0d] border border-[#00c752]/40 rounded-2xl">
-      <h2 class="text-2xl font-bold text-white mb-6 flex items-center gap-2">
+    <!-- Message -->
+    <div class="p-5 sm:p-6 lg:p-8 bg-[#0a1a0d] border border-[#00c752]/40 rounded-2xl">
+      <h2 class="text-xl sm:text-2xl font-bold text-white mb-4 lg:mb-6 flex items-center gap-2">
         ✉️ Outreach Message
       </h2>
-      <div class="space-y-4">
-        @if (store.result()?.message) {
-        <div class="p-4 bg-[#00c752]/5 border border-[#00c752]/20 rounded-lg">
-          <p class="text-sm text-gray-400 mb-2">Betreff:</p>
-          <p class="text-white text-sm font-medium leading-relaxed mb-3">{{ store.result()?.message?.subject }}</p>
-          <p class="text-sm text-gray-400 mb-2">Nachrichtentext:</p>
-          <p class="text-white text-sm leading-relaxed whitespace-pre-wrap">{{ store.result()?.message?.body }}</p>
-        </div>
-        }
+
+      @if (store.result()?.message) {
+      <div class="p-4 bg-[#00c752]/5 border border-[#00c752]/20 rounded-lg">
+
+        <p class="text-xs sm:text-sm text-gray-400 mb-2">Betreff:</p>
+        <p class="text-white text-sm font-medium mb-3">
+          {{ store.result()?.message?.subject }}
+        </p>
+
+        <p class="text-xs sm:text-sm text-gray-400 mb-2">Nachricht:</p>
+        <p class="text-white text-sm whitespace-pre-wrap leading-relaxed">
+          {{ store.result()?.message?.body }}
+        </p>
+
       </div>
+      }
     </div>
+
   </div>
 
-  <!-- Right Column -->
-  <div class="flex flex-col gap-8 w-120">
+  <!-- RIGHT COLUMN -->
+  <div class="flex flex-col gap-6 lg:gap-8 w-full lg:w-[320px] xl:w-90">
+
+    <!-- Ghost Risk -->
     @if (store.result()?.insights) {
-    <div class="p-6 bg-white/3 rounded-2xl border border-white/5">
-      <div class="flex items-center gap-2 mb-4">
-        <span class="w-5 h-5">⚠️</span>
-        <h3 class="text-lg font-semibold" [ngClass]="getRiskClass(store.result()?.insights?.ghostRisk)">{{
-          store.result()?.insights?.ghostRisk }} Ghost Risk</h3>
-      </div>
-      <p class="text-gray-300 text-sm leading-relaxed mb-4">{{ store.result()?.insights?.ghostRiskReason }}</p>
-      <div class="flex items-center gap-2 text-sm text-gray-400">
-        <span>Confidence: {{ store.result()?.insights?.ghostRiskConfidence }}%</span>
-      </div>
+    <div class="p-5 sm:p-6 bg-white/3 rounded-2xl border border-white/5">
+
+      <h3 class="text-lg font-semibold mb-3 flex items-center gap-2"
+        [ngClass]="getRiskClass(store.result()?.insights?.ghostRisk)">
+        ⚠️ {{ store.result()?.insights?.ghostRisk }} Ghost Risk
+      </h3>
+
+      <p class="text-gray-300 text-sm mb-3">
+        {{ store.result()?.insights?.ghostRiskReason }}
+      </p>
+
+      <p class="text-xs text-gray-400">
+        Confidence: {{ store.result()?.insights?.ghostRiskConfidence }}%
+      </p>
+
     </div>
     }
 
+    <!-- Verdict -->
     @if (store.result()?.insights?.verdict) {
-    <div class="p-6 bg-white/3 rounded-2xl border border-white/5">
-      <h3 class="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-        <span class="w-5 h-5 text-[#00c752]">📋</span>
-        Verdict
-      </h3>
+    <div class="p-5 sm:p-6 bg-white/3 rounded-2xl border border-white/5">
+
+      <h3 class="text-lg font-semibold text-white mb-4">📋 Verdict</h3>
+
       <div class="p-3 rounded-lg bg-[#00c752]/10 border border-[#00c752]/30 mb-3">
         <span class="text-sm font-semibold" [class.text-red-400]="!store.result()?.insights?.verdict?.apply"
           [class.text-[#00c752]]="store.result()?.insights?.verdict?.apply">
+
           {{ store.result()?.insights?.verdict?.apply ? '✅ Apply' : '❌ Skip' }}
+
         </span>
       </div>
-      <p class="text-gray-300 text-sm leading-relaxed">{{ store.result()?.insights?.verdict?.reason }}</p>
+
+      <p class="text-sm text-gray-300">
+        {{ store.result()?.insights?.verdict?.reason }}
+      </p>
+
     </div>
     }
 
+    <!-- Red Flags -->
     @if (store.result()?.insights?.redFlags?.length) {
-    <div class="p-6 bg-white/3 rounded-2xl border border-white/5">
-      <h3 class="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-        <span class="w-5 h-5 text-red-400">🚩</span>
-        Red Flags
-      </h3>
-      <ul class="space-y-2">
+    <div class="p-5 sm:p-6 bg-white/3 rounded-2xl border border-white/5">
+
+      <h3 class="text-lg font-semibold text-white mb-4">🚩 Red Flags</h3>
+
+      <ul class="space-y-2 text-sm text-gray-300">
         @for (flag of store.result()?.insights?.redFlags; track flag) {
-        <li class="text-sm text-gray-300 flex items-start gap-2">
+        <li class="flex gap-2">
           <span class="text-red-400">•</span>
-          {{ flag }}
+          <span>{{ flag }}</span>
         </li>
         }
       </ul>
+
     </div>
     }
 
+    <!-- Competition -->
     @if (store.result()?.insights?.competitionLevel) {
-    <div class="p-6 bg-white/3 rounded-2xl border border-white/5">
+    <div class="p-5 sm:p-6 bg-white/3 rounded-2xl border border-white/5">
+
       <h3 class="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-        <span class="w-5 h-5 text-[#00c752]">👥</span>
-        Competition
+        👥 Competition
       </h3>
+
       <div class="space-y-2">
-        <div class="flex justify-between items-center">
-          <span class="text-sm text-gray-400">Level</span>
-          <span class="text-sm font-semibold text-white capitalize">{{ store.result()?.insights?.competitionLevel
-            }}</span>
+
+        <div class="flex justify-between text-sm">
+          <span class="text-gray-400">Level</span>
+          <span class="text-white capitalize">
+            {{ store.result()?.insights?.competitionLevel }}
+          </span>
         </div>
+
         <div class="w-full h-2 bg-white/5 rounded-full overflow-hidden">
-          <div class="h-full bg-[#00c752]"
-            [style.width.%]="store.result()?.insights?.competitionLevel === 'low' ? 30 : store.result()?.insights?.competitionLevel === 'medium' ? 60 : 90">
+          <div class="h-full bg-[#00c752]" [style.width.%]="store.result()?.insights?.competitionLevel === 'low' ? 30 :
+                             store.result()?.insights?.competitionLevel === 'medium' ? 60 : 90">
           </div>
         </div>
-        <p class="text-sm text-gray-300 pt-2">{{ store.result()?.insights?.competitionReason }}</p>
+
+        <p class="text-sm text-gray-300 pt-2">
+          {{ store.result()?.insights?.competitionReason }}
+        </p>
+
       </div>
+
     </div>
     }
+
   </div>
+
 </div>
+
 }

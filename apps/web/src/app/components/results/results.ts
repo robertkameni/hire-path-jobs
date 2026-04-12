@@ -1,10 +1,11 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule, NgClass } from '@angular/common';
 import { AnalysisStore } from '../../store/analysis.store';
+import { StatusIndicator } from '../../shared/status-indicator';
 
 @Component({
   selector: 'dev-results',
-  imports: [NgClass],
+  imports: [NgClass, StatusIndicator],
   templateUrl: './results.html',
   styleUrls: ['./results.scss'],
 })

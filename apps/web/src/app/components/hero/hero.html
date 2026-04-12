@@ -1,19 +1,35 @@
-<section class="flex flex-col items-center gap-6 py-12 px-4">
-  <h1 class="text-[56px] font-extrabold text-white text-center leading-tight">
+<section class="flex flex-col items-center gap-6 sm:gap-8 py-10 sm:py-12 px-4 sm:px-6">
+
+  <h1 class="text-3xl sm:text-5xl lg:text-[56px] font-extrabold text-white text-center leading-tight">
     Stop applying blindly...
   </h1>
-
   <div
-    class="flex items-center gap-3 w-full max-w-175 h-16 px-4 bg-[#0a1a0d] border border-[#00c752]/30 rounded-xl shadow-[0_0_20px_rgba(0,199,82,0.2)]">
-    <input #urlInput type="text" placeholder="Paste job posting URL here..."
-      class="flex-1 bg-transparent text-white text-base outline-none placeholder:text-[#94a3b8]" />
-    <button (click)="handleAnalyze(urlInput)" [disabled]="store.loading()" class="flex items-center gap-2 px-8 h-11 font-semibold bg-[#00c752] text-[#04110a] 
-      rounded-lg hover:text-white transition-colors animate-pulse cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+    class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full max-w-2xl
+           p-3 sm:p-4 bg-[#0a1a0d] border border-[#00c752]/30 rounded-xl
+           shadow-[0_0_20px_rgba(0,199,82,0.2)]">
+    <input
+      #urlInput
+      type="text"
+      placeholder="Paste job posting URL here..."
+      class="flex-1 bg-transparent text-white text-sm sm:text-base outline-none
+             placeholder:text-[#94a3b8] px-2 py-2 sm:py-0"
+    />
+  <button
+      (click)="handleAnalyze(urlInput)"
+      [disabled]="store.loading() || !!urlInput.value.trim()"
+      class="w-full sm:w-auto flex items-center justify-center gap-2
+             px-5 sm:px-8 py-3 sm:py-0 h-11 font-semibold
+             bg-[#00c752] text-[#04110a] rounded-lg
+             hover:text-white transition-colors cursor-pointer
+             disabled:opacity-50 disabled:cursor-not-allowed">
+
       @if (store.loading()) {
         <span>Analyzing...</span>
       } @else {
         <span>Analyze</span>
       }
+
     </button>
   </div>
+
 </section>
