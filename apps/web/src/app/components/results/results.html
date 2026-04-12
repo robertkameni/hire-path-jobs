@@ -71,7 +71,7 @@
   @if (store.result()?.insights?.verdict) {
   <div class="p-5 sm:p-6 bg-white/3 rounded-2xl border border-white/5">
 
-    <h3 class="text-lg font-semibold text-white mb-4">📋 Verdict</h3>
+    <h3 class="text-lg font-semibold text-[#00c752] mb-4">📋 Verdict</h3>
 
     <div class="p-3 rounded-lg bg-[#00c752]/10 border border-[#00c752]/30 mb-3">
       <span class="text-sm font-semibold"
@@ -127,7 +127,7 @@
   @if (store.result()?.insights?.redFlags?.length) {
   <div class="p-5 sm:p-6 bg-white/3 rounded-2xl border border-white/5">
 
-    <h3 class="text-lg font-semibold text-white mb-4">🚩 Red Flags</h3>
+    <h3 class="text-lg font-semibold text-[#00c752] mb-4">🚩 Red Flags</h3>
 
     <ul class="space-y-2 text-sm text-gray-300">
       @for (flag of store.result()?.insights?.redFlags; track flag) {
@@ -145,7 +145,7 @@
   @if (store.result()?.message) {
   <div class="p-5 sm:p-6 lg:p-8 bg-[#0a1a0d] border border-[#00c752]/40 rounded-2xl">
 
-    <h2 class="text-xl sm:text-2xl font-bold text-white mb-4 flex items-center gap-2">
+    <h2 class="text-xl sm:text-2xl font-bold text-[#00c752] mb-4 flex items-center gap-2">
       ✉️ Outreach Message
     </h2>
 
@@ -166,7 +166,7 @@
   @if (store.result()?.insights?.competitionLevel) {
   <div class="p-5 sm:p-6 bg-white/3 rounded-2xl border border-white/5">
 
-    <h3 class="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+    <h3 class="text-lg font-semibold text-[#00c752] mb-4 flex items-center gap-2">
       👥 Competition
     </h3>
 
