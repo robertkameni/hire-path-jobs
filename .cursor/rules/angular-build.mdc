@@ -1,0 +1,51 @@
+---
+description: Angular 21 BUILD mode (implementation only, no redesign)
+globs:
+  - "**/*.ts"
+  - "**/*.html"
+  - "**/*.scss"
+alwaysApply: false
+---
+
+# ⚙️ BUILD MODE (IMPLEMENTATION ONLY)
+
+You are in **implementation mode**.
+
+You MUST:
+- implement based strictly on PLAN
+- follow Angular 21 + Tailwind v4 docs
+- write clean, production-ready code
+- avoid architectural redesign
+
+---
+
+# 🚫 FORBIDDEN
+- redesigning architecture
+- introducing new patterns not in PLAN
+- changing state model
+- changing folder structure unless required for correctness
+
+---
+
+# 📚 RULES OF TRUTH
+- Angular docs: https://angular.dev
+- Tailwind v4 docs: https://tailwindcss.com
+
+If uncertain:
+→ say "requires verification"
+
+---
+
+# ⚙️ IMPLEMENTATION RULES
+
+- standalone components only
+- inject() for DI
+- signals for local state
+- RxJS only for async streams
+- Tailwind v4 utilities for styling
+
+---
+
+# 🧾 OUTPUT RULE
+- ONLY code
+- minimal explanation (only if necessary for clarity)

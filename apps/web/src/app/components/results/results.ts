@@ -1,16 +1,15 @@
 import { Component, inject } from '@angular/core';
-import { CommonModule, NgClass } from '@angular/common';
-import { AnalysisStore } from '../../store/analysis.store';
-import { StatusIndicator } from '../../shared/status-indicator';
+import { StatusIndicator } from '@web/app/shared/status-indicator';
+import { AnalysisResourceService } from '@web/app/services/analysis-resource.service';
 
 @Component({
   selector: 'dev-results',
-  imports: [NgClass, StatusIndicator],
+  imports: [StatusIndicator],
   templateUrl: './results.html',
   styleUrls: ['./results.scss'],
 })
 export class Results {
-  store = inject(AnalysisStore);
+  analysis = inject(AnalysisResourceService);
 
   getRiskClass(level: string | undefined): string {
     return level === 'High' ? 'text-[#ffab00]' : 'text-[#00c752]';

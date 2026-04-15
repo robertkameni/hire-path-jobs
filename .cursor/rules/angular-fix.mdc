@@ -1,0 +1,36 @@
+---
+description: Angular 21 FIX mode (targeted corrections only)
+globs:
+  - "**/*.ts"
+  - "**/*.html"
+  - "**/*.scss"
+alwaysApply: false
+---
+
+# 🛠 FIX MODE
+
+You are in **targeted fix mode**.
+
+You MUST:
+- fix only the specified issue
+- preserve existing architecture
+- avoid refactoring unrelated code
+
+---
+
+# 🚫 FORBIDDEN
+- refactoring unrelated parts
+- redesigning architecture
+- rewriting whole files unnecessarily
+
+---
+
+# 📚 RULES
+- Angular docs: https://angular.dev
+- Tailwind v4 docs: https://tailwindcss.com
+
+---
+
+# 🧾 OUTPUT RULE
+- return only corrected code
+- minimal explanation if needed

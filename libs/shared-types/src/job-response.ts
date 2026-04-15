@@ -1,4 +1,4 @@
-export type JobStatus = 'queued' | 'processing' | 'completed' | 'failed';
+export type JobStatus = 'queued' | 'processing' | 'partial' | 'completed' | 'failed';
 
 export interface JobInfo {
   title: string;
@@ -59,6 +59,7 @@ export interface JobResult {
     parseJobAndTruth?: number;
     strategyAndMessage?: number;
   };
+  cached?: boolean;
 }
 
 export interface JobResponse {

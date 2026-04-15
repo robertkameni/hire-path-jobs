@@ -2,6 +2,7 @@ node_modules
 
 dist
 .vscode/
+apps/web/.vscode
 .github/
 
 
@@ -20,4 +21,11 @@ apps/web/node_modules
 apps/web/.tsbuildinfo
 apps/web/.vscode
 
-.kilo/
+hire-path-jobs.iml
+material_theme_project_new.xml
+misc.xml
+modules.xml
+vcs.xml
+workspace.xml
+
+*.tsbuildinfo

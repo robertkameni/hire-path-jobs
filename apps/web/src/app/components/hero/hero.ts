@@ -1,5 +1,5 @@
-import { Component, inject } from '@angular/core';
-import { AnalysisStore } from '../../store/analysis.store';
+import { Component, inject, signal } from '@angular/core';
+import { AnalysisResourceService } from '../../services/analysis-resource.service';
 
 @Component({
   selector: 'dev-hero',
@@ -8,15 +8,16 @@ import { AnalysisStore } from '../../store/analysis.store';
   styleUrl: './hero.scss',
 })
 export class Hero {
-  store = inject(AnalysisStore);
+  analysis = inject(AnalysisResourceService);
+  jobUrl = signal('');
 
-  async handleAnalyze(urlInput: HTMLInputElement) {
-    const url = urlInput?.value.trim();
+  async handleAnalyze() {
+    const url = this.jobUrl().trim();
     if (!url) return;
     try {
       console.log('Sending URL to API:', url);
-      await this.store.submitJob(url);
-      urlInput.value = '';
+      this.analysis.submitJob(url);
+      this.jobUrl.set('');
     } catch (err) {
       console.error('Analyze failed', err);
     }
