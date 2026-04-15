@@ -15,20 +15,10 @@ export class Hero {
     const url = this.jobUrl().trim();
     if (!url) return;
     try {
-      console.log('Sending URL to API:', url);
       this.analysis.submitJob(url);
       this.jobUrl.set('');
     } catch (err) {
       console.error('Analyze failed', err);
-    }
-  }
-
-  private isValidUrl(url: string): boolean {
-    try {
-      new URL(url);
-      return true;
-    } catch {
-      return false;
     }
   }
 }
