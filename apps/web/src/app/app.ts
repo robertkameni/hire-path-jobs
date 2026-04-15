@@ -9,7 +9,6 @@ import { Footer } from './components/footer/footer';
   selector: 'app-root',
   imports: [Navbar, Hero, Results, Footer],
   templateUrl: './app.html',
-  styleUrl: './app.css',
 })
 export class App {
   protected readonly title = signal('web');
