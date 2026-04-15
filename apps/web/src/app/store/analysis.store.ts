@@ -1,9 +1,12 @@
-import { inject } from '@angular/core';
+import { computed, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
-import { signalStore, withState, withMethods, patchState } from '@ngrx/signals';
+import { patchState, signalStore, withComputed, withMethods, withState } from '@ngrx/signals';
 import { JobResult, JobResponse } from '@hire-path-jobs/shared-types';
 import { environment } from '../../environments/environment';
+
+type StatusState = 'idle' | 'loading' | 'success' | 'error';
+type Status = { state: StatusState };
 
 type AnalysisState = {
   loading: boolean;
@@ -20,6 +23,26 @@ const initialState: AnalysisState = {
 export const AnalysisStore = signalStore(
   { providedIn: 'root' },
   withState(initialState),
+  withComputed((store) => {
+    const statusState = computed<StatusState>(() => {
+      if (store.loading()) return 'loading';
+      if (store.lastError()) return 'error';
+      if (store.result()) return 'success';
+      return 'idle';
+    });
+
+    const status = computed<Status>(() => ({ state: statusState() }));
+    const hasResult = computed(() => !!store.result() && !store.loading() && !store.lastError());
+
+    return {
+      statusState,
+      status,
+      hasResult,
+      insights: computed(() => store.result()?.insights ?? null),
+      strategy: computed(() => store.result()?.strategy ?? null),
+      message: computed(() => store.result()?.message ?? null),
+    };
+  }),
   withMethods((store, http = inject(HttpClient)) => {
     const base = () => environment.apiBaseUrl.replace(/\/$/, '');
 
