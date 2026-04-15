@@ -1,13 +1,34 @@
 import { Module } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { Redis } from '@upstash/redis';
 import { AnalysisController } from './controllers/analysis.controller';
 import { AnalysisService } from './services/analysis.service';
 import { JobsService } from './jobs/jobs.service';
+import { InMemoryJobStore } from './jobs/in-memory-job.store';
+import { RedisJobStore } from './jobs/redis-job.store';
+import { JOB_STORE } from './jobs/job-store.token';
+import { JobStore } from './jobs/job-store.interface';
 import { AiModule } from '../ai/ai.module';
 import { ScraperModule } from '../scraper/scraper.module';
 
 @Module({
   imports: [AiModule, ScraperModule],
   controllers: [AnalysisController],
-  providers: [AnalysisService, JobsService],
+  providers: [
+    {
+      provide: JOB_STORE,
+      inject: [ConfigService],
+      useFactory: (config: ConfigService): JobStore => {
+        const url = config.get<string>('UPSTASH_REDIS_REST_URL');
+        const token = config.get<string>('UPSTASH_REDIS_REST_TOKEN');
+        if (url && token) {
+          return new RedisJobStore(new Redis({ url, token }));
+        }
+        return new InMemoryJobStore();
+      },
+    },
+    AnalysisService,
+    JobsService,
+  ],
 })
 export class AnalysisModule {}

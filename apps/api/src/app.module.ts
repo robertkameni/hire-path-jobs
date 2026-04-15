@@ -1,6 +1,13 @@
 import { Module, MiddlewareConsumer, RequestMethod } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { CacheModule } from '@nestjs/cache-manager';
+import type { CacheManagerOptions } from '@nestjs/cache-manager';
+import Keyv from 'keyv';
+import { Redis } from '@upstash/redis';
+import { UpstashKeyvStore } from './common/cache/upstash-keyv.store';
+import { LruKeyvStore } from './common/cache/lru-keyv.store';
+
+const ANALYSIS_CACHE_KEYV_NAMESPACE = 'hirepath-analysis-cache';
 import {
   ThrottlerModule,
   ThrottlerGuard,
@@ -34,6 +41,8 @@ import { CorrelationIdMiddleware } from './common/middleware/correlation-id.midd
         THROTTLE_LIMIT: Joi.number().default(10),
         SCRAPER_MIN_TEXT_LENGTH: Joi.number().default(100),
         SCRAPER_MAX_TEXT_CHARS: Joi.number().default(12000),
+        UPSTASH_REDIS_REST_URL: Joi.string().uri().optional(),
+        UPSTASH_REDIS_REST_TOKEN: Joi.string().optional(),
       }),
     }),
     // Rate limiting (TTL in seconds as per NestJS docs)
@@ -51,10 +60,41 @@ import { CorrelationIdMiddleware } from './common/middleware/correlation-id.midd
     CacheModule.registerAsync({
       isGlobal: true,
       inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
-        ttl: config.get<number>('CACHE_TTL_SECONDS', 86400) * 1000,
-        max: config.get<number>('CACHE_MAX_ITEMS', 500),
-      }),
+      useFactory: (config: ConfigService): CacheManagerOptions => {
+        const ttlMs = config.get<number>('CACHE_TTL_SECONDS', 86400) * 1000;
+        const url = config.get<string>('UPSTASH_REDIS_REST_URL');
+        const token = config.get<string>('UPSTASH_REDIS_REST_TOKEN');
+        const base: CacheManagerOptions = { ttl: ttlMs };
+        
+        if (url && token) {
+          const redis = new Redis({ url, token });
+          const store = new UpstashKeyvStore(
+            redis,
+            `${ANALYSIS_CACHE_KEYV_NAMESPACE}:*`,
+          );
+          return {
+            ...base,
+            stores: [
+              new Keyv({
+                store,
+                ttl: ttlMs,
+                namespace: ANALYSIS_CACHE_KEYV_NAMESPACE,
+              }),
+            ],
+          };
+        }
+        const maxItems = config.get<number>('CACHE_MAX_ITEMS', 500);
+        return {
+          ...base,
+          stores: [
+            new Keyv({
+              store: new LruKeyvStore(maxItems),
+              ttl: ttlMs,
+              namespace: ANALYSIS_CACHE_KEYV_NAMESPACE,
+            }),
+          ],
+        };
+      },
     }),
     AnalysisModule,
   ],

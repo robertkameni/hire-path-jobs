@@ -1,18 +1,18 @@
-@if (analysis.analysis.isLoading() || analysis.analysis.error() || !analysis.result()) {
+@if (analysis.isLoading() || analysis.errorMessage() || !analysis.result()) {
 
 <div class="flex flex-col items-center justify-center py-10 px-4 sm:px-8 lg:px-16">
 
   <div class="text-center max-w-md">
-    <dev-status-indicator [statusState]="analysis.analysis.isLoading() ? { state: 'loading' } :
-                     analysis.analysis.error() ? { state: 'error' } :
+    <dev-status-indicator [statusState]="analysis.isLoading() ? { state: 'loading' } :
+                     analysis.errorMessage() ? { state: 'error' } :
                      { state: 'idle' }">
     </dev-status-indicator>
 
     <h3 class="text-xl sm:text-2xl font-bold text-white mb-3">
 
-      @if (analysis.analysis.isLoading()) {
+      @if (analysis.isLoading()) {
       Analyzing job posting...
-      } @else if (analysis.analysis.error()) {
+      } @else if (analysis.errorMessage()) {
       Analysis failed
       } @else {
       Ready to analyze
@@ -21,15 +21,13 @@
     </h3>
 
     <p class="text-gray-400 text-sm sm:text-base">
-
-      @if (analysis.analysis.isLoading()) {
-      Our AI is extracting insights from the job posting. This may take a few moments.
-      } @else if (analysis.analysis.error()) {
-      {{ analysis.errorMessage() ?? 'Unknown error' }} Please try a different URL.
+      @if (analysis.isLoading()) {
+        Our AI is extracting insights from the job posting. This may take a few moments.
+      } @else if (analysis.errorMessage()) {
+        {{ analysis.errorMessage() ?? 'Unknown error' }} Please try a different URL.
       } @else {
-      Paste a job posting URL above to get AI-powered insights, application strategies, and outreach templates.
+        Paste a job posting URL above to get AI-powered insights, application strategies, and outreach templates.
       }
-
     </p>
 
   </div>
@@ -37,14 +35,12 @@
 </div>
 
 } @else {
-
 @let insights = analysis.insights();
 @let strategy = analysis.strategy();
 @let message = analysis.message();
 @let fallbacks = analysis.fallbacks();
 
 @if (!analysis.hasDisplayableAnalysis()) {
-
 <div class="px-4 sm:px-8 lg:px-16 py-8 lg:py-12">
   <div class="max-w-2xl mx-auto p-6 sm:p-8 bg-[#0a1a0d] border border-[#00c752]/30 rounded-2xl">
     <h2 class="text-xl sm:text-2xl font-bold text-[#00c752] mb-3">Analysis incomplete</h2>

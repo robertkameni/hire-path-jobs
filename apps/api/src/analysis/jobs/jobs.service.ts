@@ -1,97 +1,115 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  Logger,
+  NotFoundException,
+  OnModuleDestroy,
+} from '@nestjs/common';
+import { JobRecord } from './job-record.types';
+import { JobStore } from './job-store.interface';
+import { JOB_STORE } from './job-store.token';
 
 const JOB_TTL_MS = 30 * 60 * 1000;
 const MAX_JOBS = 1000;
 const CLEANUP_INTERVAL_MS = 5 * 60 * 1000;
 
 @Injectable()
-export class JobsService {
+export class JobsService implements OnModuleDestroy {
   private logger = new Logger(JobsService.name);
-  private store = new Map<string, any>();
   private cleanupTimer: ReturnType<typeof setInterval>;
 
-  constructor() {
-    this.cleanupTimer = setInterval(() => this.sweep(), CLEANUP_INTERVAL_MS);
+  constructor(@Inject(JOB_STORE) private readonly jobStore: JobStore) {
+    this.cleanupTimer = setInterval(() => {
+      void this.sweep().catch((err: unknown) => {
+        const message = err instanceof Error ? err.message : String(err);
+        this.logger.error(`Job sweep failed: ${message}`);
+      });
+    }, CLEANUP_INTERVAL_MS);
   }
 
-  create() {
-    if (this.store.size >= MAX_JOBS) {
-      this.evictOldest();
+  async create(): Promise<JobRecord> {
+    if ((await this.jobStore.getSize()) >= MAX_JOBS) {
+      await this.evictOldest();
     }
-    const record: any = {
+    const record: JobRecord = {
       id: crypto.randomUUID(),
       status: 'queued',
       createdAt: new Date(),
       updatedAt: new Date(),
     };
-    this.store.set(record.id, record);
+    await this.jobStore.save(record);
     return record;
   }
 
-  createCompleted(result: any) {
-    const record = this.create();
+  async createCompleted(result: unknown): Promise<JobRecord> {
+    const record = await this.create();
     record.status = 'completed';
     record.result = result;
+    await this.jobStore.save(record);
     return record;
   }
 
-  get(id: string) {
-    const job = this.store.get(id);
+  async get(id: string): Promise<JobRecord> {
+    const job = await this.jobStore.get(id);
     if (!job) throw new NotFoundException(`Job ${id} not found or expired`);
     return job;
   }
 
-  setProcessing(id: string) {
-    this.patch(id, { status: 'processing' });
+  async setProcessing(id: string): Promise<void> {
+    await this.patch(id, { status: 'processing' });
   }
 
-  setCompleted(id: string, result: any) {
-    this.patch(id, { status: 'completed', result });
+  async setCompleted(id: string, result: unknown): Promise<void> {
+    await this.patch(id, { status: 'completed', result });
   }
 
-  setPartial(id: string, result: any) {
-    this.patch(id, { status: 'partial', result });
+  async setPartial(id: string, result: unknown): Promise<void> {
+    await this.patch(id, { status: 'partial', result });
   }
 
-  setFailed(id: string, error: string) {
-    this.patch(id, { status: 'failed', error });
+  async setFailed(id: string, error: string): Promise<void> {
+    await this.patch(id, { status: 'failed', error });
   }
 
-  countPending() {
+  async countPending(): Promise<number> {
     let count = 0;
-    for (const job of this.store.values()) {
+    for (const job of await this.jobStore.getAll()) {
       if (job.status === 'queued' || job.status === 'processing') count++;
     }
     return count;
   }
 
-  private patch(id: string, fields: any) {
-    const job = this.store.get(id);
+  onModuleDestroy(): void {
+    clearInterval(this.cleanupTimer);
+  }
+
+  private async patch(
+    id: string,
+    fields: Partial<Pick<JobRecord, 'status' | 'result' | 'error'>>,
+  ): Promise<void> {
+    const job = await this.jobStore.get(id);
     if (!job) return;
     Object.assign(job, fields, { updatedAt: new Date() });
+    await this.jobStore.save(job);
   }
 
-  private evictOldest() {
-    let oldest: any | undefined;
-    for (const job of this.store.values()) {
+  private async evictOldest(): Promise<void> {
+    let oldest: JobRecord | undefined;
+    for (const job of await this.jobStore.getAll()) {
       if (!oldest || job.updatedAt < oldest.updatedAt) oldest = job;
     }
-    if (oldest) this.store.delete(oldest.id);
+    if (oldest) await this.jobStore.delete(oldest.id);
   }
 
-  private sweep() {
+  private async sweep(): Promise<void> {
     const cutoff = Date.now() - JOB_TTL_MS;
     let count = 0;
-    for (const [id, job] of this.store) {
+    for (const job of await this.jobStore.getAll()) {
       if (job.updatedAt.getTime() < cutoff) {
-        this.store.delete(id);
+        await this.jobStore.delete(job.id);
         count++;
       }
     }
     if (count > 0) this.logger.log(`Swept ${count} expired job record(s)`);
-  }
-
-  onModuleDestroy() {
-    clearInterval(this.cleanupTimer);
   }
 }

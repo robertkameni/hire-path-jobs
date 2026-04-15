@@ -43,7 +43,7 @@ export class AnalysisController {
   @ApiOperation({
     summary: 'Analyze a job posting',
     description:
-      'Accepts a job URL. Runs the full pipeline (scrape → 3 AI calls) synchronously and returns the result.',
+      'Accepts a job URL. Starts the pipeline (scrape → AI) in the background and returns the job immediately; poll GET /analysis/:id until status is completed, partial, or failed.',
   })
   @ApiBody({
     type: AnalyzeJobDto,
@@ -56,7 +56,8 @@ export class AnalysisController {
   })
   @ApiResponse({
     status: 200,
-    description: 'Analysis complete',
+    description:
+      'Job created or cache hit — body includes jobId and status (processing until done; use GET to poll)',
     type: JobResponseDto,
   })
   @ApiResponse({
@@ -66,7 +67,7 @@ export class AnalysisController {
   })
   @ApiResponse({ status: 429, description: 'Rate limit exceeded' })
   async submit(@Body() dto: AnalyzeJobDto) {
-    const pending = this.jobsService.countPending();
+    const pending = await this.jobsService.countPending();
     if (pending >= MAX_QUEUE_DEPTH) {
       throw new HttpException(
         'Queue at capacity — try again shortly',
@@ -77,13 +78,22 @@ export class AnalysisController {
     const cached = await this.cacheManager.get(cacheKey);
     if (cached) {
       this.logger.event('cache_hit', { cacheKey: cacheKey.slice(0, 16) });
-      const job = this.jobsService.createCompleted(cached);
+      const job = await this.jobsService.createCompleted(cached);
       return this.toDto(job);
     }
-    const job = this.jobsService.create();
+    const job = await this.jobsService.create();
+    await this.jobsService.setProcessing(job.id);
     this.logger.event('pipeline_start', { jobId: job.id });
-    await this.runPipeline(job.id, dto, cacheKey);
-    return this.toDto(this.jobsService.get(job.id));
+    void this.runPipeline(job.id, dto, cacheKey).catch(async (err: unknown) => {
+      const message =
+        err instanceof Error ? err.message : 'Unknown error during analysis';
+      this.logger.event('pipeline_unhandled', {
+        jobId: job.id,
+        message,
+      });
+      await this.jobsService.setFailed(job.id, message);
+    });
+    return this.toDto(await this.jobsService.get(job.id));
   }
 
   @Get(':id')
@@ -103,13 +113,12 @@ export class AnalysisController {
     status: 404,
     description: 'Job not found or expired (30 min TTL)',
   })
-  getJob(@Param('id') id: string) {
-    const job = this.jobsService.get(id);
+  async getJob(@Param('id') id: string) {
+    const job = await this.jobsService.get(id);
     return this.toDto(job);
   }
 
   private async runPipeline(jobId: string, dto: any, cacheKey: string) {
-    this.jobsService.setProcessing(jobId);
     try {
       const jobText = await this.scraperService.fetchJobText(dto.jobUrl);
       const result = await this.analysisService.analyze({
@@ -119,14 +128,14 @@ export class AnalysisController {
       });
       await this.cacheManager.set(cacheKey, result);
       if (result.status === 'partial') {
-        this.jobsService.setPartial(jobId, result);
+        await this.jobsService.setPartial(jobId, result);
       } else {
-        this.jobsService.setCompleted(jobId, result);
+        await this.jobsService.setCompleted(jobId, result);
       }
     } catch (err) {
       const message =
         err instanceof Error ? err.message : 'Unknown error during analysis';
-      this.jobsService.setFailed(jobId, message);
+      await this.jobsService.setFailed(jobId, message);
     }
   }
 
