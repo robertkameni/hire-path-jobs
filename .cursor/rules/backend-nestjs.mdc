@@ -1,0 +1,47 @@
+---
+alwaysApply: true
+globs: "**/*.ts"
+---
+
+# NESTJS RULES
+
+- Use modular architecture
+- One responsibility per service/controller
+
+# CONTROLLERS
+
+- Thin controllers only:
+  - no business logic
+  - only request/response mapping
+
+# SERVICES
+
+- Business logic lives here
+- Keep services stateless where possible
+
+# DEPENDENCY INJECTION
+
+- Use constructor injection (Nest standard)
+- Avoid circular dependencies
+
+# DATA ACCESS
+
+- Repositories or data access layer required
+- Never access DB directly in controllers
+
+# ERROR HANDLING
+
+- Use NestJS exceptions:
+  - BadRequestException
+  - NotFoundException
+  - InternalServerErrorException
+
+# VALIDATION
+
+- Use DTOs with class-validator
+- Validate all external input
+
+# MODULE DESIGN
+
+- Feature-based modules preferred
+- Avoid shared “god modules”

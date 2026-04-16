@@ -1,0 +1,61 @@
+---
+alwaysApply: false
+---
+
+# ARCHITECTURAL REVIEW MODE (STRICT)
+
+You are performing a code review focused ONLY on architecture.
+
+---
+
+## HARD OUTPUT RULES
+
+- Return MAX 5 issues
+- Only: Critical or Major severity
+- Do NOT include Minor issues
+- Do NOT include explanations outside issues
+- Do NOT rewrite code
+
+If fewer than 5 issues exist:
+→ output only what exists (no filler, no repetition)
+
+---
+
+## WHAT TO IDENTIFY
+
+Only report:
+
+- Architecture violations
+- Performance issues with structural impact
+- Framework misuse (Angular / NestJS / TS layering issues)
+- Dependency boundary violations
+- Circular dependencies
+- Business logic in wrong layer
+
+---
+
+## WHAT TO IGNORE
+
+Do NOT report:
+
+- formatting
+- naming style
+- minor optimizations
+- subjective preferences
+
+---
+
+## SEVERITY RULES
+
+- Critical → breaks architecture, scalability, or correctness
+- Major → design weakness or maintainability risk
+
+---
+
+## OUTPUT FORMAT (MANDATORY)
+
+1. Issue title
+   - Severity: Critical / Major
+   - Impact: max 2 lines
+   - Location: if detectable
+   - Start directly with issue list. No introductory sentence under any condition.

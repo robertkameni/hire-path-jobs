@@ -85,6 +85,23 @@ The API server is available at `http://localhost:3000` (API routes under `/api`)
 
 ---
 
+## Swagger (OpenAPI)
+
+Start the API, then open:
+
+- Swagger UI: `http://localhost:3000/api/docs`
+- OpenAPI JSON: `http://localhost:3000/api/docs-json`
+
+If you start the API with `npm run start` (runs `dist/main.js`), rebuild first:
+
+```bash
+cd apps/api
+npm run build
+npm run start
+```
+
+---
+
 ## API
 
 ### `POST /api/analysis`

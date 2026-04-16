@@ -1,0 +1,56 @@
+---
+alwaysApply: true
+---
+
+# CORE PRINCIPLES (FULL-STACK)
+
+- Follow official documentation first (no invented APIs)
+- If uncertain → explicitly say "Not confirmed in official docs"
+
+- Prefer simplicity over abstraction
+- Prefer composition over inheritance
+- Prefer explicit logic over magic
+
+- Strict TypeScript:
+  - no `any`
+  - no unsafe casts
+  - explicit return types for public APIs
+
+- Keep code:
+  - small functions (single responsibility)
+  - low nesting
+  - readable without comments where possible
+
+- Never over-engineer:
+  - no premature abstraction
+  - no generic factories unless reused ≥3 times
+
+- Changes must be:
+  - minimal
+  - localized
+  - reversible
+
+# ARCHITECTURE THINKING
+
+- Separate concerns:
+  - UI logic ≠ business logic ≠ data access
+- Avoid cross-layer leakage
+- Keep state ownership clear
+
+# ERROR HANDLING
+
+- Fail explicitly, not silently
+- Never ignore errors
+- Always propagate or handle intentionally
+
+# PERFORMANCE
+
+- Avoid unnecessary re-renders (frontend)
+- Avoid unnecessary DB calls (backend)
+- Prefer caching only when justified
+
+# OUTPUT STYLE
+
+- Be concise
+- No unnecessary explanations
+- Code-first unless planning is requested

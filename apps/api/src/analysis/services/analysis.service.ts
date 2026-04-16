@@ -1,5 +1,4 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
-import { AiService } from '../../ai/ai.service';
+import { Inject, Injectable, InternalServerErrorException } from '@nestjs/common';
 import {
   ParsedJobAndInsightsSchema,
   StrategyAndMessageSchema,
@@ -8,6 +7,7 @@ import { jobParseAndTruthPrompt } from '../prompts/job-parse-and-truth.prompt';
 import { strategyAndMessagePrompt } from '../prompts/strategy-and-message.prompt';
 import { StructuredLogger } from '../../common/logger/structured.logger';
 import { performance } from 'perf_hooks';
+import { AI_Port, AiPort } from '../../ai/shared/ai.port';
 
 function buildParseFailureResult(
   reason: string | undefined,
@@ -40,7 +40,7 @@ function buildFallbackMessage(job: any) {
 export class AnalysisService {
   private logger = new StructuredLogger(AnalysisService.name);
 
-  constructor(private aiService: AiService) {}
+  constructor(@Inject(AI_Port) private readonly aiPort: AiPort) { }
 
   async analyze(input: { jobText: string; userProfile?: any; jobId?: string }) {
     const { jobId } = input;
@@ -148,7 +148,7 @@ export class AnalysisService {
   }
 
   private async parseJobAndTruth(jobText: string) {
-    const raw = await this.aiService.generate(jobParseAndTruthPrompt(jobText), {
+    const raw = await this.aiPort.generateText(jobParseAndTruthPrompt(jobText), {
       temperature: 0,
     });
     return this.parseAiResponse(
@@ -163,7 +163,7 @@ export class AnalysisService {
     insights: any,
     userProfile: any,
   ) {
-    const raw = await this.aiService.generate(
+    const raw = await this.aiPort.generateText(
       strategyAndMessagePrompt(job, insights, userProfile),
       { temperature: 0.3 },
     );

@@ -1,0 +1,8 @@
+---
+alwaysApply: false
+---
+
+- Fix only the reported issue
+- Do not refactor unrelated code
+- Preserve structure
+- Minimal diff mindset

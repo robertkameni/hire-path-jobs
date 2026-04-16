@@ -1,0 +1,9 @@
+---
+alwaysApply: false
+---
+
+- Analyze requirements
+- Define architecture
+- Identify components/modules/services
+- Provide tradeoffs
+- No code unless requested

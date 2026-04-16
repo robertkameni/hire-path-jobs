@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { Redis } from '@upstash/redis';
 import { AnalysisController } from './controllers/analysis.controller';
 import { AnalysisService } from './services/analysis.service';
+import { AnalysisPipelineService } from './services/analysis-pipeline.service';
 import { JobsService } from './jobs/jobs.service';
 import { InMemoryJobStore } from './jobs/in-memory-job.store';
 import { RedisJobStore } from './jobs/redis-job.store';
@@ -28,6 +29,7 @@ import { ScraperModule } from '../scraper/scraper.module';
       },
     },
     AnalysisService,
+    AnalysisPipelineService,
     JobsService,
   ],
 })

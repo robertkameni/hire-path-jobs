@@ -15,11 +15,14 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse();
     const request = ctx.getRequest();
+
     const status =
       exception instanceof HttpException
         ? exception.getStatus()
         : HttpStatus.INTERNAL_SERVER_ERROR;
+
     const correlationId = request.headers['x-correlation-id'];
+
     const body = {
       statusCode: status,
       timestamp: new Date().toISOString(),
@@ -28,10 +31,17 @@ export class AllExceptionsFilter implements ExceptionFilter {
       error: this.extractError(exception),
       message: this.extractMessage(exception),
     };
-    this.logger.error(
-      `[${correlationId ?? 'no-id'}] ${request.method} ${request.url} → ${status}`,
-      exception instanceof Error ? exception.stack : String(exception),
-    );
+
+    const logMessage = `[${correlationId ?? 'no-id'}] ${request.method} ${request.url} → ${status}`;
+    if (status >= 500) {
+      this.logger.error(
+        logMessage,
+        exception instanceof Error ? exception.stack : String(exception),
+      );
+    } else {
+      this.logger.warn(logMessage);
+    }
+
     response.status(status).json(body);
   }
 
@@ -40,7 +50,6 @@ export class AllExceptionsFilter implements ExceptionFilter {
       const res = exception.getResponse();
       if (typeof res === 'string') return res;
       if (typeof res === 'object' && res !== null && 'message' in res) {
-        // @ts-ignore
         return res.message;
       }
     }
@@ -50,10 +59,11 @@ export class AllExceptionsFilter implements ExceptionFilter {
   private extractError(exception: unknown) {
     if (exception instanceof HttpException) {
       const res = exception.getResponse();
+      
       if (typeof res === 'object' && res !== null && 'error' in res) {
-        // @ts-ignore
         return res.error;
       }
+
       return exception.constructor.name;
     }
     return 'InternalServerError';

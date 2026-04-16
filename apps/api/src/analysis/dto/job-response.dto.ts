@@ -4,8 +4,8 @@ export class JobResponseDto {
   @ApiProperty({ example: '550e8400-e29b-41d4-a716-446655440000' })
   jobId!: string;
 
-  @ApiProperty({ enum: ['queued', 'processing', 'completed', 'failed'] })
-  status!: 'queued' | 'processing' | 'completed' | 'failed';
+  @ApiProperty({ enum: ['queued', 'processing', 'completed', 'partial', 'failed'] })
+  status!: 'queued' | 'processing' | 'completed' | 'partial' | 'failed';
 
   @ApiPropertyOptional({ description: 'Present when status is "completed"' })
   result?: any;

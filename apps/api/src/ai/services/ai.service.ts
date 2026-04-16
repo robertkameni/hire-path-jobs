@@ -1,18 +1,17 @@
 import {
-  Injectable,
-  Logger,
-  ServiceUnavailableException,
+  Injectable, ServiceUnavailableException,
   BadGatewayException,
-  RequestTimeoutException,
+  RequestTimeoutException
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import OpenAI from 'openai';
 import pLimit from 'p-limit';
-import { CircuitBreaker } from './circuit-breaker';
-import { StructuredLogger } from '../common/logger/structured.logger';
+import { CircuitBreaker } from '../shared/circuit-breaker';
+import { StructuredLogger } from '../../common/logger/structured.logger';
+import type { AiPort } from '../shared/ai.port';
 
 @Injectable()
-export class AiService {
+export class AiService implements AiPort {
   private logger = new StructuredLogger(AiService.name);
   private client: any;
   private model: string;
@@ -20,13 +19,13 @@ export class AiService {
   private limit: any;
   private circuitBreaker = new CircuitBreaker(5, 30000);
 
-  constructor(private configService: ConfigService) {}
+  constructor(private configService: ConfigService) { }
 
   onModuleInit() {
-    const apiKey = this.configService.get('ai.geminiApiKey');
-    this.model = this.configService.get('ai.model') ?? 'gemini-2.5-flash';
-    this.timeoutMs = this.configService.get('AI_TIMEOUT_MS', 45000);
-    const concurrency = this.configService.get('AI_CONCURRENCY', 5);
+    const apiKey: string = this.configService.getOrThrow<string>('ai.geminiApiKey');
+    this.model = this.configService.get<string>('ai.model') ?? 'gemini-2.5-flash';
+    this.timeoutMs = this.configService.get<number>('ai.timeoutMs') ?? 45000;
+    const concurrency: number = this.configService.get<number>('ai.concurrency') ?? 5;
     this.limit = pLimit(concurrency);
     this.client = new OpenAI({
       apiKey,
@@ -34,7 +33,10 @@ export class AiService {
     });
   }
 
-  async generate(prompt: string, options?: { temperature?: number }) {
+  async generateText(
+    prompt: string,
+    options?: { temperature?: number },
+  ): Promise<string> {
     return this.limit(() => this.executeGenerate(prompt, options));
   }
 
@@ -76,6 +78,7 @@ export class AiService {
     this.logger.event('ai_request_start', { model: this.model });
     const temperature = options?.temperature ?? 0.2;
     const maxRetries = 3;
+
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       let response: any;
       try {
@@ -99,6 +102,7 @@ export class AiService {
             `AI provider timed out after ${this.timeoutMs / 1000}s`,
           );
         }
+
         if (this.isRetryable(err) && attempt < maxRetries) {
           const delay = this.getRetryDelay(err, attempt);
           this.logger.warnEvent('ai_retry', {
@@ -111,14 +115,19 @@ export class AiService {
           await new Promise((resolve) => setTimeout(resolve, delay));
           continue;
         }
+
         throw new BadGatewayException(
           `AI provider error: ${err instanceof Error ? err.message : String(err)}`,
         );
       }
+
       const content = response.choices?.[0]?.message?.content;
+
       if (!content)
         throw new BadGatewayException('AI provider returned an empty response');
+
       const usage = response.usage;
+
       if (usage) {
         this.logger.event('ai_tokens', {
           model: this.model,
@@ -134,17 +143,22 @@ export class AiService {
 
   private isRetryable(err: any) {
     if (!(err instanceof Error)) return false;
+
     if ('status' in err) {
       const status = err.status;
       if (status === 429 || (Number(status) >= 500 && Number(status) < 600)) return true;
     }
+
     const retryCodes = ['ECONNRESET', 'ETIMEDOUT', 'ENOTFOUND', 'ECONNREFUSED'];
+
     if (
       'code' in err &&
       typeof err.code === 'string' &&
       retryCodes.includes(err.code)
-    )
+    ) {
       return true;
+    }
+
     return (
       err.message.includes('ECONNRESET') ||
       err.message.includes('ETIMEDOUT') ||

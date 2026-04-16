@@ -1,0 +1,47 @@
+---
+alwaysApply: true
+globs: "**/*.ts"
+---
+
+# ANGULAR 21 RULES
+
+- Use standalone components by default
+- Use signals for local state
+- Use RxJS for async streams
+
+- Dependency injection:
+  - prefer inject() over constructor injection
+
+- Avoid:
+  - legacy NgModules (unless required)
+  - manual subscriptions without cleanup
+
+# COMPONENT DESIGN
+
+- Components should:
+  - be small
+  - represent one responsibility
+  - avoid business logic
+
+- Move logic to:
+  - services
+  - signal stores
+
+# TEMPLATE RULES
+
+- Prefer:
+  - structural directives (@if, @for)
+  - standalone pipes if needed
+
+- Avoid complex template logic
+
+# STYLING
+
+- Tailwind CSS preferred
+- No custom CSS unless necessary
+- Keep class lists readable
+
+# REACTIVITY MODEL
+
+- signals → UI state
+- RxJS → async/data streams
