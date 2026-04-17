@@ -1,10 +1,11 @@
+/** biome-ignore-all lint/style/useImportType: <explanation> */
 import {
   BadGatewayException,
   Injectable,
   RequestTimeoutException,
   ServiceUnavailableException,
 } from '@nestjs/common';
-import type { ConfigService } from '@nestjs/config';
+import { ConfigService } from '@nestjs/config';
 import OpenAI from 'openai';
 import pLimit from 'p-limit';
 import { StructuredLogger } from '../../common/logger/structured.logger';
