@@ -10,6 +10,7 @@ export class Hero {
   analysis = inject(AnalysisResourceService);
   jobUrl = signal('');
   jobText = signal('');
+  closeJobTextDetails = signal(false);
 
   async handleAnalyze() {
     const url = this.jobUrl().trim();
@@ -21,5 +22,6 @@ export class Hero {
 
     this.jobUrl.set('');
     this.jobText.set('');
+    this.closeJobTextDetails.update(() => false);
   }
 }
