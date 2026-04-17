@@ -18,6 +18,8 @@ export class AnalysisResourceService {
 
   readonly errorMessage = signal<string | null>(null);
 
+  readonly needsJobText = signal(false);
+
   private readonly jobResponse = signal<JobResponse | null>(null);
 
   readonly result = computed<JobResult | null>(() => {
@@ -38,13 +40,17 @@ export class AnalysisResourceService {
 
   readonly fallbacks = computed(() => this.result()?.fallbacks ?? []);
 
-  async submitJob(url: string): Promise<void> {
+  async submitJob(url: string, jobText?: string): Promise<void> {
     this.isLoading.set(true);
     this.errorMessage.set(null);
+    this.needsJobText.set(false);
     try {
+      const trimmedJobText = jobText?.trim();
+      const trimmedUrl = url.trim();
       const postRes = await firstValueFrom(
         this.http.post<JobResponse>(`${this.baseUrl()}/analysis`, {
-          jobUrl: url,
+          ...(trimmedUrl ? { jobUrl: trimmedUrl } : {}),
+          ...(trimmedJobText ? { jobText: trimmedJobText } : {}),
         }),
       );
       if (
@@ -53,7 +59,11 @@ export class AnalysisResourceService {
         postRes.status === 'failed'
       ) {
         if (postRes.status === 'failed') {
-          throw new Error(postRes.error ?? 'Analysis failed');
+          const msg = postRes.error ?? 'Analysis failed';
+          if (postRes.errorCode === 'SCRAPE_BLOCKED') {
+            this.needsJobText.set(true);
+          }
+          throw new Error(msg);
         }
         this.jobResponse.set(postRes);
         return;
@@ -80,11 +90,16 @@ export class AnalysisResourceService {
         );
       }
       if (job.status === 'failed') {
-        throw new Error(job.error ?? 'Analysis failed');
+        const msg = job.error ?? 'Analysis failed';
+        if (job.errorCode === 'SCRAPE_BLOCKED') {
+          this.needsJobText.set(true);
+        }
+        throw new Error(msg);
       }
       this.jobResponse.set(job);
     } catch (err: unknown) {
-      this.errorMessage.set(formatError(err));
+      const msg = formatError(err);
+      this.errorMessage.set(msg);
     } finally {
       this.isLoading.set(false);
     }
@@ -93,5 +108,6 @@ export class AnalysisResourceService {
   clear(): void {
     this.jobResponse.set(null);
     this.errorMessage.set(null);
+    this.needsJobText.set(false);
   }
 }

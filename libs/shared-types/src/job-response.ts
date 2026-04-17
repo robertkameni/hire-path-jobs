@@ -71,6 +71,7 @@ export interface JobResponse {
   jobId: string;
   status: JobStatus;
   result?: JobResult;
+  errorCode?: 'SCRAPE_BLOCKED' | 'SCRAPE_FAILED';
   error?: string;
   createdAt: string;
   updatedAt: string;

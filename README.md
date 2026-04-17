@@ -1,46 +1,34 @@
 # hire-path-jobs
 
-AI-powered job analysis backend. Send a job posting URL and get back structured job data, quality insights, a contact strategy, and a ready-to-send outreach message — all in one API call.
+AI-powered job analysis app.
 
-Built with **NestJS**, **TypeScript**, and **Google Gemini**.
+Built with **Angular** (web) + **NestJS** (API) + **TypeScript** + **Google Gemini**.
 
 ---
 
 ## How it works
 
-1. `POST /api/analysis` with a job posting URL
-2. The server scrapes the page and extracts the job description text
-3. Three sequential Gemini calls run through the pipeline:
-   - **Step 1** — Parse structured job data + analyze quality (ghost risk, competition level, salary fairness, red flags, verdict)
-   - **Step 2** — Generate a contact strategy (who to reach, which channels, talking points, timing)
-   - **Step 3** — Write a personalized outreach message
-4. The full result is returned as a single JSON response
+1. `POST /api/analysis` with a job posting URL (`jobUrl`)
+2. Backend tries to fetch and extract the job description text (scrape step)
+3. Text is normalized (cleanup / whitespace / dedupe)
+4. The AI pipeline produces structured output:
+   - **Parse job + insights** (ghost risk, competition level, salary fairness, red flags, verdict)
+   - **Contact strategy**
+   - **Outreach message**
+5. You poll `GET /api/analysis/:id` until status is `completed`, `partial`, or `failed`
+
+If a site blocks automated fetching (Indeed / LinkedIn / StepStone / Xing, etc.), you can retry the same request with `jobText` (paste the job description) and the backend will **skip scraping**.
 
 ---
 
 ## Project structure
 
 ```
-src/
-├── analysis/
-│   ├── controllers/       # HTTP layer
-│   ├── dto/               # Request validation (class-validator)
-│   ├── interfaces/        # Shared TypeScript types
-│   ├── prompts/           # One file per LLM prompt
-│   │   ├── job-parse-and-truth.prompt.ts
-│   │   ├── contact-strategy.prompt.ts
-│   │   └── message.prompt.ts
-│   ├── schemas/           # Zod schemas for AI response validation
-│   ├── analysis.module.ts
-│   └── analysis.service.ts
-├── ai/
-│   └── ai.service.ts      # Gemini client (retry, timeout, concurrency)
-├── scraper/
-│   └── scraper.service.ts # URL fetcher + HTML → plain text
-├── common/
-│   ├── filters/           # Global exception filter
-│   └── middleware/        # Correlation ID middleware
-└── main.ts
+apps/
+├── api/                   # NestJS backend
+└── web/                   # Angular frontend
+libs/
+└── shared-types/          # Shared DTO/types between web and api
 ```
 
 ---
@@ -67,18 +55,14 @@ GEMINI_MODEL=gemini-2.5-flash   # optional, this is the default
 
 ---
 
-## Running the server (development)
+## Running (development)
 
 ```bash
-# start API (dev) from repo root — runs the API workspace dev script
+# API (dev) from repo root
 npm run start:api
 
-# start web (dev) from repo root
+# Web (dev) from repo root
 npm run start:web
-
-# alternative: start the API directly from the package
-cd apps/api
-npm run dev
 ```
 
 The API server is available at `http://localhost:3000` (API routes under `/api`).
@@ -92,14 +76,6 @@ Start the API, then open:
 - Swagger UI: `http://localhost:3000/api/docs`
 - OpenAPI JSON: `http://localhost:3000/api/docs-json`
 
-If you start the API with `npm run start` (runs `dist/main.js`), rebuild first:
-
-```bash
-cd apps/api
-npm run build
-npm run start
-```
-
 ---
 
 ## API
@@ -110,56 +86,19 @@ npm run start
 
 ```json
 {
-  "jobUrl": "https://example.com/job/some-role"
+  "jobUrl": "https://example.com/job/some-role",
+  "jobText": "optional pasted job description text (when scraping is blocked)"
 }
 ```
 
 `userProfile` is optional. When provided, the contact strategy and outreach message are tailored to the candidate.
 
-**Response:**
+**Response (polling model):**
 
-```json
-{
-  "job": {
-    "title": "string",
-    "company": "string",
-    "location": "string",
-    "salary": "string | null",
-    "skills": ["string"],
-    "requirements": ["string"],
-    "responsibilities": ["string"],
-    "remote": true
-  },
-  "insights": {
-    "competitionLevel": "low | medium | high",
-    "competitionReason": "string",
-    "competitionConfidence": 0,
-    "signalsLoweringCompetition": ["string"],
-    "signalsRaisingCompetition": ["string"],
-    "ghostRisk": "low | medium | high",
-    "ghostRiskReason": "string",
-    "ghostRiskConfidence": 0,
-    "salaryFairness": "below-market | market | above-market | unknown",
-    "redFlags": ["string"],
-    "positives": ["string"],
-    "verdict": {
-      "apply": true,
-      "reason": "string"
-    }
-  },
-  "strategy": {
-    "targetRole": "string",
-    "contactChannels": ["string"],
-    "talkingPoints": ["string"],
-    "timing": "string"
-  },
-  "message": {
-    "subject": "string",
-    "body": "string",
-    "tone": "formal | friendly | direct"
-  }
-}
-```
+- `POST /api/analysis` returns `{ jobId, status, ... }` immediately
+- Poll `GET /api/analysis/:id` until status is `completed | partial | failed`
+
+When completed/partial, `result` contains `job`, `insights`, `strategy`, and `message`.
 
 **Error responses:**
 
@@ -203,7 +142,13 @@ Returns `{ "status": "ok", "timestamp": "..." }`. Use this to verify the server 
 
 ## Caching
 
-Results are cached in-memory, keyed by a SHA-256 hash of `jobUrl + userProfile`. Repeated requests for the same URL (and same profile) are served instantly without hitting the scraper or Gemini.
+Results are cached in-memory, keyed by a SHA-256 hash of:
+
+- `jobUrl`
+- `userProfile` (or null)
+- `jobText` hash (when provided) or `"scrape"` (when scraping)
+
+Repeated requests for the same inputs are served instantly without hitting the scraper or AI.
 
 | Variable            | Default | Description                     |
 | ------------------- | ------- | ------------------------------- |
@@ -222,25 +167,7 @@ The scraper fetches server-rendered HTML and strips noise (scripts, nav, footer,
 
 **Blocked by:** Indeed, LinkedIn, Glassdoor, and other sites that use heavy bot-detection or client-side rendering. These return `SCRAPE_BLOCKED`.
 
----
-
-## Tests
-
-```bash
-# unit tests (mocked AI + scraper)
-npm test
-
-# integration tests (real Gemini API calls — requires GEMINI_API_KEY_BACKEND)
-npm run test:integration
-
-# watch mode
-npm run test:watch
-
-# coverage report
-npm run test:cov
-```
-
-Unit tests cover: `AiService` (retry, timeout, fences), `AnalysisService` (pipeline, Zod validation), `AnalysisController` (cache, stampede protection), `ScraperService` (SSRF guards, extraction).
+In that case, retry with `jobText` (paste the job description section). The backend skips scraping and continues normally.
 
 ---
 
@@ -259,197 +186,15 @@ Unit tests cover: `AiService` (retry, timeout, fences), `AnalysisService` (pipel
 
 ---
 
-## License
+## Biome (formatting & linting)
 
-MIT
-
----
-
-## How it works
-
-1. You `POST` a job URL to `/api/analysis`
-2. The server scrapes the page and extracts the job text
-3. Three sequential Gemini calls run through the pipeline:
-   - **Step 1** — Parse structured job data + analyze quality (ghost risk, competition, red flags)
-   - **Step 2** — Generate a contact strategy (who to reach, talking points, timing)
-   - **Step 3** — Write a personalized outreach message
-4. The full result is returned as JSON
-
----
-
-## Project structure
-
-```
-src/
-├── analysis/
-│   ├── controllers/       # HTTP layer
-│   ├── dto/               # Request validation (class-validator)
-│   ├── interfaces/        # Shared TypeScript types
-│   ├── prompts/           # One file per LLM prompt
-│   │   ├── job-parse-and-truth.prompt.ts
-│   │   ├── contact-strategy.prompt.ts
-│   │   └── message.prompt.ts
-│   ├── analysis.module.ts
-│   └── analysis.service.ts
-├── ai/
-│   └── ai.service.ts      # Gemini client wrapper
-├── scraper/
-│   └── scraper.service.ts # URL fetcher + HTML → plain text
-├── common/
-│   ├── filters/           # Global exception filter
-│   └── middleware/        # Correlation ID middleware
-└── main.ts
-```
-
----
-
-## Prerequisites
-
-- Node.js 20+
-- A [Google Gemini API key](https://aistudio.google.com/app/apikey)
-
----
-
-## Setup
+Biome is installed once at the repo root (v2.4.12) and runs across both `apps/web` and `apps/api`.
 
 ```bash
-npm install
+npm run biome:check
+npm run biome:write
+npm run biome:ci
 ```
-
-Create a `.env` file in the project root:
-
-```env
-GEMINI_API_KEY_BACKEND=your_api_key_here
-GEMINI_MODEL=gemini-2.5-flash   # optional, this is the default
-```
-
----
-
-## Running the server (development)
-
-```bash
-# start API (dev) from repo root — runs the API workspace dev script
-npm run start:api
-
-# start web (dev) from repo root
-npm run start:web
-
-# alternative: start the API directly from the package
-cd apps/api
-npm run dev
-```
-
-The API server is available at `http://localhost:3000` (API routes under `/api`).
-
----
-
-## API
-
-### `POST /api/analysis`
-
-**Request body:**
-
-```json
-{
-  "jobUrl": "https://example.com/job/some-role",
-  "userProfile": {
-    "role": "Frontend Developer",
-    "skills": ["React", "TypeScript"]
-  }
-}
-```
-
-`userProfile` is optional. When provided, the contact strategy and outreach message are tailored to the candidate.
-
-**Response:**
-
-```json
-{
-  "job": {
-    "title": "string",
-    "company": "string",
-    "location": "string",
-    "salary": "string | null",
-    "skills": ["string"],
-    "requirements": ["string"],
-    "responsibilities": ["string"],
-    "remote": true
-  },
-  "insights": {
-    "competitionLevel": "low | medium | high",
-    "ghostRisk": "low | medium | high",
-    "salaryFairness": "below-market | market | above-market | unknown",
-    "redFlags": ["string"],
-    "positives": ["string"]
-  },
-  "strategy": {
-    "targetRole": "string",
-    "contactChannels": ["string"],
-    "talkingPoints": ["string"],
-    "timing": "string"
-  },
-  "message": {
-    "subject": "string",
-    "body": "string",
-    "tone": "formal | friendly | direct"
-  }
-}
-```
-
-### `GET /api/health`
-
-Returns `{ "status": "ok", "timestamp": "..." }`. Use this to check the server is running.
-
----
-
-## Caching
-
-Results are cached in-memory keyed by a SHA-256 hash of `jobUrl + userProfile`. Repeated requests for the same URL (and same profile) are served instantly without hitting the scraper or Gemini.
-
-| Setting             | Default | Description                     |
-| ------------------- | ------- | ------------------------------- |
-| `CACHE_TTL_SECONDS` | `86400` | TTL per entry (24 h)            |
-| `CACHE_MAX_ITEMS`   | `500`   | Max entries before LRU eviction |
-
-Set `CACHE_TTL_SECONDS=0` to disable caching entirely.
-
----
-
-## Scraper compatibility
-
-The scraper fetches plain HTML and strips noise (scripts, nav, footer, etc.). It works on server-rendered job boards. Client-side rendered boards (e.g. LinkedIn) will return an error asking you to use a different URL.
-
-Compatible examples: Ratbacher, Lever, Ashby, Workable, Greenhouse, Bundesagentur für Arbeit.
-
----
-
-## Tests
-
-```bash
-# unit tests
-npm test
-
-# watch mode
-npm run test:watch
-
-# coverage
-npm run test:cov
-```
-
----
-
-## Environment variables
-
-| Variable                 | Required | Default            | Description                                         |
-| ------------------------ | -------- | ------------------ | --------------------------------------------------- |
-| `GEMINI_API_KEY_BACKEND` | Yes      | —                  | Your Google Gemini API key                          |
-| `GEMINI_MODEL`           | No       | `gemini-2.5-flash` | Gemini model to use                                 |
-| `PORT`                   | No       | `3000`             | Server port                                         |
-| `CORS_ORIGIN`            | No       | `*`                | Allowed CORS origin                                 |
-| `CACHE_TTL_SECONDS`      | No       | `86400`            | How long to cache results (seconds). Default = 24 h |
-| `CACHE_MAX_ITEMS`        | No       | `500`              | Maximum number of results to keep in memory         |
-| `THROTTLE_TTL_SECONDS`   | No       | `60`               | Rate limit window in seconds                        |
-| `THROTTLE_LIMIT`         | No       | `10`               | Max requests per IP per window                      |
 
 ---
 

@@ -5,20 +5,21 @@ import { AnalysisResourceService } from '../../services/analysis-resource.servic
   selector: 'dev-hero',
   imports: [],
   templateUrl: './hero.html',
-  styleUrl: './hero.scss',
 })
 export class Hero {
   analysis = inject(AnalysisResourceService);
   jobUrl = signal('');
+  jobText = signal('');
 
   async handleAnalyze() {
     const url = this.jobUrl().trim();
-    if (!url) return;
-    try {
-      this.analysis.submitJob(url);
-      this.jobUrl.set('');
-    } catch (err) {
-      console.error('Analyze failed', err);
-    }
+    const text = this.jobText().trim();
+
+    if (!url && !text) return;
+
+    await this.analysis.submitJob(url, text);
+
+    this.jobUrl.set('');
+    this.jobText.set('');
   }
 }

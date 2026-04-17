@@ -67,8 +67,12 @@ export class JobsService implements OnModuleDestroy {
     await this.patch(id, { status: 'partial', result });
   }
 
-  async setFailed(id: string, error: string): Promise<void> {
-    await this.patch(id, { status: 'failed', error });
+  async setFailed(
+    id: string,
+    error: string,
+    errorCode?: string,
+  ): Promise<void> {
+    await this.patch(id, { status: 'failed', error, errorCode });
   }
 
   async countPending(): Promise<number> {
@@ -85,7 +89,9 @@ export class JobsService implements OnModuleDestroy {
 
   private async patch(
     id: string,
-    fields: Partial<Pick<JobRecord, 'status' | 'result' | 'error'>>,
+    fields: Partial<
+      Pick<JobRecord, 'status' | 'result' | 'error' | 'errorCode'>
+    >,
   ): Promise<void> {
     const job = await this.jobStore.get(id);
     if (!job) return;

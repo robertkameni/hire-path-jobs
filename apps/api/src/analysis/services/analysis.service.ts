@@ -97,7 +97,7 @@ export class AnalysisService {
 
     let strategy: ContactStrategy | null = null;
     let message: OutreachMessage;
-    
+
     if (strategyAndMessageResult.fallback) {
       fallbacks.push({
         step: 'strategyAndMessage',

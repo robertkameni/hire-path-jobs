@@ -6,6 +6,7 @@ export function mapJobRecordToJobResponseDto(job: JobRecord): JobResponseDto {
   dto.jobId = job.id;
   dto.status = job.status;
   dto.result = job.result;
+  dto.errorCode = job.errorCode;
   dto.error = job.error;
   dto.createdAt = job.createdAt.toISOString();
   dto.updatedAt = job.updatedAt.toISOString();

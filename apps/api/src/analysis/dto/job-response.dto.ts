@@ -14,6 +14,12 @@ export class JobResponseDto {
 
   @ApiPropertyOptional({
     description: 'Present when status is "failed"',
+    enum: ['SCRAPE_BLOCKED', 'SCRAPE_FAILED'],
+  })
+  errorCode?: string;
+
+  @ApiPropertyOptional({
+    description: 'Present when status is "failed"',
     example: 'AI provider timed out',
   })
   error?: string;
