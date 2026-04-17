@@ -1,31 +1,37 @@
 import {
-  Injectable, ServiceUnavailableException,
   BadGatewayException,
-  RequestTimeoutException
+  Injectable,
+  RequestTimeoutException,
+  ServiceUnavailableException,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import type { ConfigService } from '@nestjs/config';
 import OpenAI from 'openai';
 import pLimit from 'p-limit';
-import { CircuitBreaker } from '../shared/circuit-breaker';
 import { StructuredLogger } from '../../common/logger/structured.logger';
 import type { AiPort } from '../shared/ai.port';
+import { CircuitBreaker } from '../shared/circuit-breaker';
+
+type UnknownRecord = Record<string, unknown>;
 
 @Injectable()
 export class AiService implements AiPort {
   private logger = new StructuredLogger(AiService.name);
-  private client: any;
+  private client!: OpenAI;
   private model: string;
   private timeoutMs: number;
-  private limit: any;
+  private limit!: ReturnType<typeof pLimit>;
   private circuitBreaker = new CircuitBreaker(5, 30000);
 
-  constructor(private configService: ConfigService) { }
+  constructor(private configService: ConfigService) {}
 
   onModuleInit() {
-    const apiKey: string = this.configService.getOrThrow<string>('ai.geminiApiKey');
-    this.model = this.configService.get<string>('ai.model') ?? 'gemini-2.5-flash';
+    const apiKey: string =
+      this.configService.getOrThrow<string>('ai.geminiApiKey');
+    this.model =
+      this.configService.get<string>('ai.model') ?? 'gemini-2.5-flash';
     this.timeoutMs = this.configService.get<number>('ai.timeoutMs') ?? 45000;
-    const concurrency: number = this.configService.get<number>('ai.concurrency') ?? 5;
+    const concurrency: number =
+      this.configService.get<number>('ai.concurrency') ?? 5;
     this.limit = pLimit(concurrency);
     this.client = new OpenAI({
       apiKey,
@@ -80,7 +86,7 @@ export class AiService implements AiPort {
     const maxRetries = 3;
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
-      let response: any;
+      let response: OpenAI.Chat.Completions.ChatCompletion;
       try {
         const controller = new AbortController();
         const timer = setTimeout(() => controller.abort(), this.timeoutMs);
@@ -96,7 +102,7 @@ export class AiService implements AiPort {
         } finally {
           clearTimeout(timer);
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         if (err instanceof Error && err.name === 'AbortError') {
           throw new RequestTimeoutException(
             `AI provider timed out after ${this.timeoutMs / 1000}s`,
@@ -141,21 +147,18 @@ export class AiService implements AiPort {
     throw new BadGatewayException('AI provider max retries exceeded');
   }
 
-  private isRetryable(err: any) {
+  private isRetryable(err: unknown): boolean {
     if (!(err instanceof Error)) return false;
 
-    if ('status' in err) {
-      const status = err.status;
-      if (status === 429 || (Number(status) >= 500 && Number(status) < 600)) return true;
+    const status = this.getNumberProp(err, 'status');
+    if (status !== undefined) {
+      if (status === 429 || (status >= 500 && status < 600)) return true;
     }
 
     const retryCodes = ['ECONNRESET', 'ETIMEDOUT', 'ENOTFOUND', 'ECONNREFUSED'];
 
-    if (
-      'code' in err &&
-      typeof err.code === 'string' &&
-      retryCodes.includes(err.code)
-    ) {
+    const code = this.getStringProp(err, 'code');
+    if (code !== undefined && retryCodes.includes(code)) {
       return true;
     }
 
@@ -166,28 +169,44 @@ export class AiService implements AiPort {
     );
   }
 
-  private isCircuitBreakerTriggering(err: any) {
+  private isCircuitBreakerTriggering(err: unknown): boolean {
     if (err instanceof RequestTimeoutException) return true;
     if (!(err instanceof BadGatewayException)) return false;
     return true;
   }
 
-  private getRetryDelay(err: any, attempt: number) {
+  private getRetryDelay(err: unknown, attempt: number): number {
     const isRateLimit =
-      err instanceof Error && 'status' in err && err.status === 429;
+      err instanceof Error && this.getNumberProp(err, 'status') === 429;
     return isRateLimit ? attempt * 15000 : attempt * 1000;
   }
 
-  private describeError(err: any) {
+  private describeError(err: unknown): string {
     if (!(err instanceof Error)) return String(err);
-    if ('status' in err) return `HTTP ${err.status}`;
-    if ('code' in err) return String(err.code);
+    const status = this.getNumberProp(err, 'status');
+    if (status !== undefined) return `HTTP ${status}`;
+    const code = this.getStringProp(err, 'code');
+    if (code !== undefined) return code;
     return err.message;
   }
 
-  private stripMarkdownFences(text: string) {
+  private stripMarkdownFences(text: string): string {
     const trimmed = text.trim();
     const match = trimmed.match(/^```(?:\w+)?\s*\n([\s\S]*?)\n?```$/);
     return match ? match[1].trim() : trimmed;
+  }
+
+  private getStringProp(value: unknown, key: string): string | undefined {
+    if (!value || typeof value !== 'object') return undefined;
+    const record = value as UnknownRecord;
+    const prop = record[key];
+    return typeof prop === 'string' ? prop : undefined;
+  }
+
+  private getNumberProp(value: unknown, key: string): number | undefined {
+    if (!value || typeof value !== 'object') return undefined;
+    const record = value as UnknownRecord;
+    const prop = record[key];
+    return typeof prop === 'number' ? prop : undefined;
   }
 }

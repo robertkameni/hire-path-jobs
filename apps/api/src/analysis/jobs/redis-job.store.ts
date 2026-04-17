@@ -1,6 +1,6 @@
-import { Redis } from '@upstash/redis';
-import { JobRecord } from './job-record.types';
-import { JobStore } from './job-store.interface';
+import type { Redis } from '@upstash/redis';
+import type { JobRecord } from './job-record.types';
+import type { JobStore } from './job-store.interface';
 
 const JOB_IDS_KEY = 'hirepath:analysis:job:ids';
 
@@ -83,9 +83,7 @@ export class RedisJobStore implements JobStore {
       const str = typeof raw === 'string' ? raw : JSON.stringify(raw);
       try {
         out.push(deserializeRecord(str));
-      } catch {
-        continue;
-      }
+      } catch {}
     }
     return out;
   }

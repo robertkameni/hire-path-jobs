@@ -1,41 +1,41 @@
 {
-    "name": "hire-path-api",
-    "version": "0.0.1",
-    "private": true,
-    "main": "dist/main.js",
-    "scripts": {
-        "start": "node dist/main.js",
-        "build": "tsc -p tsconfig.json",
-        "dev": "ts-node-dev --respawn --transpile-only src/main.ts"
-    },
-    "dependencies": {
-        "@mozilla/readability": "^0.6.0",
-        "@nestjs/cache-manager": "^3.1.0",
-        "@nestjs/common": "^11.1.19",
-        "@nestjs/config": "^4.0.4",
-        "@nestjs/core": "^11.1.19",
-        "@nestjs/platform-express": "^11.1.19",
-        "@nestjs/swagger": "^11.3.0",
-        "@nestjs/throttler": "^6.5.0",
-        "@upstash/redis": "^1.37.0",
-        "axios": "^1.15.0",
-        "cache-manager": "^7.2.8",
-        "cheerio": "^1.2.0",
-        "class-transformer": "^0.5.1",
-        "class-validator": "^0.15.1",
-        "helmet": "^8.1.0",
-        "joi": "^18.1.2",
-        "jsdom": "^29.0.2",
-        "keyv": "^5.6.0",
-        "lru-cache": "^11.3.5",
-        "openai": "^6.34.0",
-        "p-limit": "^7.3.0",
-        "reflect-metadata": "^0.2.2",
-        "zod": "^4.3.6"
-    },
-    "devDependencies": {
-        "@types/node": "^25.6.0",
-        "ts-node-dev": "^2.0.0",
-        "typescript": "^6.0.2"
-    }
+  "name": "hire-path-api",
+  "version": "0.0.1",
+  "private": true,
+  "main": "dist/main.js",
+  "scripts": {
+    "start": "node dist/main.js",
+    "build": "tsc -p tsconfig.json",
+    "dev": "ts-node-dev --respawn --transpile-only src/main.ts"
+  },
+  "dependencies": {
+    "@mozilla/readability": "^0.6.0",
+    "@nestjs/cache-manager": "^3.1.0",
+    "@nestjs/common": "^11.1.19",
+    "@nestjs/config": "^4.0.4",
+    "@nestjs/core": "^11.1.19",
+    "@nestjs/platform-express": "^11.1.19",
+    "@nestjs/swagger": "^11.3.0",
+    "@nestjs/throttler": "^6.5.0",
+    "@upstash/redis": "^1.37.0",
+    "axios": "^1.15.0",
+    "cache-manager": "^7.2.8",
+    "cheerio": "^1.2.0",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.15.1",
+    "helmet": "^8.1.0",
+    "joi": "^18.1.2",
+    "jsdom": "^29.0.2",
+    "keyv": "^5.6.0",
+    "lru-cache": "^11.3.5",
+    "openai": "^6.34.0",
+    "p-limit": "^7.3.0",
+    "reflect-metadata": "^0.2.2",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/node": "^25.6.0",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^6.0.2"
+  }
 }

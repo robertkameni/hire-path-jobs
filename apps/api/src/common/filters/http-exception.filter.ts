@@ -1,7 +1,7 @@
 import {
-  ExceptionFilter,
+  type ArgumentsHost,
   Catch,
-  ArgumentsHost,
+  type ExceptionFilter,
   HttpException,
   HttpStatus,
   Logger,
@@ -59,7 +59,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
   private extractError(exception: unknown) {
     if (exception instanceof HttpException) {
       const res = exception.getResponse();
-      
+
       if (typeof res === 'object' && res !== null && 'error' in res) {
         return res.error;
       }

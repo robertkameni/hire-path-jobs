@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { JobRecord } from './job-record.types';
-import { JobStore } from './job-store.interface';
+import type { JobRecord } from './job-record.types';
+import type { JobStore } from './job-store.interface';
 
 /**
  * Process-local job storage. Use when UPSTASH_REDIS_* is unset (e.g. local dev).

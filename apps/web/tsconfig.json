@@ -17,9 +17,9 @@
     "outDir": "./dist",
     "rootDir": ".",
     "paths": {
-      "@web/*": ["./src/*"],
+      "@web/*": ["./src/*"]
     },
-    "esModuleInterop": true,
+    "esModuleInterop": true
   },
   "angularCompilerOptions": {
     "enableI18nLegacyMessageIdFormat": false,

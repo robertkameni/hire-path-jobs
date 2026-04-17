@@ -1,8 +1,8 @@
-import { Injectable, Logger, BadGatewayException } from '@nestjs/common';
-import * as cheerio from 'cheerio';
 import { Readability } from '@mozilla/readability';
+import { BadGatewayException, Injectable, Logger } from '@nestjs/common';
+import type { ConfigService } from '@nestjs/config';
+import * as cheerio from 'cheerio';
 import { JSDOM } from 'jsdom';
-import { ConfigService } from '@nestjs/config';
 
 const NOISE_TAGS = [
   'script',
@@ -90,10 +90,12 @@ export class JobTextExtractorService {
   private extractWithReadability(html: string, url: string) {
     try {
       const dom = new JSDOM(html, { url });
-      const reader = new Readability(dom.window.document as any);
+      const reader = new Readability(
+        dom.window.document as unknown as Document,
+      );
       const article = reader.parse();
       if (article?.textContent) return this.normalizeText(article.textContent);
-    } catch (err: any) {
+    } catch (err: unknown) {
       this.logger.warn(
         `Readability fallback failed: ${err instanceof Error ? err.message : String(err)}`,
       );

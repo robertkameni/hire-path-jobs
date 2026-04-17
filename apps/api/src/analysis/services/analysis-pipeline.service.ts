@@ -1,15 +1,15 @@
-import { Inject, Injectable, HttpException, HttpStatus } from '@nestjs/common';
+import { createHash } from 'node:crypto';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
 import type { Cache } from 'cache-manager';
-import { createHash } from 'crypto';
-import { AnalysisService } from './analysis.service';
-import { ScraperService } from '../../scraper/scraper.service';
-import { JobsService } from '../jobs/jobs.service';
-import { AnalyzeJobDto } from '../dto/analyze-job.dto';
-import { JobResponseDto } from '../dto/job-response.dto';
 import { StructuredLogger } from '../../common/logger/structured.logger';
+import type { ScraperService } from '../../scraper/scraper.service';
+import type { AnalyzeJobDto } from '../dto/analyze-job.dto';
+import type { JobResponseDto } from '../dto/job-response.dto';
 import type { JobRecord } from '../jobs/job-record.types';
+import type { JobsService } from '../jobs/jobs.service';
 import { mapJobRecordToJobResponseDto } from '../mappers/job-response.mapper';
+import type { AnalysisService } from './analysis.service';
 
 const MAX_QUEUE_DEPTH = 50;
 
@@ -83,8 +83,10 @@ export class AnalysisPipelineService {
   private async runPipeline(input: AnalysisPipelineInput): Promise<void> {
     const { jobId, dto, cacheKey } = input;
     try {
-      const jobText: string = await this.scraperService.fetchJobText(dto.jobUrl);
-      
+      const jobText: string = await this.scraperService.fetchJobText(
+        dto.jobUrl,
+      );
+
       const result: AnalyzeResult = (await this.analysisService.analyze({
         jobText,
         userProfile: dto.userProfile,
@@ -107,8 +109,8 @@ export class AnalysisPipelineService {
   }
 
   private buildCacheKey(dto: AnalyzeJobDto): string {
-    const payload: string = dto.jobUrl + JSON.stringify(dto.userProfile ?? null);
+    const payload: string =
+      dto.jobUrl + JSON.stringify(dto.userProfile ?? null);
     return createHash('sha256').update(payload).digest('hex');
   }
 }
-

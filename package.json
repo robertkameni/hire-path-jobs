@@ -8,9 +8,13 @@
   ],
   "scripts": {
     "start:api": "npm --workspace=apps/api run dev",
-    "start:web": "npm run start -w web"
+    "start:web": "npm run start -w web",
+    "biome:check": "biome check .",
+    "biome:write": "biome check --write --unsafe .",
+    "biome:ci": "biome ci ."
   },
   "devDependencies": {
+    "@biomejs/biome": "2.4.12",
     "autoprefixer": "^10.4.27",
     "postcss": "^8.5.9",
     "tailwindcss": "^4.2.0"

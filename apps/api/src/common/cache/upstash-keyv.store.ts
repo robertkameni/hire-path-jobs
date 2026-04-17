@@ -1,4 +1,4 @@
-import { Redis } from '@upstash/redis';
+import type { Redis } from '@upstash/redis';
 
 const DEFAULT_KEY_PATTERN = 'hirepath-analysis-cache:*';
 

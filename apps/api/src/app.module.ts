@@ -1,24 +1,25 @@
-import { Module, MiddlewareConsumer, RequestMethod } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { CacheModule } from '@nestjs/cache-manager';
 import type { CacheManagerOptions } from '@nestjs/cache-manager';
-import Keyv from 'keyv';
+import { CacheModule } from '@nestjs/cache-manager';
+import { type MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { Redis } from '@upstash/redis';
-import { UpstashKeyvStore } from './common/cache/upstash-keyv.store';
+import Keyv from 'keyv';
 import { LruKeyvStore } from './common/cache/lru-keyv.store';
+import { UpstashKeyvStore } from './common/cache/upstash-keyv.store';
 
 const ANALYSIS_CACHE_KEYV_NAMESPACE = 'hirepath-analysis-cache';
+
+import { APP_FILTER, APP_GUARD } from '@nestjs/core';
 import {
-  ThrottlerModule,
   ThrottlerGuard,
-  ThrottlerModuleOptions,
+  ThrottlerModule,
+  type ThrottlerModuleOptions,
 } from '@nestjs/throttler';
 import * as Joi from 'joi';
-import { APP_FILTER, APP_GUARD } from '@nestjs/core';
-import { AppController } from './controllers/app.controller';
 import { AnalysisModule } from './analysis/analysis.module';
 import { AllExceptionsFilter } from './common/filters/http-exception.filter';
 import { CorrelationIdMiddleware } from './common/middleware/correlation-id.middleware';
+import { AppController } from './controllers/app.controller';
 
 @Module({
   imports: [
@@ -65,7 +66,7 @@ import { CorrelationIdMiddleware } from './common/middleware/correlation-id.midd
         const url = config.get<string>('UPSTASH_REDIS_REST_URL');
         const token = config.get<string>('UPSTASH_REDIS_REST_TOKEN');
         const base: CacheManagerOptions = { ttl: ttlMs };
-        
+
         if (url && token) {
           const redis = new Redis({ url, token });
           const store = new UpstashKeyvStore(

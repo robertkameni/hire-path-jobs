@@ -1,13 +1,29 @@
-import { Inject, Injectable, InternalServerErrorException } from '@nestjs/common';
+import { performance } from 'node:perf_hooks';
 import {
-  ParsedJobAndInsightsSchema,
-  StrategyAndMessageSchema,
-} from '../schemas/analysis.schemas';
+  Inject,
+  Injectable,
+  InternalServerErrorException,
+} from '@nestjs/common';
+import type { z } from 'zod';
+import { AI_Port, type AiPort } from '../../ai/shared/ai.port';
+import { StructuredLogger } from '../../common/logger/structured.logger';
 import { jobParseAndTruthPrompt } from '../prompts/job-parse-and-truth.prompt';
 import { strategyAndMessagePrompt } from '../prompts/strategy-and-message.prompt';
-import { StructuredLogger } from '../../common/logger/structured.logger';
-import { performance } from 'perf_hooks';
-import { AI_Port, AiPort } from '../../ai/shared/ai.port';
+import {
+  type ContactStrategySchema,
+  type JobInsightsSchema,
+  type OutreachMessageSchema,
+  ParsedJobAndInsightsSchema,
+  type ParsedJobSchema,
+  StrategyAndMessageSchema,
+} from '../schemas/analysis.schemas';
+
+type ParsedJob = z.infer<typeof ParsedJobSchema>;
+type JobInsights = z.infer<typeof JobInsightsSchema>;
+type ContactStrategy = z.infer<typeof ContactStrategySchema>;
+type OutreachMessage = z.infer<typeof OutreachMessageSchema>;
+
+type Fallback = { step: string; reason?: string };
 
 function buildParseFailureResult(
   reason: string | undefined,
@@ -24,7 +40,7 @@ function buildParseFailureResult(
   };
 }
 
-function buildFallbackMessage(job: any) {
+function buildFallbackMessage(job: ParsedJob): OutreachMessage {
   const skillLine =
     job.skills.length > 0
       ? ` Mein Hintergrund in ${job.skills.slice(0, 2).join(' und ')} passt direkt zu den Anforderungen dieser Stelle.`
@@ -40,13 +56,17 @@ function buildFallbackMessage(job: any) {
 export class AnalysisService {
   private logger = new StructuredLogger(AnalysisService.name);
 
-  constructor(@Inject(AI_Port) private readonly aiPort: AiPort) { }
+  constructor(@Inject(AI_Port) private readonly aiPort: AiPort) {}
 
-  async analyze(input: { jobText: string; userProfile?: any; jobId?: string }) {
+  async analyze(input: {
+    jobText: string;
+    userProfile?: unknown;
+    jobId?: string;
+  }) {
     const { jobId } = input;
     this.logger.event('pipeline_start', { jobId });
     const timings: Record<string, number> = {};
-    const fallbacks: Array<any> = [];
+    const fallbacks: Fallback[] = [];
 
     const parseResult = await this.runStep('parseJobAndTruth', () =>
       this.parseJobAndTruth(input.jobText),
@@ -72,8 +92,8 @@ export class AnalysisService {
     );
     timings.strategyAndMessage = strategyAndMessageResult.durationMs;
 
-    let strategy = null;
-    let message;
+    let strategy: ContactStrategy | null = null;
+    let message: OutreachMessage;
     if (strategyAndMessageResult.fallback) {
       fallbacks.push({
         step: 'strategyAndMessage',
@@ -106,7 +126,7 @@ export class AnalysisService {
     };
   }
 
-  private async runStep(name: string, fn: () => Promise<any>) {
+  private async runStep<T>(name: string, fn: () => Promise<T>) {
     const start = performance.now();
     try {
       const data = await fn();
@@ -117,7 +137,7 @@ export class AnalysisService {
         status: 'success',
       });
       return { data, fallback: false, durationMs };
-    } catch (err) {
+    } catch (err: unknown) {
       const durationMs = Math.round(performance.now() - start);
       const error = err instanceof Error ? err.message : String(err);
       this.logger.errorEvent('step_failed', { step: name, durationMs, error });
@@ -125,10 +145,14 @@ export class AnalysisService {
     }
   }
 
-  private parseAiResponse(raw: string, schema: any, step: string) {
-    let parsed;
+  private parseAiResponse<T>(
+    raw: string,
+    schema: z.ZodType<T>,
+    step: string,
+  ): T {
+    let parsed: unknown;
     try {
-      parsed = JSON.parse(raw);
+      parsed = JSON.parse(raw) as unknown;
     } catch {
       throw new InternalServerErrorException(
         `AI returned invalid JSON at step: ${step}`,
@@ -138,7 +162,7 @@ export class AnalysisService {
     if (!result.success) {
       this.logger.errorEvent('schema_validation_failed', {
         step,
-        errors: JSON.parse(result.error.message),
+        errors: result.error.flatten(),
       });
       throw new InternalServerErrorException(
         `AI response did not match expected schema at step: ${step}`,
@@ -148,9 +172,12 @@ export class AnalysisService {
   }
 
   private async parseJobAndTruth(jobText: string) {
-    const raw = await this.aiPort.generateText(jobParseAndTruthPrompt(jobText), {
-      temperature: 0,
-    });
+    const raw = await this.aiPort.generateText(
+      jobParseAndTruthPrompt(jobText),
+      {
+        temperature: 0,
+      },
+    );
     return this.parseAiResponse(
       raw,
       ParsedJobAndInsightsSchema,
@@ -159,9 +186,9 @@ export class AnalysisService {
   }
 
   private async generateStrategyAndMessage(
-    job: any,
-    insights: any,
-    userProfile: any,
+    job: ParsedJob,
+    insights: JobInsights,
+    userProfile: unknown,
   ) {
     const raw = await this.aiPort.generateText(
       strategyAndMessagePrompt(job, insights, userProfile),

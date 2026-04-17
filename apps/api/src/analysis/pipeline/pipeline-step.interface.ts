@@ -1,4 +1,4 @@
-export interface PipelineStep {
+export interface PipelineStep<TInput = unknown, TOutput = unknown> {
   name: string;
-  run(input: any): Promise<any>;
+  run(input: TInput): Promise<TOutput>;
 }

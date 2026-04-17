@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { ScraperHttpService } from './scraper-http.service';
-import { JobTextExtractorService } from './job-text-extractor.service';
+import type { JobTextExtractorService } from './job-text-extractor.service';
+import type { ScraperHttpService } from './scraper-http.service';
 
 @Injectable()
 export class ScraperService {

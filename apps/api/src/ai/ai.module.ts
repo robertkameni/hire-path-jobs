@@ -9,4 +9,4 @@ import { AI_Port } from './shared/ai.port';
   providers: [AiService, { provide: AI_Port, useClass: AiService }],
   exports: [AI_Port],
 })
-export class AiModule { }
+export class AiModule {}

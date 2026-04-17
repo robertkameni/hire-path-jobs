@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable, computed, inject, signal } from '@angular/core';
-import { JobResponse, JobResult } from '@hire-path-jobs/shared-types';
+import { computed, Injectable, inject, signal } from '@angular/core';
+import type { JobResponse, JobResult } from '@hire-path-jobs/shared-types';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { formatError } from '../shared/utils/format-error.utils';

@@ -1,6 +1,6 @@
 import { Component, inject } from '@angular/core';
-import { StatusIndicator } from '@web/app/shared/status-indicator';
 import { AnalysisResourceService } from '@web/app/services/analysis-resource.service';
+import { StatusIndicator } from '@web/app/shared/status-indicator';
 
 @Component({
   selector: 'dev-results',

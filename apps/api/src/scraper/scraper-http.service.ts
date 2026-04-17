@@ -1,14 +1,14 @@
-import {
-  Injectable,
-  Logger,
-  BadGatewayException,
-  BadRequestException,
-} from '@nestjs/common';
-import axios from 'axios';
 import * as dns from 'node:dns';
 import * as http from 'node:http';
 import * as https from 'node:https';
 import * as net from 'node:net';
+import {
+  BadGatewayException,
+  BadRequestException,
+  Injectable,
+  Logger,
+} from '@nestjs/common';
+import axios from 'axios';
 
 const BLOCKED_DOMAINS = new Set([
   'linkedin.com',
@@ -136,8 +136,8 @@ export class ScraperHttpService {
         },
       });
       return response.data;
-    } catch (err: any) {
-      const nested = err?.cause ?? err;
+    } catch (err: unknown) {
+      const nested = this.getCause(err) ?? err;
       const nestedMsg =
         nested instanceof Error ? nested.message : String(nested);
       const topMsg = err instanceof Error ? err.message : String(err);
@@ -150,7 +150,7 @@ export class ScraperHttpService {
         );
       }
       const message = err instanceof Error ? err.message : String(err);
-      const status = err?.response?.status ?? 0;
+      const status = this.getAxiosStatus(err) ?? 0;
       const isBlocked = [401, 403, 429, 503].includes(status);
       if (isBlocked) {
         throw new BadGatewayException({
@@ -188,5 +188,17 @@ export class ScraperHttpService {
         'Requests to private network addresses are not allowed.',
       );
     }
+  }
+
+  private getCause(value: unknown): unknown | undefined {
+    if (!value || typeof value !== 'object') return undefined;
+    const record = value as Record<string, unknown>;
+    return record.cause;
+  }
+
+  private getAxiosStatus(value: unknown): number | undefined {
+    if (!axios.isAxiosError(value)) return undefined;
+    const status = value.response?.status;
+    return typeof status === 'number' ? status : undefined;
   }
 }

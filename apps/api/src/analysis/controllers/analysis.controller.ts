@@ -8,15 +8,15 @@ import {
   Post,
 } from '@nestjs/common';
 import {
-  ApiTags,
-  ApiOperation,
   ApiBody,
-  ApiResponse,
+  ApiOperation,
   ApiParam,
+  ApiResponse,
+  ApiTags,
 } from '@nestjs/swagger';
 import { AnalyzeJobDto } from '../dto/analyze-job.dto';
 import { JobResponseDto } from '../dto/job-response.dto';
-import { AnalysisPipelineService } from '../services/analysis-pipeline.service';
+import type { AnalysisPipelineService } from '../services/analysis-pipeline.service';
 
 @ApiTags('analysis')
 @Controller('analysis')
