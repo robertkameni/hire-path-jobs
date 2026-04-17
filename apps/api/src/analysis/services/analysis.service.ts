@@ -71,6 +71,7 @@ export class AnalysisService {
     const parseResult = await this.runStep('parseJobAndTruth', () =>
       this.parseJobAndTruth(input.jobText),
     );
+
     if (!parseResult.fallback) {
       timings.parseJobAndTruth = parseResult.durationMs;
     } else {
@@ -79,6 +80,7 @@ export class AnalysisService {
         step: 'parseJobAndTruth',
         reason: parseResult.error,
       });
+
       return buildParseFailureResult(
         parseResult.error ?? 'Parse step failed',
         parseResult.durationMs,
@@ -90,10 +92,12 @@ export class AnalysisService {
       'strategyAndMessage',
       () => this.generateStrategyAndMessage(job, insights, input.userProfile),
     );
+
     timings.strategyAndMessage = strategyAndMessageResult.durationMs;
 
     let strategy: ContactStrategy | null = null;
     let message: OutreachMessage;
+    
     if (strategyAndMessageResult.fallback) {
       fallbacks.push({
         step: 'strategyAndMessage',
