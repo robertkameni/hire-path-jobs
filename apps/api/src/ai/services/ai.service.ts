@@ -4,7 +4,7 @@ import {
   RequestTimeoutException,
   ServiceUnavailableException,
 } from '@nestjs/common';
-// biome-ignore lint/style/useImportType: Needed for NestJS DI (emitDecoratorMetadata) to resolve ConfigService at runtime.
+/** biome-ignore lint/style/useImportType: Needed for NestJS DI (emitDecoratorMetadata) to resolve JobTextExtractorService and ScraperHttpService at runtime. */
 import { ConfigService } from '@nestjs/config';
 import OpenAI from 'openai';
 import pLimit from 'p-limit';

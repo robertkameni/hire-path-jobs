@@ -1,16 +1,17 @@
+/** biome-ignore-all lint/style/useImportType: Needed for NestJS DI (emitDecoratorMetadata) to resolve JobTextExtractorService and ScraperHttpService at runtime. */
 import { createHash } from 'node:crypto';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
 import type { Cache } from 'cache-manager';
 import { StructuredLogger } from '../../common/logger/structured.logger';
 import { normalizeJobText } from '../../scraper/job-normalizer';
-import type { ScraperService } from '../../scraper/scraper.service';
+import { ScraperService } from '../../scraper/scraper.service';
 import type { AnalyzeJobDto } from '../dto/analyze-job.dto';
 import type { JobResponseDto } from '../dto/job-response.dto';
 import type { JobRecord } from '../jobs/job-record.types';
-import type { JobsService } from '../jobs/jobs.service';
+import { JobsService } from '../jobs/jobs.service';
 import { mapJobRecordToJobResponseDto } from '../mappers/job-response.mapper';
-import type { AnalysisService } from './analysis.service';
+import { AnalysisService } from './analysis.service';
 
 const MAX_QUEUE_DEPTH = 50;
 // Token/cost guardrails for gemini-2.5-flash (char-based approximation).

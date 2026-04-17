@@ -1,6 +1,7 @@
+/** biome-ignore-all lint/style/useImportType: Needed for NestJS DI (emitDecoratorMetadata) to resolve JobTextExtractorService and ScraperHttpService at runtime. */
 import { Injectable } from '@nestjs/common';
-import type { JobTextExtractorService } from './job-text-extractor.service';
-import type { ScraperHttpService } from './scraper-http.service';
+import { JobTextExtractorService } from './job-text-extractor.service';
+import { ScraperHttpService } from './scraper-http.service';
 
 @Injectable()
 export class ScraperService {

@@ -16,7 +16,8 @@ import {
 } from '@nestjs/swagger';
 import { AnalyzeJobDto } from '../dto/analyze-job.dto';
 import { JobResponseDto } from '../dto/job-response.dto';
-import type { AnalysisPipelineService } from '../services/analysis-pipeline.service';
+/** biome-ignore lint/style/useImportType: Needed for NestJS DI (emitDecoratorMetadata) to resolve JobTextExtractorService and ScraperHttpService at runtime. */
+import { AnalysisPipelineService } from '../services/analysis-pipeline.service';
 
 @ApiTags('analysis')
 @Controller('analysis')
