@@ -1,9 +1,4 @@
-import {
-  BadGatewayException,
-  Injectable,
-  RequestTimeoutException,
-  ServiceUnavailableException,
-} from '@nestjs/common';
+import { BadGatewayException, Injectable, RequestTimeoutException, ServiceUnavailableException } from '@nestjs/common';
 /** biome-ignore lint/style/useImportType: Needed for NestJS DI (emitDecoratorMetadata) to resolve JobTextExtractorService and ScraperHttpService at runtime. */
 import { ConfigService } from '@nestjs/config';
 import OpenAI from 'openai';
@@ -26,13 +21,10 @@ export class AiService implements AiPort {
   constructor(private configService: ConfigService) {}
 
   onModuleInit() {
-    const apiKey: string =
-      this.configService.getOrThrow<string>('ai.geminiApiKey');
-    this.model =
-      this.configService.get<string>('ai.model') ?? 'gemini-2.5-flash';
+    const apiKey: string = this.configService.getOrThrow<string>('ai.geminiApiKey');
+    this.model = this.configService.get<string>('ai.model') ?? 'gemini-2.5-flash';
     this.timeoutMs = this.configService.get<number>('ai.timeoutMs') ?? 45000;
-    const concurrency: number =
-      this.configService.get<number>('ai.concurrency') ?? 5;
+    const concurrency: number = this.configService.get<number>('ai.concurrency') ?? 5;
     this.limit = pLimit(concurrency);
     this.client = new OpenAI({
       apiKey,
@@ -40,25 +32,17 @@ export class AiService implements AiPort {
     });
   }
 
-  async generateText(
-    prompt: string,
-    options?: { temperature?: number },
-  ): Promise<string> {
+  async generateText(prompt: string, options?: { temperature?: number }): Promise<string> {
     return this.limit(() => this.executeGenerate(prompt, options));
   }
 
-  private async executeGenerate(
-    prompt: string,
-    options?: { temperature?: number },
-  ) {
+  private async executeGenerate(prompt: string, options?: { temperature?: number }) {
     if (this.circuitBreaker.isOpen()) {
       this.logger.warnEvent('circuit_breaker_open', {
         model: this.model,
         state: this.circuitBreaker.getState(),
       });
-      throw new ServiceUnavailableException(
-        'AI provider circuit breaker is open — too many recent failures',
-      );
+      throw new ServiceUnavailableException('AI provider circuit breaker is open — too many recent failures');
     }
     try {
       const result = await this.doRetryLoop(prompt, options);
@@ -78,10 +62,7 @@ export class AiService implements AiPort {
     }
   }
 
-  private async doRetryLoop(
-    prompt: string,
-    options?: { temperature?: number },
-  ) {
+  private async doRetryLoop(prompt: string, options?: { temperature?: number }) {
     this.logger.event('ai_request_start', { model: this.model });
     const temperature = options?.temperature ?? 0.2;
     const maxRetries = 3;
@@ -105,9 +86,7 @@ export class AiService implements AiPort {
         }
       } catch (err: unknown) {
         if (err instanceof Error && err.name === 'AbortError') {
-          throw new RequestTimeoutException(
-            `AI provider timed out after ${this.timeoutMs / 1000}s`,
-          );
+          throw new RequestTimeoutException(`AI provider timed out after ${this.timeoutMs / 1000}s`);
         }
 
         if (this.isRetryable(err) && attempt < maxRetries) {
@@ -123,15 +102,12 @@ export class AiService implements AiPort {
           continue;
         }
 
-        throw new BadGatewayException(
-          `AI provider error: ${err instanceof Error ? err.message : String(err)}`,
-        );
+        throw new BadGatewayException(`AI provider error: ${err instanceof Error ? err.message : String(err)}`);
       }
 
       const content = response.choices?.[0]?.message?.content;
 
-      if (!content)
-        throw new BadGatewayException('AI provider returned an empty response');
+      if (!content) throw new BadGatewayException('AI provider returned an empty response');
 
       const usage = response.usage;
 
@@ -163,11 +139,7 @@ export class AiService implements AiPort {
       return true;
     }
 
-    return (
-      err.message.includes('ECONNRESET') ||
-      err.message.includes('ETIMEDOUT') ||
-      err.message.includes('socket hang up')
-    );
+    return err.message.includes('ECONNRESET') || err.message.includes('ETIMEDOUT') || err.message.includes('socket hang up');
   }
 
   private isCircuitBreakerTriggering(err: unknown): boolean {
@@ -177,8 +149,7 @@ export class AiService implements AiPort {
   }
 
   private getRetryDelay(err: unknown, attempt: number): number {
-    const isRateLimit =
-      err instanceof Error && this.getNumberProp(err, 'status') === 429;
+    const isRateLimit = err instanceof Error && this.getNumberProp(err, 'status') === 429;
     return isRateLimit ? attempt * 15000 : attempt * 1000;
   }
 

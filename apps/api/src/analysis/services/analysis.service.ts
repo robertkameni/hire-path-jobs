@@ -1,9 +1,5 @@
 import { performance } from 'node:perf_hooks';
-import {
-  Inject,
-  Injectable,
-  InternalServerErrorException,
-} from '@nestjs/common';
+import { Inject, Injectable, InternalServerErrorException } from '@nestjs/common';
 import type { z } from 'zod';
 import { AI_Port, type AiPort } from '../../ai/shared/ai.port';
 import { StructuredLogger } from '../../common/logger/structured.logger';
@@ -25,10 +21,7 @@ type OutreachMessage = z.infer<typeof OutreachMessageSchema>;
 
 type Fallback = { step: string; reason?: string };
 
-function buildParseFailureResult(
-  reason: string | undefined,
-  durationMs: number,
-) {
+function buildParseFailureResult(reason: string | undefined, durationMs: number) {
   return {
     job: null,
     insights: null,
@@ -42,9 +35,7 @@ function buildParseFailureResult(
 
 function buildFallbackMessage(job: ParsedJob): OutreachMessage {
   const skillLine =
-    job.skills.length > 0
-      ? ` Mein Hintergrund in ${job.skills.slice(0, 2).join(' und ')} passt direkt zu den Anforderungen dieser Stelle.`
-      : '';
+    job.skills.length > 0 ? ` Mein Hintergrund in ${job.skills.slice(0, 2).join(' und ')} passt direkt zu den Anforderungen dieser Stelle.` : '';
   return {
     subject: `${job.title} — ${job.company}`,
     body: `Hallo, ich bin auf die Stelle als ${job.title} bei ${job.company} aufmerksam geworden und möchte mich vor einer formellen Bewerbung direkt melden.${skillLine} Sind Sie die richtige Ansprechperson für diese Position, oder können Sie mich an jemanden weiterleiten?`,
@@ -58,19 +49,13 @@ export class AnalysisService {
 
   constructor(@Inject(AI_Port) private readonly aiPort: AiPort) {}
 
-  async analyze(input: {
-    jobText: string;
-    userProfile?: unknown;
-    jobId?: string;
-  }) {
+  async analyze(input: { jobText: string; userProfile?: unknown; jobId?: string }) {
     const { jobId } = input;
     this.logger.event('pipeline_start', { jobId });
     const timings: Record<string, number> = {};
     const fallbacks: Fallback[] = [];
 
-    const parseResult = await this.runStep('parseJobAndTruth', () =>
-      this.parseJobAndTruth(input.jobText),
-    );
+    const parseResult = await this.runStep('parseJobAndTruth', () => this.parseJobAndTruth(input.jobText));
 
     if (!parseResult.fallback) {
       timings.parseJobAndTruth = parseResult.durationMs;
@@ -81,16 +66,12 @@ export class AnalysisService {
         reason: parseResult.error,
       });
 
-      return buildParseFailureResult(
-        parseResult.error ?? 'Parse step failed',
-        parseResult.durationMs,
-      );
+      return buildParseFailureResult(parseResult.error ?? 'Parse step failed', parseResult.durationMs);
     }
     const { job, insights } = parseResult.data;
 
-    const strategyAndMessageResult = await this.runStep(
-      'strategyAndMessage',
-      () => this.generateStrategyAndMessage(job, insights, input.userProfile),
+    const strategyAndMessageResult = await this.runStep('strategyAndMessage', () =>
+      this.generateStrategyAndMessage(job, insights, input.userProfile),
     );
 
     timings.strategyAndMessage = strategyAndMessageResult.durationMs;
@@ -101,8 +82,7 @@ export class AnalysisService {
     if (strategyAndMessageResult.fallback) {
       fallbacks.push({
         step: 'strategyAndMessage',
-        reason:
-          strategyAndMessageResult.error ?? 'Strategy+message step failed',
+        reason: strategyAndMessageResult.error ?? 'Strategy+message step failed',
       });
       message = buildFallbackMessage(job);
     } else {
@@ -114,9 +94,7 @@ export class AnalysisService {
       jobId,
       status: fallbacks.length === 0 ? 'complete' : 'partial',
       fallbackSteps: fallbacks.map((f) => f.step),
-      ...Object.fromEntries(
-        Object.entries(timings).map(([k, v]) => [`${k}Ms`, v]),
-      ),
+      ...Object.fromEntries(Object.entries(timings).map(([k, v]) => [`${k}Ms`, v])),
     });
 
     return {
@@ -149,18 +127,12 @@ export class AnalysisService {
     }
   }
 
-  private parseAiResponse<T>(
-    raw: string,
-    schema: z.ZodType<T>,
-    step: string,
-  ): T {
+  private parseAiResponse<T>(raw: string, schema: z.ZodType<T>, step: string): T {
     let parsed: unknown;
     try {
       parsed = JSON.parse(raw) as unknown;
     } catch {
-      throw new InternalServerErrorException(
-        `AI returned invalid JSON at step: ${step}`,
-      );
+      throw new InternalServerErrorException(`AI returned invalid JSON at step: ${step}`);
     }
     const result = schema.safeParse(parsed);
     if (!result.success) {
@@ -168,40 +140,20 @@ export class AnalysisService {
         step,
         errors: result.error.flatten(),
       });
-      throw new InternalServerErrorException(
-        `AI response did not match expected schema at step: ${step}`,
-      );
+      throw new InternalServerErrorException(`AI response did not match expected schema at step: ${step}`);
     }
     return result.data;
   }
 
   private async parseJobAndTruth(jobText: string) {
-    const raw = await this.aiPort.generateText(
-      jobParseAndTruthPrompt(jobText),
-      {
-        temperature: 0,
-      },
-    );
-    return this.parseAiResponse(
-      raw,
-      ParsedJobAndInsightsSchema,
-      'parseJobAndTruth',
-    );
+    const raw = await this.aiPort.generateText(jobParseAndTruthPrompt(jobText), {
+      temperature: 0,
+    });
+    return this.parseAiResponse(raw, ParsedJobAndInsightsSchema, 'parseJobAndTruth');
   }
 
-  private async generateStrategyAndMessage(
-    job: ParsedJob,
-    insights: JobInsights,
-    userProfile: unknown,
-  ) {
-    const raw = await this.aiPort.generateText(
-      strategyAndMessagePrompt(job, insights, userProfile),
-      { temperature: 0.3 },
-    );
-    return this.parseAiResponse(
-      raw,
-      StrategyAndMessageSchema,
-      'generateStrategyAndMessage',
-    );
+  private async generateStrategyAndMessage(job: ParsedJob, insights: JobInsights, userProfile: unknown) {
+    const raw = await this.aiPort.generateText(strategyAndMessagePrompt(job, insights, userProfile), { temperature: 0.3 });
+    return this.parseAiResponse(raw, StrategyAndMessageSchema, 'generateStrategyAndMessage');
   }
 }

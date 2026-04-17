@@ -10,7 +10,7 @@ export class Hero {
   analysis = inject(AnalysisResourceService);
   jobUrl = signal('');
   jobText = signal('');
-  closeJobTextDetails = signal(false);
+  isJobTextOpen = signal(false);
 
   async handleAnalyze() {
     const url = this.jobUrl().trim();
@@ -22,6 +22,14 @@ export class Hero {
 
     this.jobUrl.set('');
     this.jobText.set('');
-    this.closeJobTextDetails.update(() => false);
+    this.isJobTextOpen.set(false);
+  }
+
+  onToggle(event: Event) {
+    const open = (event.target as HTMLDetailsElement).open;
+
+    if (this.isJobTextOpen() !== open) {
+      this.isJobTextOpen.set(open);
+    }
   }
 }

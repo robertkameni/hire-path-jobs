@@ -1,8 +1,4 @@
-import {
-  ApiHideProperty,
-  ApiProperty,
-  ApiPropertyOptional,
-} from '@nestjs/swagger';
+import { ApiHideProperty, ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
   IsArray,
@@ -30,8 +26,7 @@ export class UserProfileDto {
 
   @ApiPropertyOptional({
     example: ['TypeScript', 'NestJS', 'Node.js'],
-    description:
-      'Your key skills — used to tailor the contact strategy and message',
+    description: 'Your key skills — used to tailor the contact strategy and message',
   })
   @IsOptional()
   @IsArray()
@@ -40,9 +35,7 @@ export class UserProfileDto {
 }
 
 @ValidatorConstraint({ name: 'atLeastOneOfJobUrlOrJobText', async: false })
-class AtLeastOneOfJobUrlOrJobTextConstraint
-  implements ValidatorConstraintInterface
-{
+class AtLeastOneOfJobUrlOrJobTextConstraint implements ValidatorConstraintInterface {
   validate(_value: unknown, args: ValidationArguments): boolean {
     const obj = args.object as { jobUrl?: unknown; jobText?: unknown };
     const url = typeof obj.jobUrl === 'string' ? obj.jobUrl.trim() : '';
@@ -66,8 +59,7 @@ export class AnalyzeJobDto {
 
   @ApiPropertyOptional({
     example: 'The job text to analyze',
-    description:
-      'If provided, the job text will be used instead of scraping the job URL.',
+    description: 'If provided, the job text will be used instead of scraping the job URL.',
   })
   @ValidateIf((o: AnalyzeJobDto) => !o.jobUrl?.trim())
   @IsString()
@@ -81,8 +73,7 @@ export class AnalyzeJobDto {
 
   @ApiPropertyOptional({
     type: UserProfileDto,
-    description:
-      'Optional candidate profile — personalizes the strategy and outreach message',
+    description: 'Optional candidate profile — personalizes the strategy and outreach message',
   })
   @IsOptional()
   @ValidateNested()

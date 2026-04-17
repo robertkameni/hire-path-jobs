@@ -28,10 +28,7 @@ export class CircuitBreaker {
 
   recordFailure() {
     this.consecutiveFailures++;
-    if (
-      this.state === 'half-open' ||
-      this.consecutiveFailures >= this.threshold
-    ) {
+    if (this.state === 'half-open' || this.consecutiveFailures >= this.threshold) {
       this.state = 'open';
       this.openedAt = Date.now();
     }

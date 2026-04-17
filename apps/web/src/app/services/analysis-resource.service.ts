@@ -53,17 +53,10 @@ export class AnalysisResourceService {
           ...(trimmedJobText ? { jobText: trimmedJobText } : {}),
         }),
       );
-      if (
-        postRes.status === 'completed' ||
-        postRes.status === 'partial' ||
-        postRes.status === 'failed'
-      ) {
+      if (postRes.status === 'completed' || postRes.status === 'partial' || postRes.status === 'failed') {
         if (postRes.status === 'failed') {
           const msg = postRes.error ?? 'Analysis failed';
-          if (
-            postRes.errorCode === 'SCRAPE_BLOCKED' ||
-            postRes.errorCode === 'SCRAPE_FAILED'
-          ) {
+          if (postRes.errorCode === 'SCRAPE_BLOCKED' || postRes.errorCode === 'SCRAPE_FAILED') {
             this.needsJobText.set(true);
           }
           throw new Error(msg);
@@ -73,31 +66,16 @@ export class AnalysisResourceService {
       }
       const deadline = Date.now() + POLL_MAX_WAIT_MS;
       let job = postRes;
-      while (
-        job.status !== 'completed' &&
-        job.status !== 'partial' &&
-        job.status !== 'failed'
-      ) {
+      while (job.status !== 'completed' && job.status !== 'partial' && job.status !== 'failed') {
         if (Date.now() > deadline) {
-          throw new Error(
-            'Analysis timed out while waiting for result. Try again or poll the job later.',
-          );
+          throw new Error('Analysis timed out while waiting for result. Try again or poll the job later.');
         }
-        await new Promise<void>((resolve) =>
-          setTimeout(resolve, POLL_INTERVAL_MS),
-        );
-        job = await firstValueFrom(
-          this.http.get<JobResponse>(
-            `${this.baseUrl()}/analysis/${postRes.jobId}`,
-          ),
-        );
+        await new Promise<void>((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
+        job = await firstValueFrom(this.http.get<JobResponse>(`${this.baseUrl()}/analysis/${postRes.jobId}`));
       }
       if (job.status === 'failed') {
         const msg = job.error ?? 'Analysis failed';
-        if (
-          job.errorCode === 'SCRAPE_BLOCKED' ||
-          job.errorCode === 'SCRAPE_FAILED'
-        ) {
+        if (job.errorCode === 'SCRAPE_BLOCKED' || job.errorCode === 'SCRAPE_FAILED') {
           this.needsJobText.set(true);
         }
         throw new Error(msg);

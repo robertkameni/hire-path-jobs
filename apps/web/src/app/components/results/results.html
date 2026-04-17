@@ -1,46 +1,26 @@
 @if (analysis.isLoading() || analysis.errorMessage() || !analysis.result()) {
 
 <div class="flex flex-col items-center justify-center py-10 px-4 sm:px-8 lg:px-16">
-
   <div class="text-center max-w-md">
-    <dev-status-indicator [statusState]="analysis.isLoading() ? { state: 'loading' } :
+    <dev-status-indicator
+      [statusState]="analysis.isLoading() ? { state: 'loading' } :
                      analysis.errorMessage() ? { state: 'error' } :
-                     { state: 'idle' }">
-    </dev-status-indicator>
+                     { state: 'idle' }"
+    > </dev-status-indicator>
 
     <h3 class="text-xl sm:text-2xl font-bold text-white mb-3">
-
-      @if (analysis.isLoading()) {
-      Analyzing job posting...
-      } @else if (analysis.errorMessage()) {
-      Analysis failed
-      } @else {
-      Ready to analyze
-      }
-
+      @if (analysis.isLoading()) { Analyzing job posting... } @else if (analysis.errorMessage()) { Analysis failed } @else { Ready to analyze }
     </h3>
 
     <p class="text-gray-400 text-sm sm:text-base">
-      @if (analysis.isLoading()) {
-        Our AI is extracting insights from the job posting. This may take a few moments.
-      } @else if (analysis.needsJobText()) {
-        This site can’t be fetched automatically. Paste the job description and try again.
-      } @else {
-        Paste a job posting URL or a job description above to get AI-powered insights, application strategies, and outreach templates.
-      }
+      @if (analysis.isLoading()) { Our AI is extracting insights from the job posting. This may take a few moments. } @else if
+      (analysis.needsJobText()) { This site can’t be fetched automatically. Paste the job description and try again. } @else { Paste a job posting URL
+      or a job description above to get AI-powered insights, application strategies, and outreach templates. }
     </p>
-
   </div>
-
 </div>
-
-} @else {
-@let insights = analysis.insights();
-@let strategy = analysis.strategy();
-@let message = analysis.message();
-@let fallbacks = analysis.fallbacks();
-
-@if (!analysis.hasDisplayableAnalysis()) {
+} @else { @let insights = analysis.insights(); @let strategy = analysis.strategy(); @let message = analysis.message(); @let fallbacks =
+analysis.fallbacks(); @if (!analysis.hasDisplayableAnalysis()) {
 <div class="px-4 sm:px-8 lg:px-16 py-8 lg:py-12">
   <div class="max-w-2xl mx-auto p-6 sm:p-8 bg-[#0a1a0d] border border-[#00c752]/30 rounded-2xl">
     <h2 class="text-xl sm:text-2xl font-bold text-[#00c752] mb-3">Analysis incomplete</h2>
@@ -50,8 +30,7 @@
     </p>
     @if (analysis.result()?.status) {
     <p class="text-gray-500 text-xs mb-4">Result status: {{ analysis.result()?.status }}</p>
-    }
-    @if (fallbacks.length) {
+    } @if (fallbacks.length) {
     <p class="text-gray-400 text-sm font-semibold mb-2">Details</p>
     <ul class="space-y-2 text-sm text-gray-300">
       @for (fb of fallbacks; track fb.step) {
@@ -66,66 +45,46 @@
     }
   </div>
 </div>
-
 } @else {
 
 <!-- =========================
      Mobile Version
 ========================= -->
 <div class="flex flex-col gap-6 lg:hidden px-4 sm:px-8 py-8 lg:py-12">
-
   <!-- 1. Ghost Risk -->
   @if (insights) {
   <div class="p-5 sm:p-6 bg-white/3 rounded-2xl border border-white/5">
+    <h3 class="text-lg font-bold mb-3 flex items-center text-[#00c752] gap-2">⚠️ {{ insights.ghostRisk }} Ghost Risk</h3>
 
-    <h3 class="text-lg font-bold mb-3 flex items-center text-[#00c752] gap-2">
-      ⚠️ {{ insights.ghostRisk }} Ghost Risk
-    </h3>
+    <p class="text-gray-300 text-sm mb-3">{{ insights.ghostRiskReason }}</p>
 
-    <p class="text-gray-300 text-sm mb-3">
-      {{ insights.ghostRiskReason }}
-    </p>
-
-    <p class="text-xs text-gray-400">
-      Confidence: {{ insights.ghostRiskConfidence }}%
-    </p>
-
+    <p class="text-xs text-gray-400">Confidence: {{ insights.ghostRiskConfidence }}%</p>
   </div>
   }
-
   <!-- 2. Verdict -->
   @if (insights?.verdict) {
   <div class="p-5 sm:p-6 bg-white/3 rounded-2xl border border-white/5">
-
     <h3 class="text-lg font-semibold text-[#00c752] mb-4">📋 Verdict</h3>
 
     <div class="p-3 rounded-lg bg-[#00c752]/10 border border-[#00c752]/30 mb-3">
-      <span class="text-sm font-semibold" [class.text-red-400]="!insights?.verdict?.apply"
-        [class.text-[#00c752]]="insights?.verdict?.apply">
-
+      <span
+        class="text-sm font-semibold"
+        [class.text-red-400]="!insights?.verdict?.apply"
+        [class.text-[#00c752]]="insights?.verdict?.apply"
+      >
         {{ insights?.verdict?.apply ? '✅ Apply' : '❌ Skip' }}
-
       </span>
     </div>
 
-    <p class="text-sm text-gray-300">
-      {{ insights?.verdict?.reason }}
-    </p>
-
+    <p class="text-sm text-gray-300">{{ insights?.verdict?.reason }}</p>
   </div>
   }
-
   <!-- 3. Recommended Strategy -->
   @if (strategy) {
   <div class="p-5 sm:p-6 lg:p-8 bg-[#0a1a0d] border border-white/5 rounded-2xl">
+    <h2 class="text-xl sm:text-2xl font-bold text-[#00c752] mb-4 flex items-center gap-2">🎯 Recommended Strategy</h2>
 
-    <h2 class="text-xl sm:text-2xl font-bold text-[#00c752] mb-4 flex items-center gap-2">
-      🎯 Recommended Strategy
-    </h2>
-
-    <h3 class="text-base sm:text-lg font-semibold text-white mb-2">
-      {{ strategy.targetRole }}
-    </h3>
+    <h3 class="text-base sm:text-lg font-semibold text-white mb-2">{{ strategy.targetRole }}</h3>
 
     <p class="text-gray-300 text-xs sm:text-sm mb-2">Contact channels:</p>
     <ul class="space-y-1 text-sm text-gray-300 mb-3">
@@ -141,17 +100,12 @@
       }
     </ul>
 
-    <p class="text-gray-400 text-xs sm:text-sm mt-3">
-      Timing: {{ strategy.timing }}
-    </p>
-
+    <p class="text-gray-400 text-xs sm:text-sm mt-3">Timing: {{ strategy.timing }}</p>
   </div>
   }
-
   <!-- 4. Red Flags -->
   @if (insights?.redFlags?.length) {
   <div class="p-5 sm:p-6 bg-white/3 rounded-2xl border border-white/5">
-
     <h3 class="text-lg font-semibold text-[#00c752] mb-4">🚩 Red Flags</h3>
 
     <ul class="space-y-2 text-sm text-gray-300">
@@ -162,78 +116,52 @@
       </li>
       }
     </ul>
-
   </div>
   }
-
   <!-- 5. Outreach Message -->
   @if (message) {
   <div class="p-5 sm:p-6 lg:p-8 bg-[#0a1a0d] border border-[#00c752]/40 rounded-2xl">
-
-    <h2 class="text-xl sm:text-2xl font-bold text-[#00c752] mb-4 flex items-center gap-2">
-      ✉️ Outreach Message
-    </h2>
+    <h2 class="text-xl sm:text-2xl font-bold text-[#00c752] mb-4 flex items-center gap-2">✉️ Outreach Message</h2>
 
     <p class="text-xs sm:text-sm text-gray-400 mb-2">Betreff:</p>
-    <p class="text-white text-sm font-medium mb-3">
-      {{ message.subject }}
-    </p>
+    <p class="text-white text-sm font-medium mb-3">{{ message.subject }}</p>
 
     <p class="text-xs sm:text-sm text-gray-400 mb-2">Nachricht:</p>
-    <p class="text-white text-sm whitespace-pre-wrap leading-relaxed">
-      {{ message.body }}
-    </p>
-
+    <p class="text-white text-sm whitespace-pre-wrap leading-relaxed">{{ message.body }}</p>
   </div>
   }
-
   <!-- 6. Competition -->
   @if (insights?.competitionLevel) {
   <div class="p-5 sm:p-6 bg-white/3 rounded-2xl border border-white/5">
-
-    <h3 class="text-lg font-semibold text-[#00c752] mb-4 flex items-center gap-2">
-      👥 Competition
-    </h3>
+    <h3 class="text-lg font-semibold text-[#00c752] mb-4 flex items-center gap-2">👥 Competition</h3>
 
     <div class="space-y-2">
-
       <div class="flex justify-between text-sm">
         <span class="text-gray-400">Level</span>
-        <span class="text-white capitalize">
-          {{ insights?.competitionLevel }}
-        </span>
+        <span class="text-white capitalize"> {{ insights?.competitionLevel }} </span>
       </div>
 
       <div class="w-full h-2 bg-white/5 rounded-full overflow-hidden">
-        <div class="h-full bg-[#00c752]" [style.width.%]="insights?.competitionLevel === 'low' ? 30 :
-                           insights?.competitionLevel === 'medium' ? 60 : 90">
-        </div>
+        <div
+          class="h-full bg-[#00c752]"
+          [style.width.%]="insights?.competitionLevel === 'low' ? 30 :
+                           insights?.competitionLevel === 'medium' ? 60 : 90"
+        ></div>
       </div>
-
     </div>
-
   </div>
   }
-
 </div>
 
 <div class="hidden lg:flex flex-col lg:flex-row gap-6 lg:gap-8 px-4 sm:px-8 lg:px-16 py-8 lg:py-12">
-
   <!-- LEFT COLUMN -->
   <div class="flex flex-col gap-6 lg:gap-8 w-full lg:flex-1">
-
     @if (strategy) {
     <div class="p-5 sm:p-6 lg:p-8 bg-[#0a1a0d] border border-white/5 rounded-2xl">
-
-      <h2 class="text-xl sm:text-2xl font-bold text-[#00c752] mb-4 lg:mb-6 flex items-center gap-2">
-        🎯 Recommended Strategy
-      </h2>
+      <h2 class="text-xl sm:text-2xl font-bold text-[#00c752] mb-4 lg:mb-6 flex items-center gap-2">🎯 Recommended Strategy</h2>
 
       <div class="p-4 bg-white/5 rounded-lg">
-
-        <h3 class="text-base sm:text-lg font-semibold text-white mb-2">
-          {{ strategy.targetRole }}
-        </h3>
+        <h3 class="text-base sm:text-lg font-semibold text-white mb-2">{{ strategy.targetRole }}</h3>
 
         <p class="text-gray-300 text-xs sm:text-sm mb-2">Contact channels:</p>
         <ul class="space-y-1 text-sm text-gray-300 mb-3">
@@ -249,75 +177,40 @@
           }
         </ul>
 
-        <p class="text-gray-400 text-xs sm:text-sm mt-3">
-          Timing: {{ strategy.timing }}
-        </p>
-
+        <p class="text-gray-400 text-xs sm:text-sm mt-3">Timing: {{ strategy.timing }}</p>
       </div>
-
     </div>
-    }
-
-    @if (message) {
+    } @if (message) {
     <div class="p-5 sm:p-6 lg:p-8 bg-[#0a1a0d] border border-[#00c752]/40 rounded-2xl">
-
-      <h2 class="text-xl sm:text-2xl font-bold text-[#00c752] mb-4 lg:mb-6 flex items-center gap-2">
-        ✉️ Outreach Message
-      </h2>
+      <h2 class="text-xl sm:text-2xl font-bold text-[#00c752] mb-4 lg:mb-6 flex items-center gap-2">✉️ Outreach Message</h2>
 
       <div class="p-4 bg-[#00c752]/5 border border-[#00c752]/20 rounded-lg">
-
         <p class="text-xs sm:text-sm text-gray-400 mb-2">Betreff:</p>
-        <p class="text-white text-sm font-medium mb-3">
-          {{ message.subject }}
-        </p>
+        <p class="text-white text-sm font-medium mb-3">{{ message.subject }}</p>
 
         <p class="text-xs sm:text-sm text-gray-400 mb-2">Nachricht:</p>
-        <p class="text-white text-sm whitespace-pre-wrap leading-relaxed">
-          {{ message.body }}
-        </p>
-
+        <p class="text-white text-sm whitespace-pre-wrap leading-relaxed">{{ message.body }}</p>
       </div>
-
     </div>
     }
-
   </div>
 
   <!-- RIGHT COLUMN -->
   <div class="flex flex-col gap-6 lg:gap-8 w-full lg:w-[320px] xl:w-90">
-
     @if (insights) {
     <div class="p-5 sm:p-6 bg-white/3 rounded-2xl border border-white/5">
-      <h3 class="text-lg font-bold mb-3 flex items-center gap-2 text-[#00c752]">
-        ⚠️ {{ insights.ghostRisk }} Ghost Risk
-      </h3>
-      <p class="text-gray-300 text-sm mb-3">
-        {{ insights.ghostRiskReason }}
-      </p>
-      <p class="text-xs text-gray-400">
-        Confidence: {{ insights.ghostRiskConfidence }}%
-      </p>
-
+      <h3 class="text-lg font-bold mb-3 flex items-center gap-2 text-[#00c752]">⚠️ {{ insights.ghostRisk }} Ghost Risk</h3>
+      <p class="text-gray-300 text-sm mb-3">{{ insights.ghostRiskReason }}</p>
+      <p class="text-xs text-gray-400">Confidence: {{ insights.ghostRiskConfidence }}%</p>
     </div>
-
-    }
-
-    @if (insights?.verdict) {
+    } @if (insights?.verdict) {
     <div class="p-5 sm:p-6 bg-white/3 rounded-2xl border border-white/5">
-
       <h3 class="text-lg font-bold text-[#00c752] mb-4">📋 Verdict</h3>
 
-      <p class="text-sm text-gray-300">
-        {{ insights?.verdict?.reason }}
-      </p>
-
+      <p class="text-sm text-gray-300">{{ insights?.verdict?.reason }}</p>
     </div>
-    }
-
-    @if (insights?.redFlags?.length) {
+    } @if (insights?.redFlags?.length) {
     <div class="p-5 sm:p-6 bg-white/3 rounded-2xl border border-white/5">
-
       <h3 class="text-lg font-bold text-[#00c752] mb-4">🚩 Red Flags</h3>
 
       <ul class="space-y-2 text-sm text-gray-300">
@@ -328,30 +221,20 @@
         </li>
         }
       </ul>
-
     </div>
-    }
-
-    @if (insights?.competitionLevel) {
+    } @if (insights?.competitionLevel) {
     <div class="p-5 sm:p-6 bg-white/3 rounded-2xl border border-white/5">
-
-      <h3 class="text-lg font-bold text-[#00c752] mb-4 flex items-center gap-2">
-        👥 Competition
-      </h3>
+      <h3 class="text-lg font-bold text-[#00c752] mb-4 flex items-center gap-2">👥 Competition</h3>
 
       <div class="w-full h-2 bg-white/5 rounded-full overflow-hidden">
-        <div class="h-full bg-[#00c752]" [style.width.%]="insights?.competitionLevel === 'low' ? 30 :
-                           insights?.competitionLevel === 'medium' ? 60 : 90">
-        </div>
+        <div
+          class="h-full bg-[#00c752]"
+          [style.width.%]="insights?.competitionLevel === 'low' ? 30 :
+                           insights?.competitionLevel === 'medium' ? 60 : 90"
+        ></div>
       </div>
-
     </div>
     }
-
   </div>
-
 </div>
-
-}
-
-}
+} }

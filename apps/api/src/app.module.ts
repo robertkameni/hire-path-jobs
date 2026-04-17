@@ -10,11 +10,7 @@ import { UpstashKeyvStore } from './common/cache/upstash-keyv.store';
 const ANALYSIS_CACHE_KEYV_NAMESPACE = 'hirepath-analysis-cache';
 
 import { APP_FILTER, APP_GUARD } from '@nestjs/core';
-import {
-  ThrottlerGuard,
-  ThrottlerModule,
-  type ThrottlerModuleOptions,
-} from '@nestjs/throttler';
+import { ThrottlerGuard, ThrottlerModule, type ThrottlerModuleOptions } from '@nestjs/throttler';
 import * as Joi from 'joi';
 import { AnalysisModule } from './analysis/analysis.module';
 import { AllExceptionsFilter } from './common/filters/http-exception.filter';
@@ -27,9 +23,7 @@ import { AppController } from './controllers/app.controller';
       envFilePath: '../../.env',
       isGlobal: true,
       validationSchema: Joi.object({
-        NODE_ENV: Joi.string()
-          .valid('development', 'production', 'test')
-          .default('development'),
+        NODE_ENV: Joi.string().valid('development', 'production', 'test').default('development'),
         PORT: Joi.number().default(3000),
         GEMINI_API_KEY_BACKEND: Joi.string().required(),
         GEMINI_MODEL: Joi.string().default('gemini-2.5-flash'),
@@ -69,10 +63,7 @@ import { AppController } from './controllers/app.controller';
 
         if (url && token) {
           const redis = new Redis({ url, token });
-          const store = new UpstashKeyvStore(
-            redis,
-            `${ANALYSIS_CACHE_KEYV_NAMESPACE}:*`,
-          );
+          const store = new UpstashKeyvStore(redis, `${ANALYSIS_CACHE_KEYV_NAMESPACE}:*`);
           return {
             ...base,
             stores: [
@@ -113,8 +104,6 @@ import { AppController } from './controllers/app.controller';
 })
 export class AppModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer
-      .apply(CorrelationIdMiddleware)
-      .forRoutes({ path: '*', method: RequestMethod.ALL });
+    consumer.apply(CorrelationIdMiddleware).forRoutes({ path: '*', method: RequestMethod.ALL });
   }
 }

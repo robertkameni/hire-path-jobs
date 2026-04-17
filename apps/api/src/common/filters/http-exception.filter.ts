@@ -1,11 +1,4 @@
-import {
-  type ArgumentsHost,
-  Catch,
-  type ExceptionFilter,
-  HttpException,
-  HttpStatus,
-  Logger,
-} from '@nestjs/common';
+import { type ArgumentsHost, Catch, type ExceptionFilter, HttpException, HttpStatus, Logger } from '@nestjs/common';
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
@@ -16,10 +9,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const response = ctx.getResponse();
     const request = ctx.getRequest();
 
-    const status =
-      exception instanceof HttpException
-        ? exception.getStatus()
-        : HttpStatus.INTERNAL_SERVER_ERROR;
+    const status = exception instanceof HttpException ? exception.getStatus() : HttpStatus.INTERNAL_SERVER_ERROR;
 
     const correlationId = request.headers['x-correlation-id'];
 
@@ -34,10 +24,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
     const logMessage = `[${correlationId ?? 'no-id'}] ${request.method} ${request.url} → ${status}`;
     if (status >= 500) {
-      this.logger.error(
-        logMessage,
-        exception instanceof Error ? exception.stack : String(exception),
-      );
+      this.logger.error(logMessage, exception instanceof Error ? exception.stack : String(exception));
     } else {
       this.logger.warn(logMessage);
     }

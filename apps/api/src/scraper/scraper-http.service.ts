@@ -2,12 +2,7 @@ import * as dns from 'node:dns';
 import * as http from 'node:http';
 import * as https from 'node:https';
 import * as net from 'node:net';
-import {
-  BadGatewayException,
-  BadRequestException,
-  Injectable,
-  Logger,
-} from '@nestjs/common';
+import { BadGatewayException, BadRequestException, Injectable, Logger } from '@nestjs/common';
 import axios from 'axios';
 
 const BLOCKED_DOMAINS = new Set([
@@ -57,11 +52,7 @@ const SSRF_BLOCKLIST = buildSsrfBlockList();
 function executeSsrfSafeLookup(
   hostname: string,
   _options: object,
-  callback: (
-    err: NodeJS.ErrnoException | null,
-    address: string,
-    family: number,
-  ) => void,
+  callback: (err: NodeJS.ErrnoException | null, address: string, family: number) => void,
 ): void {
   dns.lookup(hostname, { all: true, verbatim: true }, (err, addresses) => {
     if (err) {
@@ -69,20 +60,12 @@ function executeSsrfSafeLookup(
       return;
     }
     if (!addresses || addresses.length === 0) {
-      callback(
-        Object.assign(new Error('No addresses'), { code: 'ENOTFOUND' }),
-        '',
-        0,
-      );
+      callback(Object.assign(new Error('No addresses'), { code: 'ENOTFOUND' }), '', 0);
       return;
     }
     for (const entry of addresses) {
       if (typeof entry.address !== 'string' || entry.address.length === 0) {
-        callback(
-          Object.assign(new Error('No valid addresses'), { code: 'ENOTFOUND' }),
-          '',
-          0,
-        );
+        callback(Object.assign(new Error('No valid addresses'), { code: 'ENOTFOUND' }), '', 0);
         return;
       }
 
@@ -110,16 +93,8 @@ function executeSsrfSafeLookup(
     }
 
     const first = addresses[0];
-    if (
-      !first ||
-      typeof first.address !== 'string' ||
-      first.address.length === 0
-    ) {
-      callback(
-        Object.assign(new Error('No valid addresses'), { code: 'ENOTFOUND' }),
-        '',
-        0,
-      );
+    if (!first || typeof first.address !== 'string' || first.address.length === 0) {
+      callback(Object.assign(new Error('No valid addresses'), { code: 'ENOTFOUND' }), '', 0);
       return;
     }
     callback(null, first.address, first.family);
@@ -144,17 +119,14 @@ export class ScraperHttpService {
     if (BLOCKED_DOMAINS.has(host)) {
       throw new BadGatewayException({
         error: 'SCRAPE_BLOCKED',
-        message:
-          'This site blocks automated access. We cannot fetch the job from this site automatically.',
+        message: 'This site blocks automated access. We cannot fetch the job from this site automatically.',
       });
     }
     try {
       const response = await axios.get(url, {
         headers: {
-          'User-Agent':
-            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-          Accept:
-            'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+          Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
           'Accept-Language': 'en-US,en;q=0.9',
         },
         timeout: 10000,
@@ -171,30 +143,22 @@ export class ScraperHttpService {
       return response.data;
     } catch (err: unknown) {
       const nested = this.getCause(err) ?? err;
-      const nestedMsg =
-        nested instanceof Error ? nested.message : String(nested);
+      const nestedMsg = nested instanceof Error ? nested.message : String(nested);
       const topMsg = err instanceof Error ? err.message : String(err);
-      if (
-        nestedMsg === 'Forbidden target address' ||
-        topMsg.includes('Forbidden target address')
-      ) {
-        throw new BadRequestException(
-          'Requests to that address are not allowed.',
-        );
+      if (nestedMsg === 'Forbidden target address' || topMsg.includes('Forbidden target address')) {
+        throw new BadRequestException('Requests to that address are not allowed.');
       }
       const status = this.getAxiosStatus(err) ?? 0;
       const isBlocked = [401, 403, 429, 503].includes(status);
       if (isBlocked) {
         throw new BadGatewayException({
           error: 'SCRAPE_BLOCKED',
-          message:
-            'This site blocks automated access. We cannot fetch the job from this site automatically.',
+          message: 'This site blocks automated access. We cannot fetch the job from this site automatically.',
         });
       }
       throw new BadGatewayException({
         error: 'SCRAPE_FAILED',
-        message:
-          'Could not fetch the job URL. If this site blocks automated access, paste the job description instead.',
+        message: 'Could not fetch the job URL. If this site blocks automated access, paste the job description instead.',
       });
     }
   }
@@ -212,14 +176,10 @@ export class ScraperHttpService {
     const host = parsed.hostname.toLowerCase();
     const blockedHosts = ['localhost', '127.0.0.1', '0.0.0.0', '::1'];
     if (blockedHosts.includes(host)) {
-      throw new BadRequestException(
-        'Requests to local addresses are not allowed.',
-      );
+      throw new BadRequestException('Requests to local addresses are not allowed.');
     }
     if (/^(10\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.|169\.254\.)/.test(host)) {
-      throw new BadRequestException(
-        'Requests to private network addresses are not allowed.',
-      );
+      throw new BadRequestException('Requests to private network addresses are not allowed.');
     }
   }
 

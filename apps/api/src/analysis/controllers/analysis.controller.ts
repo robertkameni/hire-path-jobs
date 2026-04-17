@@ -1,19 +1,5 @@
-import {
-  Body,
-  Controller,
-  Get,
-  HttpCode,
-  HttpStatus,
-  Param,
-  Post,
-} from '@nestjs/common';
-import {
-  ApiBody,
-  ApiOperation,
-  ApiParam,
-  ApiResponse,
-  ApiTags,
-} from '@nestjs/swagger';
+import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post } from '@nestjs/common';
+import { ApiBody, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AnalyzeJobDto } from '../dto/analyze-job.dto';
 import { JobResponseDto } from '../dto/job-response.dto';
 /** biome-ignore lint/style/useImportType: Needed for NestJS DI (emitDecoratorMetadata) to resolve JobTextExtractorService and ScraperHttpService at runtime. */
@@ -22,9 +8,7 @@ import { AnalysisPipelineService } from '../services/analysis-pipeline.service';
 @ApiTags('analysis')
 @Controller('analysis')
 export class AnalysisController {
-  constructor(
-    private readonly analysisPipelineService: AnalysisPipelineService,
-  ) {}
+  constructor(private readonly analysisPipelineService: AnalysisPipelineService) {}
 
   @Post()
   @HttpCode(HttpStatus.OK)
@@ -44,14 +28,12 @@ export class AnalysisController {
   })
   @ApiResponse({
     status: 200,
-    description:
-      'Job created or cache hit — body includes jobId and status (processing until done; use GET to poll)',
+    description: 'Job created or cache hit — body includes jobId and status (processing until done; use GET to poll)',
     type: JobResponseDto,
   })
   @ApiResponse({
     status: 400,
-    description:
-      'Validation error — jobUrl is required and must be a valid URL',
+    description: 'Validation error — jobUrl is required and must be a valid URL',
   })
   @ApiResponse({ status: 429, description: 'Rate limit exceeded' })
   async submit(@Body() dto: AnalyzeJobDto): Promise<JobResponseDto> {
@@ -61,14 +43,12 @@ export class AnalysisController {
   @Get(':id')
   @ApiOperation({
     summary: 'Get job analysis status and result',
-    description:
-      'Returns the current status of the analysis job. Poll every 2–3 seconds. When status is "completed" the result field is populated.',
+    description: 'Returns the current status of the analysis job. Poll every 2–3 seconds. When status is "completed" the result field is populated.',
   })
   @ApiParam({ name: 'id', description: 'Job ID returned by POST /analysis' })
   @ApiResponse({
     status: 200,
-    description:
-      'Job status — status is one of: queued | processing | completed | failed | partial',
+    description: 'Job status — status is one of: queued | processing | completed | failed | partial',
     type: JobResponseDto,
   })
   @ApiResponse({

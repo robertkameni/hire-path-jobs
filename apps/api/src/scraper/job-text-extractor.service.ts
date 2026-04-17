@@ -5,22 +5,7 @@ import { ConfigService } from '@nestjs/config';
 import * as cheerio from 'cheerio';
 import { JSDOM } from 'jsdom';
 
-const NOISE_TAGS = [
-  'script',
-  'style',
-  'noscript',
-  'header',
-  'footer',
-  'nav',
-  'aside',
-  'iframe',
-  'form',
-  'button',
-  'img',
-  'svg',
-  'meta',
-  'link',
-];
+const NOISE_TAGS = ['script', 'style', 'noscript', 'header', 'footer', 'nav', 'aside', 'iframe', 'form', 'button', 'img', 'svg', 'meta', 'link'];
 
 @Injectable()
 export class JobTextExtractorService {
@@ -29,22 +14,14 @@ export class JobTextExtractorService {
   private maxTextChars: number;
 
   constructor(private configService: ConfigService) {
-    this.minTextLength = this.configService.get<number>(
-      'SCRAPER_MIN_TEXT_LENGTH',
-      100,
-    );
-    this.maxTextChars = this.configService.get<number>(
-      'SCRAPER_MAX_TEXT_CHARS',
-      12000,
-    );
+    this.minTextLength = this.configService.get<number>('SCRAPER_MIN_TEXT_LENGTH', 100);
+    this.maxTextChars = this.configService.get<number>('SCRAPER_MAX_TEXT_CHARS', 12000);
   }
 
   extractJobText(html: string, pageUrl: string): string {
     let text = this.extractWithCheerio(html);
     if (text.length < this.minTextLength) {
-      this.logger.warn(
-        `Cheerio extracted only ${text.length} chars — trying Readability fallback`,
-      );
+      this.logger.warn(`Cheerio extracted only ${text.length} chars — trying Readability fallback`);
       text = this.extractWithReadability(html, pageUrl);
     }
     if (text.length < this.minTextLength) {
@@ -56,9 +33,7 @@ export class JobTextExtractorService {
       });
     }
     if (text.length > this.maxTextChars) {
-      this.logger.warn(
-        `Job text truncated from ${text.length} to ${this.maxTextChars} chars`,
-      );
+      this.logger.warn(`Job text truncated from ${text.length} to ${this.maxTextChars} chars`);
       text = text.slice(0, this.maxTextChars);
     }
     this.logger.log(`Extracted ${text.length} characters from job page`);
@@ -91,15 +66,11 @@ export class JobTextExtractorService {
   private extractWithReadability(html: string, url: string) {
     try {
       const dom = new JSDOM(html, { url });
-      const reader = new Readability(
-        dom.window.document as unknown as Document,
-      );
+      const reader = new Readability(dom.window.document as unknown as Document);
       const article = reader.parse();
       if (article?.textContent) return this.normalizeText(article.textContent);
     } catch (err: unknown) {
-      this.logger.warn(
-        `Readability fallback failed: ${err instanceof Error ? err.message : String(err)}`,
-      );
+      this.logger.warn(`Readability fallback failed: ${err instanceof Error ? err.message : String(err)}`);
     }
     return '';
   }

@@ -58,21 +58,16 @@ export class AnalysisPipelineService {
   async submit(dto: AnalyzeJobDto): Promise<JobResponseDto> {
     const pending: number = await this.jobsService.countPending();
     if (pending >= MAX_QUEUE_DEPTH) {
-      throw new HttpException(
-        'Queue at capacity — try again shortly',
-        HttpStatus.TOO_MANY_REQUESTS,
-      );
+      throw new HttpException('Queue at capacity — try again shortly', HttpStatus.TOO_MANY_REQUESTS);
     }
     const cacheKey: string = this.buildCacheKey(dto);
     const cached: unknown = await this.cacheManager.get(cacheKey);
     if (cached) {
       this.logger.event('cache_hit', { cacheKey: cacheKey.slice(0, 16) });
-      const jobFromCache: JobRecord =
-        await this.jobsService.createCompleted(cached);
+      const jobFromCache: JobRecord = await this.jobsService.createCompleted(cached);
       return mapJobRecordToJobResponseDto(jobFromCache);
     }
-    const existingJobId: string | undefined =
-      this.inFlightJobIdByCacheKey.get(cacheKey);
+    const existingJobId: string | undefined = this.inFlightJobIdByCacheKey.get(cacheKey);
     if (existingJobId) {
       const existingJob: JobRecord = await this.jobsService.get(existingJobId);
       return mapJobRecordToJobResponseDto(existingJob);
@@ -101,11 +96,7 @@ export class AnalysisPipelineService {
           message: formatted.message,
           errorCode: formatted.code,
         });
-        await this.jobsService.setFailed(
-          job.id,
-          formatted.message,
-          formatted.code,
-        );
+        await this.jobsService.setFailed(job.id, formatted.message, formatted.code);
       })
       .finally(() => {
         this.inFlightJobIdByCacheKey.delete(cacheKey);
@@ -118,13 +109,9 @@ export class AnalysisPipelineService {
     const { jobId, dto, cacheKey } = input;
     try {
       const providedJobText = dto.jobText?.trim();
-      const scrapedJobText = providedJobText
-        ? null
-        : await this.scraperService.fetchJobText(dto.jobUrl);
+      const scrapedJobText = providedJobText ? null : await this.scraperService.fetchJobText(dto.jobUrl);
 
-      const normalizedJobText = normalizeJobText(
-        providedJobText ?? scrapedJobText ?? '',
-      );
+      const normalizedJobText = normalizeJobText(providedJobText ?? scrapedJobText ?? '');
       const jobText = truncateForAi(normalizedJobText);
 
       const result: AnalyzeResult = (await this.analysisService.analyze({
@@ -143,22 +130,13 @@ export class AnalysisPipelineService {
       await this.jobsService.setCompleted(jobId, result);
     } catch (err: unknown) {
       const formatted = this.formatPipelineError(err);
-      await this.jobsService.setFailed(
-        jobId,
-        formatted.message,
-        formatted.code,
-      );
+      await this.jobsService.setFailed(jobId, formatted.message, formatted.code);
     }
   }
 
   private buildCacheKey(dto: AnalyzeJobDto): string {
-    const jobTextHash = dto.jobText?.trim()
-      ? createHash('sha256')
-          .update(normalizeJobText(dto.jobText.trim()))
-          .digest('hex')
-      : 'scrape';
-    const payload: string =
-      dto.jobUrl + jobTextHash + JSON.stringify(dto.userProfile ?? null);
+    const jobTextHash = dto.jobText?.trim() ? createHash('sha256').update(normalizeJobText(dto.jobText.trim())).digest('hex') : 'scrape';
+    const payload: string = dto.jobUrl + jobTextHash + JSON.stringify(dto.userProfile ?? null);
     return createHash('sha256').update(payload).digest('hex');
   }
 
@@ -182,9 +160,7 @@ export class AnalysisPipelineService {
     return { message: message || 'Unknown error during analysis' };
   }
 
-  private getErrorPayload(
-    payload: unknown,
-  ): { error?: string; message?: string } | null {
+  private getErrorPayload(payload: unknown): { error?: string; message?: string } | null {
     if (!payload || typeof payload !== 'object') return null;
     return payload as { error?: string; message?: string };
   }

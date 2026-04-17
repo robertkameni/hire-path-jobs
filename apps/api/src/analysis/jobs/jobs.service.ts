@@ -1,10 +1,4 @@
-import {
-  Inject,
-  Injectable,
-  Logger,
-  NotFoundException,
-  type OnModuleDestroy,
-} from '@nestjs/common';
+import { Inject, Injectable, Logger, NotFoundException, type OnModuleDestroy } from '@nestjs/common';
 import type { JobRecord } from './job-record.types';
 import type { JobStore } from './job-store.interface';
 import { JOB_STORE } from './job-store.token';
@@ -67,11 +61,7 @@ export class JobsService implements OnModuleDestroy {
     await this.patch(id, { status: 'partial', result });
   }
 
-  async setFailed(
-    id: string,
-    error: string,
-    errorCode?: string,
-  ): Promise<void> {
+  async setFailed(id: string, error: string, errorCode?: string): Promise<void> {
     await this.patch(id, { status: 'failed', error, errorCode });
   }
 
@@ -87,12 +77,7 @@ export class JobsService implements OnModuleDestroy {
     clearInterval(this.cleanupTimer);
   }
 
-  private async patch(
-    id: string,
-    fields: Partial<
-      Pick<JobRecord, 'status' | 'result' | 'error' | 'errorCode'>
-    >,
-  ): Promise<void> {
+  private async patch(id: string, fields: Partial<Pick<JobRecord, 'status' | 'result' | 'error' | 'errorCode'>>): Promise<void> {
     const job = await this.jobStore.get(id);
     if (!job) return;
     Object.assign(job, fields, { updatedAt: new Date() });

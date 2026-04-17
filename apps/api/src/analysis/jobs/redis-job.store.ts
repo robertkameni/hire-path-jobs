@@ -71,9 +71,7 @@ export class RedisJobStore implements JobStore {
     if (ids.length === 0) {
       return [];
     }
-    const values = await Promise.all(
-      ids.map((jobId) => this.redis.get<string>(jobDataKey(jobId))),
-    );
+    const values = await Promise.all(ids.map((jobId) => this.redis.get<string>(jobDataKey(jobId))));
     const out: JobRecord[] = [];
     for (let i = 0; i < values.length; i++) {
       const raw = values[i];

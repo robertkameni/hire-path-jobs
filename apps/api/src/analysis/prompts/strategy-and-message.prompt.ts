@@ -1,8 +1,4 @@
-export function strategyAndMessagePrompt(
-  job: unknown,
-  insights: unknown,
-  userProfile?: unknown,
-) {
+export function strategyAndMessagePrompt(job: unknown, insights: unknown, userProfile?: unknown) {
   return `
 You are a senior career strategist and expert at writing high-converting outreach messages.
 

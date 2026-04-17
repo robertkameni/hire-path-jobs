@@ -7,19 +7,14 @@
   },
   "files": {
     "ignoreUnknown": false,
-    "includes": [
-      "**",
-      "!**/build",
-      "!**/dist",
-      "!**/.angular",
-      "!**/coverage",
-      "!**/node_modules"
-    ]
+    "includes": ["**", "!**/build", "!**/dist", "!**/.angular", "!**/coverage", "!**/node_modules"]
   },
   "formatter": {
     "enabled": true,
     "indentStyle": "space",
-    "indentWidth": 2
+    "indentWidth": 2,
+    "lineWidth": 150,
+    "attributePosition": "multiline"
   },
   "linter": {
     "enabled": true,
@@ -42,6 +37,11 @@
   "html": {
     "parser": {
       "interpolation": true
+    },
+    "formatter": {
+      "enabled": true,
+      "attributePosition": "multiline",
+      "lineWidth": 150
     }
   },
   "assist": {
