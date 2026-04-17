@@ -1,10 +1,10 @@
-/** biome-ignore-all lint/style/useImportType: <explanation> */
 import {
   BadGatewayException,
   Injectable,
   RequestTimeoutException,
   ServiceUnavailableException,
 } from '@nestjs/common';
+// biome-ignore lint/style/useImportType: Needed for NestJS DI (emitDecoratorMetadata) to resolve ConfigService at runtime.
 import { ConfigService } from '@nestjs/config';
 import OpenAI from 'openai';
 import pLimit from 'p-limit';

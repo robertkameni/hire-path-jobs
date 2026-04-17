@@ -1,6 +1,7 @@
 import { Readability } from '@mozilla/readability';
 import { BadGatewayException, Injectable, Logger } from '@nestjs/common';
-import type { ConfigService } from '@nestjs/config';
+// biome-ignore lint/style/useImportType: Needed for NestJS DI (emitDecoratorMetadata) to resolve ConfigService at runtime.
+import { ConfigService } from '@nestjs/config';
 import * as cheerio from 'cheerio';
 import { JSDOM } from 'jsdom';
 
