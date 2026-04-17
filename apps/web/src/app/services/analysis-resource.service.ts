@@ -60,7 +60,10 @@ export class AnalysisResourceService {
       ) {
         if (postRes.status === 'failed') {
           const msg = postRes.error ?? 'Analysis failed';
-          if (postRes.errorCode === 'SCRAPE_BLOCKED') {
+          if (
+            postRes.errorCode === 'SCRAPE_BLOCKED' ||
+            postRes.errorCode === 'SCRAPE_FAILED'
+          ) {
             this.needsJobText.set(true);
           }
           throw new Error(msg);
@@ -91,7 +94,10 @@ export class AnalysisResourceService {
       }
       if (job.status === 'failed') {
         const msg = job.error ?? 'Analysis failed';
-        if (job.errorCode === 'SCRAPE_BLOCKED') {
+        if (
+          job.errorCode === 'SCRAPE_BLOCKED' ||
+          job.errorCode === 'SCRAPE_FAILED'
+        ) {
           this.needsJobText.set(true);
         }
         throw new Error(msg);

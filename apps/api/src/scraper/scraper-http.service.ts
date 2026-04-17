@@ -77,10 +77,30 @@ function executeSsrfSafeLookup(
       return;
     }
     for (const entry of addresses) {
-      if (SSRF_BLOCKLIST.check(entry.address)) {
+      if (typeof entry.address !== 'string' || entry.address.length === 0) {
         callback(
-          Object.assign(new Error('Forbidden target address'), {
-            code: 'EHOSTUNREACH',
+          Object.assign(new Error('No valid addresses'), { code: 'ENOTFOUND' }),
+          '',
+          0,
+        );
+        return;
+      }
+
+      try {
+        if (SSRF_BLOCKLIST.check(entry.address)) {
+          callback(
+            Object.assign(new Error('Forbidden target address'), {
+              code: 'EHOSTUNREACH',
+            }),
+            '',
+            0,
+          );
+          return;
+        }
+      } catch {
+        callback(
+          Object.assign(new Error('Invalid DNS address'), {
+            code: 'ENOTFOUND',
           }),
           '',
           0,
@@ -88,7 +108,20 @@ function executeSsrfSafeLookup(
         return;
       }
     }
+
     const first = addresses[0];
+    if (
+      !first ||
+      typeof first.address !== 'string' ||
+      first.address.length === 0
+    ) {
+      callback(
+        Object.assign(new Error('No valid addresses'), { code: 'ENOTFOUND' }),
+        '',
+        0,
+      );
+      return;
+    }
     callback(null, first.address, first.family);
   });
 }
@@ -149,7 +182,6 @@ export class ScraperHttpService {
           'Requests to that address are not allowed.',
         );
       }
-      const message = err instanceof Error ? err.message : String(err);
       const status = this.getAxiosStatus(err) ?? 0;
       const isBlocked = [401, 403, 429, 503].includes(status);
       if (isBlocked) {
@@ -161,7 +193,8 @@ export class ScraperHttpService {
       }
       throw new BadGatewayException({
         error: 'SCRAPE_FAILED',
-        message: `Could not fetch the job URL: ${message}`,
+        message:
+          'Could not fetch the job URL. If this site blocks automated access, paste the job description instead.',
       });
     }
   }

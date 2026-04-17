@@ -23,10 +23,10 @@
     <p class="text-gray-400 text-sm sm:text-base">
       @if (analysis.isLoading()) {
         Our AI is extracting insights from the job posting. This may take a few moments.
-      } @else if (analysis.errorMessage()) {
-        {{ analysis.errorMessage() ?? 'Unknown error' }} Please try a different URL.
+      } @else if (analysis.needsJobText()) {
+        This site can’t be fetched automatically. Paste the job description and try again.
       } @else {
-        Paste a job posting URL above to get AI-powered insights, application strategies, and outreach templates.
+        Paste a job posting URL or a job description above to get AI-powered insights, application strategies, and outreach templates.
       }
     </p>
 
