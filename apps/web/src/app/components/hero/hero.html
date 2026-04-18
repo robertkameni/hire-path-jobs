@@ -18,7 +18,7 @@
     <button
       type="button"
       (click)="handleAnalyze()"
-      [disabled]="analysis.isLoading() ||  (!jobUrl().trim() && !jobText().trim()) "
+      [disabled]="analysis.isLoading() || (!jobUrl().trim() && !jobText().trim()) "
       class="w-full sm:w-auto flex items-center justify-center gap-2
              px-5 sm:px-8 py-3 sm:py-0 h-11 font-semibold
              bg-[#00c752] text-[#04110a] rounded-lg

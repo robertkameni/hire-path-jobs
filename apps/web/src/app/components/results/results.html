@@ -129,6 +129,17 @@ analysis.fallbacks(); @if (!analysis.hasDisplayableAnalysis()) {
     <p class="text-xs sm:text-sm text-gray-400 mb-2">Nachricht:</p>
     <p class="text-white text-sm whitespace-pre-wrap leading-relaxed">{{ message.body }}</p>
   </div>
+  <button
+    type="button"
+    (click)="copyToClipboard(message.body)"
+    class="w-full sm:w-auto flex items-center justify-center gap-2
+       px-5 sm:px-8 py-3 sm:py-0 h-11 font-semibold
+       bg-[#00c752] text-[#04110a] rounded-lg
+       hover:text-white transition-colors cursor-pointer
+       disabled:opacity-50 disabled:cursor-not-allowed"
+  >
+    Copy to clipboard
+  </button>
   }
   <!-- 6. Competition -->
   @if (insights?.competitionLevel) {
@@ -184,13 +195,24 @@ analysis.fallbacks(); @if (!analysis.hasDisplayableAnalysis()) {
     <div class="p-5 sm:p-6 lg:p-8 bg-[#0a1a0d] border border-[#00c752]/40 rounded-2xl">
       <h2 class="text-xl sm:text-2xl font-bold text-[#00c752] mb-4 lg:mb-6 flex items-center gap-2">✉️ Outreach Message</h2>
 
-      <div class="p-4 bg-[#00c752]/5 border border-[#00c752]/20 rounded-lg">
+      <div class="p-4 mbe-4 bg-[#00c752]/5 border border-[#00c752]/20 rounded-lg">
         <p class="text-xs sm:text-sm text-gray-400 mb-2">Betreff:</p>
         <p class="text-white text-sm font-medium mb-3">{{ message.subject }}</p>
 
         <p class="text-xs sm:text-sm text-gray-400 mb-2">Nachricht:</p>
         <p class="text-white text-sm whitespace-pre-wrap leading-relaxed">{{ message.body }}</p>
       </div>
+      <button
+        type="button"
+        (click)="copyToClipboard(message.body)"
+        class="w-full sm:w-auto flex items-center justify-center gap-2
+             px-5 sm:px-8 py-3 sm:py-0 h-11 font-semibold
+             bg-[#00c752] text-[#04110a] rounded-lg
+             hover:text-white transition-colors cursor-pointer
+             disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        Copy to clipboard
+      </button>
     </div>
     }
   </div>
