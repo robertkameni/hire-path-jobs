@@ -25,8 +25,8 @@ import { AppController } from './controllers/app.controller';
       validationSchema: Joi.object({
         NODE_ENV: Joi.string().valid('development', 'production', 'test').default('development'),
         PORT: Joi.number().default(3000),
-        GEMINI_API_KEY_BACKEND: Joi.string().required(),
-        GEMINI_MODEL: Joi.string().default('gemini-2.5-flash'),
+        DEEPSEEK_API_KEY: Joi.string().required(),
+        DEEPSEEK_MODEL: Joi.string().default('deepseek-chat'),
         AI_TIMEOUT_MS: Joi.number().default(45000),
         AI_CONCURRENCY: Joi.number().default(5),
         CORS_ORIGIN: Joi.string().default('*'),

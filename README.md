@@ -2,7 +2,7 @@
 
 AI-powered job analysis app.
 
-Built with **Angular** (web) + **NestJS** (API) + **TypeScript** + **Google Gemini**.
+Built with **Angular** (web) + **NestJS** (API) + **TypeScript** + **DeepSeek**.
 
 ---
 
@@ -36,7 +36,7 @@ libs/
 ## Prerequisites
 
 - Node.js 20+
-- A [Google Gemini API key](https://aistudio.google.com/app/apikey)
+- A [DeepSeek API key](https://api-docs.deepseek.com/)
 
 ---
 
@@ -49,8 +49,8 @@ npm install
 Create a `.env` file in the project root:
 
 ```env
-GEMINI_API_KEY_BACKEND=your_api_key_here
-GEMINI_MODEL=gemini-2.5-flash   # optional, this is the default
+DEEPSEEK_API_KEY=your_api_key_here
+DEEPSEEK_MODEL=deepseek-chat   # optional, this is the default
 ```
 
 ---
@@ -107,9 +107,9 @@ When completed/partial, `result` contains `job`, `insights`, `strategy`, and `me
 | `400`  | —                 | Validation error (e.g. missing or invalid `jobUrl`)                |
 | `502`  | `SCRAPE_BLOCKED`  | The site actively blocks automated access (e.g. Indeed, LinkedIn)  |
 | `502`  | `SCRAPE_FAILED`   | Could not fetch the URL (network error, redirect loop, empty page) |
-| `502`  | `AI_INVALID_JSON` | Gemini returned malformed JSON                                     |
-| `502`  | `AI_SCHEMA_ERROR` | Gemini response did not match the expected schema                  |
-| `502`  | `Bad Gateway`     | Gemini API returned an error or timed out                          |
+| `502`  | `AI_INVALID_JSON` | AI provider returned malformed JSON                                |
+| `502`  | `AI_SCHEMA_ERROR` | AI provider response did not match the expected schema             |
+| `502`  | `Bad Gateway`     | AI provider returned an error or timed out                         |
 | `429`  | —                 | Rate limit exceeded (10 requests / 60 s per IP by default)         |
 
 ---
@@ -175,8 +175,8 @@ In that case, retry with `jobText` (paste the job description section). The back
 
 | Variable                 | Required | Default            | Description                                         |
 | ------------------------ | -------- | ------------------ | --------------------------------------------------- |
-| `GEMINI_API_KEY_BACKEND` | Yes      | —                  | Your Google Gemini API key                          |
-| `GEMINI_MODEL`           | No       | `gemini-2.5-flash` | Gemini model to use                                 |
+| `DEEPSEEK_API_KEY` | Yes      | —              | Your DeepSeek API key                    |
+| `DEEPSEEK_MODEL`   | No       | `deepseek-chat` | DeepSeek model to use                     |
 | `PORT`                   | No       | `3000`             | Server port                                         |
 | `CORS_ORIGIN`            | No       | `*`                | Allowed CORS origin                                 |
 | `CACHE_TTL_SECONDS`      | No       | `86400`            | How long to cache results (seconds). Default = 24 h |

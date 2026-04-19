@@ -14,7 +14,7 @@ import { mapJobRecordToJobResponseDto } from '../mappers/job-response.mapper';
 import { AnalysisService } from './analysis.service';
 
 const MAX_QUEUE_DEPTH = 50;
-// Token/cost guardrails for gemini-2.5-flash (char-based approximation).
+// Token/cost guardrails for AI provider (char-based approximation).
 const MAX_AI_JOB_TEXT_CHARS = 35000;
 const AI_JOB_TEXT_HEAD_CHARS = 25000;
 const AI_JOB_TEXT_TAIL_CHARS = 10000;

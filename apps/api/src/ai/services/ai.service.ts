@@ -21,14 +21,14 @@ export class AiService implements AiPort {
   constructor(private configService: ConfigService) {}
 
   onModuleInit() {
-    const apiKey: string = this.configService.getOrThrow<string>('ai.geminiApiKey');
-    this.model = this.configService.get<string>('ai.model') ?? 'gemini-2.5-flash';
+    const apiKey: string = this.configService.getOrThrow<string>('ai.apiKey');
+    this.model = this.configService.get<string>('ai.model') ?? 'deepseek-chat';
     this.timeoutMs = this.configService.get<number>('ai.timeoutMs') ?? 45000;
     const concurrency: number = this.configService.get<number>('ai.concurrency') ?? 5;
     this.limit = pLimit(concurrency);
     this.client = new OpenAI({
       apiKey,
-      baseURL: 'https://generativelanguage.googleapis.com/v1beta/openai/',
+      baseURL: 'https://api.deepseek.com',
     });
   }
 

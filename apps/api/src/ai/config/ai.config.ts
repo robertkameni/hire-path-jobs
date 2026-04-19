@@ -1,8 +1,8 @@
 import { registerAs } from '@nestjs/config';
 
 export default registerAs('ai', () => ({
-  geminiApiKey: process.env.GEMINI_API_KEY_BACKEND,
-  model: process.env.GEMINI_MODEL ?? 'gemini-2.5-flash',
+  apiKey: process.env.DEEPSEEK_API_KEY,
+  model: process.env.DEEPSEEK_MODEL ?? 'deepseek-chat',
   timeoutMs: Number(process.env.AI_TIMEOUT_MS ?? 45000),
   concurrency: Number(process.env.AI_CONCURRENCY ?? 5),
 }));
