@@ -19,11 +19,15 @@ export const CopyClipboardStore = signalStore(
       navigator.clipboard
         .writeText(text)
         .then(() => {
-          patchState(store, { copiedToClipboard: true });
+          patchState(store, { copiedToClipboard: true, error: null });
+          setTimeout(() => patchState(store, { copiedToClipboard: false }), 5000);
         })
         .catch((err) => {
-          patchState(store, { error: err.message });
+          patchState(store, { error: err.message, copiedToClipboard: false });
         });
+    },
+    reset: () => {
+      patchState(store, initialState);
     },
   })),
   withComputed(({ copiedToClipboard }) => ({

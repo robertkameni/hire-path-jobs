@@ -14,7 +14,7 @@
 
     <p class="text-gray-400 text-sm sm:text-base">
       @if (analysis.isLoading()) { Our AI is extracting insights from the job posting. This may take a few moments. } @else if
-      (analysis.needsJobText()) { This site can’t be fetched automatically. Paste the job description and try again. } @else { Paste a job posting URL
+      (analysis.needsJobText()) { This site can't be fetched automatically. Paste the job description and try again. } @else { Paste a job posting URL
       or a job description above to get AI-powered insights, application strategies, and outreach templates. }
     </p>
   </div>
@@ -131,7 +131,7 @@ analysis.fallbacks(); @if (!analysis.hasDisplayableAnalysis()) {
   </div>
   <button
     type="button"
-    (click)="copyToClipboard(message.body)"
+    (click)="copyToClipboard(message)"
     class="w-full sm:w-auto flex items-center justify-center gap-2
        px-5 sm:px-8 py-3 sm:py-0 h-11 font-semibold
        bg-[#00c752] text-[#04110a] rounded-lg
@@ -204,7 +204,7 @@ analysis.fallbacks(); @if (!analysis.hasDisplayableAnalysis()) {
       </div>
       <button
         type="button"
-        (click)="copyToClipboard(message.body)"
+        (click)="copyToClipboard(message)"
         class="w-full sm:w-auto flex items-center justify-center gap-2
              px-5 sm:px-8 py-3 sm:py-0 h-11 font-semibold
              bg-[#00c752] text-[#04110a] rounded-lg
