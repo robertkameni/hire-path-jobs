@@ -76,18 +76,9 @@ export class AnalysisPipelineService {
     this.inFlightJobIdByCacheKey.set(cacheKey, job.id);
     await this.jobsService.setProcessing(job.id);
     this.logger.event('pipeline_start', { jobId: job.id });
-    // If the user provides jobText, run the pipeline synchronously so the POST
-    // returns completed/partial/failed immediately (no polling needed).
-    if (dto.jobText?.trim()) {
-      try {
-        await this.runPipeline({ jobId: job.id, dto, cacheKey });
-      } finally {
-        this.inFlightJobIdByCacheKey.delete(cacheKey);
-      }
-      const finishedJob: JobRecord = await this.jobsService.get(job.id);
-      return mapJobRecordToJobResponseDto(finishedJob);
-    }
-
+    // Always process asynchronously and return quickly with a job id.
+    // Long AI runs (especially with pasted jobText) can exceed serverless
+    // execution limits if handled synchronously in the POST request.
     void this.runPipeline({ jobId: job.id, dto, cacheKey })
       .catch(async (err: unknown) => {
         const formatted = this.formatPipelineError(err);
