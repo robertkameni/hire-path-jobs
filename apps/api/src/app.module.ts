@@ -50,6 +50,7 @@ import { AppController } from './controllers/app.controller.js';
             limit: config.get<number>('THROTTLE_LIMIT', 10),
           },
         ],
+        skipIf: (ctx) => ctx.switchToHttp().getRequest<{ method?: string }>().method === 'OPTIONS',
       }),
     }),
     CacheModule.registerAsync({
@@ -64,8 +65,7 @@ import { AppController } from './controllers/app.controller.js';
 
         const url = config.get<string>('UPSTASH_REDIS_REST_URL')?.trim();
         const token = config.get<string>('UPSTASH_REDIS_REST_TOKEN')?.trim();
-        const useUpstash =
-          Boolean(url && token) && config.get<string>('DISABLE_UPSTASH') !== 'true';
+        const useUpstash = Boolean(url && token) && config.get<string>('DISABLE_UPSTASH') !== 'true';
 
         if (useUpstash && url && token) {
           const redis = new Redis({ url, token });

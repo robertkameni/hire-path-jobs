@@ -1,4 +1,5 @@
 export const environment = {
   production: true,
-  apiBaseUrl: 'https://hire-path-jobs-api.vercel.app/api',
+  /** Same host as SPA; Vercel rewrites to the API (`vercel.json`). */
+  apiBaseUrl: '/api',
 };

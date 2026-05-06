@@ -1,4 +1,5 @@
 export const environment = {
   production: false,
-  apiBaseUrl: 'http://localhost:3000/api',
+  /** Dev server proxies to Nest (`proxy.conf.json`). */
+  apiBaseUrl: '/api',
 };

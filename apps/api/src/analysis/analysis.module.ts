@@ -21,8 +21,7 @@ import { AnalysisPipelineService } from './services/analysis-pipeline.service.js
       useFactory: (config: ConfigService): JobStore => {
         const url = config.get<string>('UPSTASH_REDIS_REST_URL')?.trim();
         const token = config.get<string>('UPSTASH_REDIS_REST_TOKEN')?.trim();
-        const useUpstash =
-          Boolean(url && token) && config.get<string>('DISABLE_UPSTASH') !== 'true';
+        const useUpstash = Boolean(url && token) && config.get<string>('DISABLE_UPSTASH') !== 'true';
         if (useUpstash && url && token) {
           return new RedisJobStore(new Redis({ url, token }));
         }
