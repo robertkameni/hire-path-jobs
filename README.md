@@ -33,6 +33,18 @@ libs/
 
 ---
 
+## Deploying the API (Vercel)
+
+In the Vercel project for the backend, set **Root Directory** to **`apps/api`**.
+
+The app is wired for **serverless**: `vercel.json` rewrites all routes to `api/index.mjs`, which runs the compiled **`dist/vercel.js`** Nest handler (cached per instance). A plain `listen()`-only deploy will return **`FUNCTION_INVOCATION_FAILED`** on Vercel.
+
+Configure **`DEEPSEEK_API_KEY`** (and optional Upstash variables) in Vercel → Environment Variables. Increase **`maxDuration`** in `apps/api/vercel.json` if analyses hit your plan’s execution limit.
+
+Local development still uses **`npm run start:api`** (`node dist/main.js`).
+
+---
+
 ## Prerequisites
 
 - Node.js 20+

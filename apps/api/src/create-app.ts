@@ -3,16 +3,12 @@ import { createRequire } from 'node:module';
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import type { NestExpressApplication } from '@nestjs/platform-express';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 import { AppModule } from './app.module.js';
 
-type HelmetExpressMiddleware = (
-  req: IncomingMessage,
-  res: ServerResponse,
-  next: (err?: unknown) => void,
-) => void;
+type HelmetExpressMiddleware = (req: IncomingMessage, res: ServerResponse, next: (err?: unknown) => void) => void;
 type HelmetFactory = (options?: Readonly<Record<string, unknown>>) => HelmetExpressMiddleware;
 
 const require = createRequire(import.meta.url);
@@ -65,6 +61,5 @@ export async function createConfiguredApplication(): Promise<NestExpressApplicat
     jsonDocumentUrl: 'api/docs-json',
   });
 
-  await app.init();
   return app;
 }

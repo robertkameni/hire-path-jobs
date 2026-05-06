@@ -1,19 +1,21 @@
 import 'reflect-metadata';
-import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 import type { NestExpressApplication } from '@nestjs/platform-express';
+import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 import { createConfiguredApplication } from './create-app.js';
 
-declare const globalThis: typeof global & {
+const nestGlobal = globalThis as typeof globalThis & {
   __hirePathNestApp?: NestExpressApplication;
 };
 
 async function getCachedApp(): Promise<NestExpressApplication> {
-  if (!globalThis.__hirePathNestApp) {
-    globalThis.__hirePathNestApp = await createConfiguredApplication();
+  if (!nestGlobal.__hirePathNestApp) {
+    const nest = await createConfiguredApplication();
+    await nest.init();
+    nestGlobal.__hirePathNestApp = nest;
   }
-  return globalThis.__hirePathNestApp;
+  return nestGlobal.__hirePathNestApp;
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
