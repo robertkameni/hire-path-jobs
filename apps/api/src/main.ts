@@ -1,9 +1,16 @@
 import 'reflect-metadata';
+import type { IncomingMessage, ServerResponse } from 'node:http';
+import { createRequire } from 'node:module';
 import { Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import helmet from 'helmet';
 import { AppModule } from './app.module.js';
+
+type HelmetExpressMiddleware = (req: IncomingMessage, res: ServerResponse, next: (err?: unknown) => void) => void;
+type HelmetFactory = (options?: Readonly<Record<string, unknown>>) => HelmetExpressMiddleware;
+
+const require = createRequire(import.meta.url);
+const helmet = require('helmet') as HelmetFactory;
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
