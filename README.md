@@ -173,7 +173,7 @@ In that case, retry with `jobText` (paste the job description section). The back
 
 ## Environment variables
 
-With `NODE_ENV=development` (default locally), **Upstash is not used** unless you set `UPSTASH_IN_DEVELOPMENT=true`, so wrong or leftover `UPSTASH_*` values in `.env` will not cause 500s. Production (`NODE_ENV=production`) uses Upstash when both URL and token are set (unless `DISABLE_UPSTASH=true`).
+When both `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` are set, the API uses Upstash for shared cache and the job store unless `DISABLE_UPSTASH=true`.
 
 | Variable                 | Required | Default            | Description                                         |
 | ------------------------ | -------- | ------------------ | --------------------------------------------------- |
@@ -188,7 +188,6 @@ With `NODE_ENV=development` (default locally), **Upstash is not used** unless yo
 | `UPSTASH_REDIS_REST_URL` | No       | —                  | Upstash Redis REST URL (shared cache + optional job store) |
 | `UPSTASH_REDIS_REST_TOKEN` | No     | —                  | Upstash Redis REST token                             |
 | `DISABLE_UPSTASH`        | No       | `false`            | If `true`, never use Upstash (in-memory cache + job store) |
-| `UPSTASH_IN_DEVELOPMENT` | No       | `false`            | If `true`, use Upstash while `NODE_ENV=development` (default is off so invalid local tokens do not break dev) |
 
 ---
 

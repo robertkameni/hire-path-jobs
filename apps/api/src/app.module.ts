@@ -5,7 +5,6 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { Redis } from '@upstash/redis';
 import { LruKeyvStore } from './common/cache/lru-keyv.store.js';
 import { UpstashKeyvStore } from './common/cache/upstash-keyv.store.js';
-import { useUpstashRedis } from './common/config/upstash-enabled.js';
 
 const ANALYSIS_CACHE_KEYV_NAMESPACE = 'hirepath-analysis-cache';
 
@@ -39,7 +38,6 @@ import { AppController } from './controllers/app.controller.js';
         UPSTASH_REDIS_REST_URL: Joi.string().uri().optional(),
         UPSTASH_REDIS_REST_TOKEN: Joi.string().optional(),
         DISABLE_UPSTASH: Joi.string().valid('true', 'false').default('false'),
-        UPSTASH_IN_DEVELOPMENT: Joi.string().valid('true', 'false').default('false'),
       }),
     }),
     // Rate limiting (TTL in seconds as per NestJS docs)
@@ -64,13 +62,12 @@ import { AppController } from './controllers/app.controller.js';
           namespace: ANALYSIS_CACHE_KEYV_NAMESPACE,
         };
 
-        if (useUpstashRedis(config)) {
-          const url = config.get<string>('UPSTASH_REDIS_REST_URL')?.trim();
-          const token = config.get<string>('UPSTASH_REDIS_REST_TOKEN')?.trim();
-          if (!url || !token) {
-            const maxItemsFallback = config.get<number>('CACHE_MAX_ITEMS', 500);
-            return { ...base, stores: [new LruKeyvStore(maxItemsFallback)] };
-          }
+        const url = config.get<string>('UPSTASH_REDIS_REST_URL')?.trim();
+        const token = config.get<string>('UPSTASH_REDIS_REST_TOKEN')?.trim();
+        const useUpstash =
+          Boolean(url && token) && config.get<string>('DISABLE_UPSTASH') !== 'true';
+
+        if (useUpstash && url && token) {
           const redis = new Redis({ url, token });
           const store = new UpstashKeyvStore(redis, `${ANALYSIS_CACHE_KEYV_NAMESPACE}:*`);
           return {

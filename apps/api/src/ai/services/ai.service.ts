@@ -1,12 +1,16 @@
+import { createRequire } from 'node:module';
 import { BadGatewayException, Injectable, RequestTimeoutException, ServiceUnavailableException } from '@nestjs/common';
 /** biome-ignore lint/style/useImportType: Needed for NestJS DI (emitDecoratorMetadata) to resolve JobTextExtractorService and ScraperHttpService at runtime. */
 import { ConfigService } from '@nestjs/config';
-import OpenAI from 'openai';
+import type { OpenAI } from 'openai';
 import type { LimitFunction } from 'p-limit';
 import pLimit from 'p-limit';
 import { StructuredLogger } from '../../common/logger/structured.logger.js';
 import type { AiPort } from '../shared/ai.port.js';
 import { CircuitBreaker } from '../shared/circuit-breaker.js';
+
+const require = createRequire(import.meta.url);
+const OpenAIConstructor = require('openai').default as new (options: { apiKey: string; baseURL?: string | null }) => OpenAI;
 
 type UnknownRecord = Record<string, unknown>;
 
@@ -27,7 +31,7 @@ export class AiService implements AiPort {
     this.timeoutMs = this.configService.get<number>('ai.timeoutMs') ?? 45000;
     const concurrency: number = this.configService.get<number>('ai.concurrency') ?? 5;
     this.limit = pLimit(concurrency);
-    this.client = new OpenAI({
+    this.client = new OpenAIConstructor({
       apiKey,
       baseURL: 'https://api.deepseek.com',
     });
@@ -69,7 +73,7 @@ export class AiService implements AiPort {
     const maxRetries = 3;
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
-      let response: OpenAI.Chat.Completions.ChatCompletion;
+      let response: Awaited<ReturnType<OpenAI['chat']['completions']['create']>>;
       try {
         const controller = new AbortController();
         const timer = setTimeout(() => controller.abort(), this.timeoutMs);
