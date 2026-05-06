@@ -2,7 +2,7 @@ import { BadGatewayException, Injectable, RequestTimeoutException, ServiceUnavai
 /** biome-ignore lint/style/useImportType: Needed for NestJS DI (emitDecoratorMetadata) to resolve JobTextExtractorService and ScraperHttpService at runtime. */
 import { ConfigService } from '@nestjs/config';
 import OpenAI from 'openai';
-import pLimit from 'p-limit';
+import type { LimitFunction } from 'p-limit';
 import { StructuredLogger } from '../../common/logger/structured.logger';
 import type { AiPort } from '../shared/ai.port';
 import { CircuitBreaker } from '../shared/circuit-breaker';
@@ -15,16 +15,17 @@ export class AiService implements AiPort {
   private client!: OpenAI;
   private model: string;
   private timeoutMs: number;
-  private limit!: ReturnType<typeof pLimit>;
+  private limit!: LimitFunction;
   private circuitBreaker = new CircuitBreaker(5, 30000);
 
   constructor(private configService: ConfigService) {}
 
-  onModuleInit() {
+  async onModuleInit() {
     const apiKey: string = this.configService.getOrThrow<string>('ai.apiKey');
     this.model = this.configService.get<string>('ai.model') ?? 'deepseek-chat';
     this.timeoutMs = this.configService.get<number>('ai.timeoutMs') ?? 45000;
     const concurrency: number = this.configService.get<number>('ai.concurrency') ?? 5;
+    const { default: pLimit } = await import('p-limit');
     this.limit = pLimit(concurrency);
     this.client = new OpenAI({
       apiKey,
