@@ -11,7 +11,7 @@ type HelmetFactory = (options?: Readonly<Record<string, unknown>>) => HelmetExpr
 const require = createRequire(import.meta.url);
 const helmet = require('helmet') as HelmetFactory;
 
-/** Applies CORS, Helmet, global prefix, validation, Swagger (shared by `main.ts` and `vercel.ts`). */
+/** Applies CORS, Helmet, global prefix, validation, Swagger (used from `main.ts`). */
 export function configureHttpServer(app: NestExpressApplication): void {
   const config = app.get(ConfigService);
   const corsRaw = config.get<string>('CORS_ORIGIN', '*').trim();

@@ -37,11 +37,11 @@ libs/
 
 In the Vercel project for the backend, set **Root Directory** to **`apps/api`**.
 
-The app is wired for **serverless**: `vercel.json` rewrites all routes to `api/index.mjs`, which runs the compiled **`dist/vercel.js`** Nest handler (cached per instance). A plain `listen()`-only deploy will return **`FUNCTION_INVOCATION_FAILED`** on Vercel.
+Vercel treats this repo as **[NestJS on Vercel](https://vercel.com/docs/frameworks/backend/nestjs)** (“zero config”): **`src/main.ts`** must import **`NestFactory`** from **`@nestjs/core`** and call **`app.listen(process.env.PORT ?? 3000)`** (already the case).
 
-Configure **`DEEPSEEK_API_KEY`** (and optional Upstash variables) in Vercel → Environment Variables. Increase **`maxDuration`** in `apps/api/vercel.json` if analyses hit your plan’s execution limit.
+Configure **`DEEPSEEK_API_KEY`** (and optional Upstash variables) in Vercel → Project → Environment Variables. Long AI runs may need a higher **function duration** limit in **Project Settings → Functions** (plan-dependent).
 
-Local development still uses **`npm run start:api`** (`node dist/main.js`).
+Local development uses **`npm run start:api`** (`node dist/main.js`).
 
 ---
 

@@ -11,9 +11,9 @@ async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   configureHttpServer(app);
   app.enableShutdownHooks();
-  const port = Number(process.env.PORT ?? 3000);
+  const port = process.env.PORT ?? 3000;
   await app.listen(port);
-  logger.log(`Application running on http://localhost:${port}/api`);
+  logger.log(`Application running on http://localhost:${String(port)}/api`);
 }
 
 void bootstrap();
