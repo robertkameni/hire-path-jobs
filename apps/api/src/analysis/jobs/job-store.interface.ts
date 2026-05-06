@@ -1,4 +1,4 @@
-import type { JobRecord } from './job-record.types';
+import type { JobRecord } from './job-record.types.js';
 
 /**
  * Persistence port for analysis job records. Implementations may be sync (in-memory) or async (Redis).

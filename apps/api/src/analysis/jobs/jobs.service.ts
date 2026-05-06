@@ -1,7 +1,7 @@
 import { Inject, Injectable, Logger, NotFoundException, type OnModuleDestroy } from '@nestjs/common';
-import type { JobRecord } from './job-record.types';
-import type { JobStore } from './job-store.interface';
-import { JOB_STORE } from './job-store.token';
+import type { JobRecord } from './job-record.types.js';
+import type { JobStore } from './job-store.interface.js';
+import { JOB_STORE } from './job-store.token.js';
 
 const JOB_TTL_MS = 30 * 60 * 1000;
 const MAX_JOBS = 1000;

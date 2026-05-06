@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import aiConfig from './config/ai.config';
-import { AiService } from './services/ai.service';
-import { AI_Port } from './shared/ai.port';
+import aiConfig from './config/ai.config.js';
+import { AiService } from './services/ai.service.js';
+import { AI_Port } from './shared/ai.port.js';
 
 @Module({
   imports: [ConfigModule.forFeature(aiConfig)],

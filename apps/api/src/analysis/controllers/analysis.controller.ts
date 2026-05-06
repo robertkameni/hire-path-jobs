@@ -1,9 +1,9 @@
 import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post } from '@nestjs/common';
 import { ApiBody, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { AnalyzeJobDto } from '../dto/analyze-job.dto';
-import { JobResponseDto } from '../dto/job-response.dto';
+import { AnalyzeJobDto } from '../dto/analyze-job.dto.js';
+import { JobResponseDto } from '../dto/job-response.dto.js';
 /** biome-ignore lint/style/useImportType: Needed for NestJS DI (emitDecoratorMetadata) to resolve JobTextExtractorService and ScraperHttpService at runtime. */
-import { AnalysisPipelineService } from '../services/analysis-pipeline.service';
+import { AnalysisPipelineService } from '../services/analysis-pipeline.service.js';
 
 @ApiTags('analysis')
 @Controller('analysis')

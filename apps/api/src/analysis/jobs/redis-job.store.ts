@@ -1,6 +1,6 @@
 import type { Redis } from '@upstash/redis';
-import type { JobRecord } from './job-record.types';
-import type { JobStore } from './job-store.interface';
+import type { JobRecord } from './job-record.types.js';
+import type { JobStore } from './job-store.interface.js';
 
 const JOB_IDS_KEY = 'hirepath:analysis:job:ids';
 

@@ -3,19 +3,19 @@ import { CacheModule } from '@nestjs/cache-manager';
 import { type MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { Redis } from '@upstash/redis';
-import Keyv from 'keyv';
-import { LruKeyvStore } from './common/cache/lru-keyv.store';
-import { UpstashKeyvStore } from './common/cache/upstash-keyv.store';
+import { LruKeyvStore } from './common/cache/lru-keyv.store.js';
+import { UpstashKeyvStore } from './common/cache/upstash-keyv.store.js';
+import { useUpstashRedis } from './common/config/upstash-enabled.js';
 
 const ANALYSIS_CACHE_KEYV_NAMESPACE = 'hirepath-analysis-cache';
 
 import { APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule, type ThrottlerModuleOptions } from '@nestjs/throttler';
-import * as Joi from 'joi';
-import { AnalysisModule } from './analysis/analysis.module';
-import { AllExceptionsFilter } from './common/filters/http-exception.filter';
-import { CorrelationIdMiddleware } from './common/middleware/correlation-id.middleware';
-import { AppController } from './controllers/app.controller';
+import Joi from 'joi';
+import { AnalysisModule } from './analysis/analysis.module.js';
+import { AllExceptionsFilter } from './common/filters/http-exception.filter.js';
+import { CorrelationIdMiddleware } from './common/middleware/correlation-id.middleware.js';
+import { AppController } from './controllers/app.controller.js';
 
 @Module({
   imports: [
@@ -38,6 +38,8 @@ import { AppController } from './controllers/app.controller';
         SCRAPER_MAX_TEXT_CHARS: Joi.number().default(12000),
         UPSTASH_REDIS_REST_URL: Joi.string().uri().optional(),
         UPSTASH_REDIS_REST_TOKEN: Joi.string().optional(),
+        DISABLE_UPSTASH: Joi.string().valid('true', 'false').default('false'),
+        UPSTASH_IN_DEVELOPMENT: Joi.string().valid('true', 'false').default('false'),
       }),
     }),
     // Rate limiting (TTL in seconds as per NestJS docs)
@@ -57,34 +59,29 @@ import { AppController } from './controllers/app.controller';
       inject: [ConfigService],
       useFactory: (config: ConfigService): CacheManagerOptions => {
         const ttlMs = config.get<number>('CACHE_TTL_SECONDS', 86400) * 1000;
-        const url = config.get<string>('UPSTASH_REDIS_REST_URL');
-        const token = config.get<string>('UPSTASH_REDIS_REST_TOKEN');
-        const base: CacheManagerOptions = { ttl: ttlMs };
+        const base: CacheManagerOptions = {
+          ttl: ttlMs,
+          namespace: ANALYSIS_CACHE_KEYV_NAMESPACE,
+        };
 
-        if (url && token) {
+        if (useUpstashRedis(config)) {
+          const url = config.get<string>('UPSTASH_REDIS_REST_URL')?.trim();
+          const token = config.get<string>('UPSTASH_REDIS_REST_TOKEN')?.trim();
+          if (!url || !token) {
+            const maxItemsFallback = config.get<number>('CACHE_MAX_ITEMS', 500);
+            return { ...base, stores: [new LruKeyvStore(maxItemsFallback)] };
+          }
           const redis = new Redis({ url, token });
           const store = new UpstashKeyvStore(redis, `${ANALYSIS_CACHE_KEYV_NAMESPACE}:*`);
           return {
             ...base,
-            stores: [
-              new Keyv({
-                store,
-                ttl: ttlMs,
-                namespace: ANALYSIS_CACHE_KEYV_NAMESPACE,
-              }),
-            ],
+            stores: [store],
           };
         }
         const maxItems = config.get<number>('CACHE_MAX_ITEMS', 500);
         return {
           ...base,
-          stores: [
-            new Keyv({
-              store: new LruKeyvStore(maxItems),
-              ttl: ttlMs,
-              namespace: ANALYSIS_CACHE_KEYV_NAMESPACE,
-            }),
-          ],
+          stores: [new LruKeyvStore(maxItems)],
         };
       },
     }),

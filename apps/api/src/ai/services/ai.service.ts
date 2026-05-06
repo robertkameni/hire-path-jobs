@@ -3,9 +3,10 @@ import { BadGatewayException, Injectable, RequestTimeoutException, ServiceUnavai
 import { ConfigService } from '@nestjs/config';
 import OpenAI from 'openai';
 import type { LimitFunction } from 'p-limit';
-import { StructuredLogger } from '../../common/logger/structured.logger';
-import type { AiPort } from '../shared/ai.port';
-import { CircuitBreaker } from '../shared/circuit-breaker';
+import pLimit from 'p-limit';
+import { StructuredLogger } from '../../common/logger/structured.logger.js';
+import type { AiPort } from '../shared/ai.port.js';
+import { CircuitBreaker } from '../shared/circuit-breaker.js';
 
 type UnknownRecord = Record<string, unknown>;
 
@@ -20,12 +21,11 @@ export class AiService implements AiPort {
 
   constructor(private configService: ConfigService) {}
 
-  async onModuleInit() {
+  onModuleInit() {
     const apiKey: string = this.configService.getOrThrow<string>('ai.apiKey');
     this.model = this.configService.get<string>('ai.model') ?? 'deepseek-chat';
     this.timeoutMs = this.configService.get<number>('ai.timeoutMs') ?? 45000;
     const concurrency: number = this.configService.get<number>('ai.concurrency') ?? 5;
-    const { default: pLimit } = await import('p-limit');
     this.limit = pLimit(concurrency);
     this.client = new OpenAI({
       apiKey,

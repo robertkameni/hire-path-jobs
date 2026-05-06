@@ -1,5 +1,5 @@
-import { JobResponseDto } from '../dto/job-response.dto';
-import type { JobRecord } from '../jobs/job-record.types';
+import { JobResponseDto } from '../dto/job-response.dto.js';
+import type { JobRecord } from '../jobs/job-record.types.js';
 
 export function mapJobRecordToJobResponseDto(job: JobRecord): JobResponseDto {
   const dto = new JobResponseDto();

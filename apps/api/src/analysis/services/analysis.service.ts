@@ -1,10 +1,10 @@
 import { performance } from 'node:perf_hooks';
 import { Inject, Injectable, InternalServerErrorException } from '@nestjs/common';
 import type { z } from 'zod';
-import { AI_Port, type AiPort } from '../../ai/shared/ai.port';
-import { StructuredLogger } from '../../common/logger/structured.logger';
-import { jobParseAndTruthPrompt } from '../prompts/job-parse-and-truth.prompt';
-import { strategyAndMessagePrompt } from '../prompts/strategy-and-message.prompt';
+import { AI_Port, type AiPort } from '../../ai/shared/ai.port.js';
+import { StructuredLogger } from '../../common/logger/structured.logger.js';
+import { jobParseAndTruthPrompt } from '../prompts/job-parse-and-truth.prompt.js';
+import { strategyAndMessagePrompt } from '../prompts/strategy-and-message.prompt.js';
 import {
   type ContactStrategySchema,
   type JobInsightsSchema,
@@ -12,7 +12,7 @@ import {
   ParsedJobAndInsightsSchema,
   type ParsedJobSchema,
   StrategyAndMessageSchema,
-} from '../schemas/analysis.schemas';
+} from '../schemas/analysis.schemas.js';
 
 type ParsedJob = z.infer<typeof ParsedJobSchema>;
 type JobInsights = z.infer<typeof JobInsightsSchema>;
