@@ -2,11 +2,8 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import { createRequire } from 'node:module';
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { NestFactory } from '@nestjs/core';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-
-import { AppModule } from './app.module.js';
 
 type HelmetExpressMiddleware = (req: IncomingMessage, res: ServerResponse, next: (err?: unknown) => void) => void;
 type HelmetFactory = (options?: Readonly<Record<string, unknown>>) => HelmetExpressMiddleware;
@@ -14,8 +11,8 @@ type HelmetFactory = (options?: Readonly<Record<string, unknown>>) => HelmetExpr
 const require = createRequire(import.meta.url);
 const helmet = require('helmet') as HelmetFactory;
 
-export async function createConfiguredApplication(): Promise<NestExpressApplication> {
-  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+/** Applies CORS, Helmet, global prefix, validation, Swagger (shared by `main.ts` and `vercel.ts`). */
+export function configureHttpServer(app: NestExpressApplication): void {
   const config = app.get(ConfigService);
   const corsRaw = config.get<string>('CORS_ORIGIN', '*').trim();
   let origin: boolean | string[] = true;
@@ -60,6 +57,4 @@ export async function createConfiguredApplication(): Promise<NestExpressApplicat
   SwaggerModule.setup('api/docs', app, document, {
     jsonDocumentUrl: 'api/docs-json',
   });
-
-  return app;
 }

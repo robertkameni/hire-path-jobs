@@ -1,9 +1,10 @@
 import 'reflect-metadata';
-
+import { NestFactory } from '@nestjs/core';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-import { createConfiguredApplication } from './create-app.js';
+import { AppModule } from './app.module.js';
+import { configureHttpServer } from './create-app.js';
 
 const nestGlobal = globalThis as typeof globalThis & {
   __hirePathNestApp?: NestExpressApplication;
@@ -11,7 +12,8 @@ const nestGlobal = globalThis as typeof globalThis & {
 
 async function getCachedApp(): Promise<NestExpressApplication> {
   if (!nestGlobal.__hirePathNestApp) {
-    const nest = await createConfiguredApplication();
+    const nest = await NestFactory.create<NestExpressApplication>(AppModule);
+    configureHttpServer(nest);
     await nest.init();
     nestGlobal.__hirePathNestApp = nest;
   }
