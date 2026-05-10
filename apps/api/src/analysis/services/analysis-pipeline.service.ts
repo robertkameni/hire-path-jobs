@@ -15,7 +15,7 @@ import { AnalysisService } from './analysis.service.js';
 
 const MAX_QUEUE_DEPTH = 50;
 // Bump this when prompt semantics change so stale AI outputs are not reused.
-const ANALYSIS_PROMPT_CACHE_VERSION = '2026-05-10-recruiter-outreach-v3';
+const ANALYSIS_PROMPT_CACHE_VERSION = '2026-05-10-recruiter-outreach-v4';
 // Token/cost guardrails for AI provider (char-based approximation).
 const MAX_AI_JOB_TEXT_CHARS = 35000;
 const AI_JOB_TEXT_HEAD_CHARS = 25000;

@@ -207,7 +207,7 @@ Then add one concrete reason:
 The CTA should be practical and recruiter-friendly:
 • "Liegt der Schwerpunkt aktuell eher auf X oder Y?"
 • "Ist die Rolle noch aktiv zu besetzen?"
-• "Gibt es einen Schwerpunkt, der im ersten Halbjahr besonders wichtig ist?"
+• "Welcher Schwerpunkt ist in den ersten Monaten wichtiger: X oder Y?"
 
 Closing:
 • Email style: end with "Viele Grüße" or "Beste Grüße".
@@ -218,9 +218,10 @@ Closing:
 Viele Grüße
 
 Avoid over-intellectual phrasing in outreach bodies:
-• "Plattform-Governance zwischen Fachbereich, IT und Compliance" is acceptable only if the sentence stays simple.
+• "Plattform-Governance zwischen Fachbereich, IT und Compliance" is acceptable only if the sentence stays simple and practical.
 • Do not use phrases like "streng reguliertes Prozess- und Datenmodell", "organisationsübergreifende Steuerung", or "nicht-obvious interpretation" in the final message.
-• Do not use corporate-heavy phrases like "strategische Steuerungsfunktion", "Qualitätssicherung" unless explicitly central to the job, or "im ersten Halbjahr" unless the posting mentions that timeframe.
+• Never use corporate-heavy phrases like "strategische Steuerungsfunktion", "Qualitätssicherung", "strategische Weiterentwicklung", or "im ersten Halbjahr".
+• Prefer plain words: "Schwerpunkt", "Aufgabe", "Fokus", "bestehende Systeme", "neue CRM-Funktionen".
 • Do not make the recruiter feel tested or challenged.
 
 GOOD MESSAGE PATTERN:
