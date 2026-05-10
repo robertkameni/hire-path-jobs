@@ -125,20 +125,63 @@ If low:
 - Must include:
   • 1 concrete job detail
   • 1 unique element from posting
+- The message must feel perceptive: show that the writer understood the business context behind the role, not just keywords.
+- Prefer a specific observation over self-promotion.
+- If the posting contains domain context (FinTech, payments, compliance, multi-tenant systems, transformation, governance), connect the role to that context in one sentence.
+- The CTA must ask a useful calibration question about the role's real focus, current challenge, team ownership, or project context.
+- The CTA must NOT ask a generic question that is already answered by the posting.
+- The CTA must be exactly one question sentence and contain only one question mark.
 
 ANTI-GENERIC RULE:
 If reusable across jobs → reject and rewrite
+
+AUTHENTICITY RULE:
+- Do NOT claim the candidate has years of experience, specific tools, languages, industries, or achievements unless the trusted Candidate profile explicitly says so.
+- If no Candidate profile exists, write from demonstrated interest and role understanding, not from invented personal credentials.
+- Do NOT mirror requirements as "my profile"; that sounds fake.
+- It is allowed to say "die Rolle wirkt spannend, weil..." or "mich interessiert besonders...", but not "ich bringe 5+ Jahre..." unless provided.
 
 DO NOT:
 - Use placeholders
 - Invent facts
 - Start with generic phrases
+- Start with "Ich bin auf die Stelle aufmerksam geworden"
+- Use English words like "Idea", "quick question", or "fit" in German outreach unless they are part of a product name.
+- Overuse "strategisch", "spannend", or "genau mein Profil".
+- Use vague praise such as "spannende Aufgabe", "innovatives Umfeld", "tolle Chance", "starke Rolle", or "interessante Position".
+- Ask several questions in a row.
 
 If userProfile exists:
 → include 1–2 matching skills
 
 CTA:
 → one simple action
+
+QUALITY BAR:
+Before finalizing, reject the message if any sentence could be pasted into a different job ad without changes.
+Rewrite until at least 3 concrete details are specific to this job/company.
+At least one sentence must contain a real interpretation, for example:
+• "Das wirkt weniger wie reine Administration, sondern eher wie Plattform-Governance zwischen Fachbereich, IT und Compliance."
+• "Bei einem FinTech-Kontext ist Dynamics hier vermutlich nicht nur CRM, sondern Teil eines regulierten Prozess- und Datenmodells."
+
+GOOD MESSAGE PATTERN:
+1. Start with a precise observation about the role's real challenge, without praise.
+2. Connect one or two job-specific details into a non-obvious interpretation.
+3. Add candidate relevance only if supported by Candidate profile.
+4. Ask one focused question that would help decide whether to apply or who to contact.
+
+BAD MESSAGE PATTERNS TO AVOID:
+• "Mit 5+ Jahren X passe ich perfekt..." when no Candidate profile says that.
+• "Könnt ihr mir sagen, welches Projekt dahinter steckt?" if the better question is more specific.
+• Generic praise about transformation, innovation, culture, or growth.
+• A subject that sounds like a marketing headline.
+• "Die Kombination aus X und Y klingt spannend..." because it says little.
+
+SUBJECT RULES:
+- German only.
+- No "Idea für..."
+- No clickbait.
+- Make it concrete and calm, e.g. "Frage zur Dynamics-Rolle bei Riverty" or "Dynamics-Governance bei Riverty".
 
 ━━━━━━━━ AUTO-SELECTION (NEW) ━━━━━━━━
 

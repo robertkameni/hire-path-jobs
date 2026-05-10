@@ -8,14 +8,14 @@ Built with **Angular** (web) + **NestJS** (API) + **TypeScript** + **DeepSeek**.
 
 ## How it works
 
-1. `POST /api/analysis` with a job posting URL (`jobUrl`)
+1. `POST /api/analysis` with a job posting URL (`jobUrl`) or pasted text (`jobText`)
 2. Backend tries to fetch and extract the job description text (scrape step)
 3. Text is normalized (cleanup / whitespace / dedupe)
 4. The AI pipeline produces structured output:
    - **Parse job + insights** (ghost risk, competition level, salary fairness, red flags, verdict)
    - **Contact strategy**
    - **Outreach message**
-5. You poll `GET /api/analysis/:id` until status is `completed`, `partial`, or `failed`
+5. The API returns a terminal job response (`completed`, `partial`, or `failed`) from the POST request
 
 If a site blocks automated fetching (Indeed / LinkedIn / StepStone / Xing, etc.), you can retry the same request with `jobText` (paste the job description) and the backend will **skip scraping**.
 
@@ -33,15 +33,49 @@ libs/
 
 ---
 
-## Deploying the API (Vercel)
+## Deploying to Vercel
 
-In the Vercel project for the backend, set **Root Directory** to **`apps/api`**.
+This repository is deployed as two Vercel projects:
 
-Vercel treats this repo as **[NestJS on Vercel](https://vercel.com/docs/frameworks/backend/nestjs)** (“zero config”): **`src/main.ts`** must import **`NestFactory`** from **`@nestjs/core`** and call **`app.listen(process.env.PORT ?? 3000)`** (already the case).
+| Project              | Root directory | Purpose          |
+| -------------------- | -------------- | ---------------- |
+| `hire-path-jobs-api` | `apps/api`     | NestJS backend   |
+| `hire-path-jobs-web` | `apps/web`     | Angular frontend |
+
+For the backend, Vercel treats this repo as **[NestJS on Vercel](https://vercel.com/docs/frameworks/backend/nestjs)** (“zero config”): **`src/main.ts`** must import **`NestFactory`** from **`@nestjs/core`** and call **`app.listen(process.env.PORT ?? 3000)`** (already the case).
 
 Configure **`DEEPSEEK_API_KEY`** (and optional Upstash variables) in Vercel → Project → Environment Variables. Long AI runs may need a higher **function duration** limit in **Project Settings → Functions** (plan-dependent).
 
 Local development uses **`npm run start:api`** (`node dist/main.js`).
+
+The web project rewrites `/api/*` to the API project via `apps/web/vercel.json`.
+
+---
+
+## GitHub Actions deployment
+
+The workflow in `.github/workflows/ci-deploy.yml` runs on pushes to `main`, pull requests to `main`, and manual dispatch.
+
+Pipeline:
+
+1. Checkout
+2. Install dependencies with `npm ci`
+3. Run Biome checks
+4. Build API
+5. Build web
+6. Deploy API to Vercel
+7. Deploy web to Vercel
+
+Required GitHub repository secrets:
+
+| Secret                  | Value                                      |
+| ----------------------- | ------------------------------------------ |
+| `VERCEL_TOKEN`          | Vercel account token                       |
+| `VERCEL_ORG_ID`         | Vercel team/user ID                        |
+| `VERCEL_API_PROJECT_ID` | Vercel project ID for `hire-path-jobs-api` |
+| `VERCEL_WEB_PROJECT_ID` | Vercel project ID for `hire-path-jobs-web` |
+
+Do not store `VERCEL_TOKEN` as a GitHub variable. It must be a repository secret.
 
 ---
 
@@ -105,10 +139,11 @@ Start the API, then open:
 
 `userProfile` is optional. When provided, the contact strategy and outreach message are tailored to the candidate.
 
-**Response (polling model):**
+**Response:**
 
-- `POST /api/analysis` returns `{ jobId, status, ... }` immediately
-- Poll `GET /api/analysis/:id` until status is `completed | partial | failed`
+- `POST /api/analysis` runs the scrape/AI pipeline and returns `{ jobId, status, result, ... }`
+- `status` is usually `completed`, `partial`, or `failed`
+- `GET /api/analysis/:id` can still be used to retrieve a stored job response
 
 When completed/partial, `result` contains `job`, `insights`, `strategy`, and `message`.
 
@@ -154,13 +189,15 @@ Returns `{ "status": "ok", "timestamp": "..." }`. Use this to verify the server 
 
 ## Caching
 
-Results are cached in-memory, keyed by a SHA-256 hash of:
+Results are cached, keyed by a SHA-256 hash of:
 
 - `jobUrl`
 - `userProfile` (or null)
 - `jobText` hash (when provided) or `"scrape"` (when scraping)
 
 Repeated requests for the same inputs are served instantly without hitting the scraper or AI.
+
+When Upstash is configured, cache and job records are shared across serverless invocations. Without Upstash, cache and jobs are process-local and best suited for local development.
 
 | Variable            | Default | Description                     |
 | ------------------- | ------- | ------------------------------- |
@@ -187,19 +224,19 @@ In that case, retry with `jobText` (paste the job description section). The back
 
 When both `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` are set, the API uses Upstash for shared cache and the job store unless `DISABLE_UPSTASH=true`.
 
-| Variable                 | Required | Default            | Description                                         |
-| ------------------------ | -------- | ------------------ | --------------------------------------------------- |
-| `DEEPSEEK_API_KEY` | Yes      | —              | Your DeepSeek API key                    |
-| `DEEPSEEK_MODEL`   | No       | `deepseek-chat` | DeepSeek model to use                     |
-| `PORT`                   | No       | `3000`             | Server port                                         |
-| `CORS_ORIGIN`            | No       | `*`                | Allowed CORS origin                                 |
-| `CACHE_TTL_SECONDS`      | No       | `86400`            | How long to cache results (seconds). Default = 24 h |
-| `CACHE_MAX_ITEMS`        | No       | `500`              | Maximum number of results to keep in memory         |
-| `THROTTLE_TTL_SECONDS`   | No       | `60`               | Rate limit window in seconds                        |
-| `THROTTLE_LIMIT`         | No       | `10`               | Max requests per IP per window                      |
-| `UPSTASH_REDIS_REST_URL` | No       | —                  | Upstash Redis REST URL (shared cache + optional job store) |
-| `UPSTASH_REDIS_REST_TOKEN` | No     | —                  | Upstash Redis REST token                             |
-| `DISABLE_UPSTASH`        | No       | `false`            | If `true`, never use Upstash (in-memory cache + job store) |
+| Variable                   | Required | Default         | Description                                                |
+| -------------------------- | -------- | --------------- | ---------------------------------------------------------- |
+| `DEEPSEEK_API_KEY`         | Yes      | —               | Your DeepSeek API key                                      |
+| `DEEPSEEK_MODEL`           | No       | `deepseek-chat` | DeepSeek model to use                                      |
+| `PORT`                     | No       | `3000`          | Server port                                                |
+| `CORS_ORIGIN`              | No       | `*`             | Allowed CORS origin                                        |
+| `CACHE_TTL_SECONDS`        | No       | `86400`         | How long to cache results (seconds). Default = 24 h        |
+| `CACHE_MAX_ITEMS`          | No       | `500`           | Maximum number of results to keep in memory                |
+| `THROTTLE_TTL_SECONDS`     | No       | `60`            | Rate limit window in seconds                               |
+| `THROTTLE_LIMIT`           | No       | `10`            | Max requests per IP per window                             |
+| `UPSTASH_REDIS_REST_URL`   | No       | —               | Upstash Redis REST URL (shared cache + optional job store) |
+| `UPSTASH_REDIS_REST_TOKEN` | No       | —               | Upstash Redis REST token                                   |
+| `DISABLE_UPSTASH`          | No       | `false`         | If `true`, never use Upstash (in-memory cache + job store) |
 
 ---
 
