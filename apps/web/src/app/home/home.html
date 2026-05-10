@@ -3,6 +3,9 @@
   <main class="flex min-h-0 flex-1 flex-col">
     <dev-hero />
     <dev-results />
+    @if (!analysis.isLoading() && !analysis.errorMessage() && !analysis.result()) {
+      <dev-landing-copy />
+      }
   </main>
   <dev-footer />
 </div>
