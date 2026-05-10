@@ -18,6 +18,7 @@ concurrency:
 
 env:
   NODE_VERSION: 22
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   verify:
@@ -64,6 +65,7 @@ jobs:
     environment: production
 
     env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_API_PROJECT_ID }}
 
@@ -85,23 +87,23 @@ jobs:
 
       - name: Validate Vercel API secrets
         run: |
-          test -n "${{ secrets.VERCEL_TOKEN }}" || (echo "Missing VERCEL_TOKEN" && exit 1)
+          test -n "$VERCEL_TOKEN" || (echo "Missing VERCEL_TOKEN" && exit 1)
           test -n "$VERCEL_ORG_ID" || (echo "Missing VERCEL_ORG_ID" && exit 1)
           test -n "$VERCEL_PROJECT_ID" || (echo "Missing VERCEL_API_PROJECT_ID" && exit 1)
 
       - name: Pull API Vercel environment
         working-directory: apps/api
-        run: vercel pull --yes --environment=production --token="${{ secrets.VERCEL_TOKEN }}"
+        run: vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
 
       - name: Build API with Vercel
         working-directory: apps/api
-        run: vercel build --prod --token="${{ secrets.VERCEL_TOKEN }}"
+        run: vercel build --prod --token="$VERCEL_TOKEN"
 
       - name: Deploy API prebuilt output
         id: deploy-api
         working-directory: apps/api
         run: |
-          url="$(vercel deploy --prebuilt --prod --token="${{ secrets.VERCEL_TOKEN }}")"
+          url="$(vercel deploy --prebuilt --prod --token="$VERCEL_TOKEN")"
           echo "url=$url" >> "$GITHUB_OUTPUT"
           echo "API deployed to $url"
 
@@ -123,6 +125,7 @@ jobs:
     environment: production
 
     env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_WEB_PROJECT_ID }}
 
@@ -144,23 +147,23 @@ jobs:
 
       - name: Validate Vercel web secrets
         run: |
-          test -n "${{ secrets.VERCEL_TOKEN }}" || (echo "Missing VERCEL_TOKEN" && exit 1)
+          test -n "$VERCEL_TOKEN" || (echo "Missing VERCEL_TOKEN" && exit 1)
           test -n "$VERCEL_ORG_ID" || (echo "Missing VERCEL_ORG_ID" && exit 1)
           test -n "$VERCEL_PROJECT_ID" || (echo "Missing VERCEL_WEB_PROJECT_ID" && exit 1)
 
       - name: Pull web Vercel environment
         working-directory: apps/web
-        run: vercel pull --yes --environment=production --token="${{ secrets.VERCEL_TOKEN }}"
+        run: vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
 
       - name: Build web with Vercel
         working-directory: apps/web
-        run: vercel build --prod --token="${{ secrets.VERCEL_TOKEN }}"
+        run: vercel build --prod --token="$VERCEL_TOKEN"
 
       - name: Deploy web prebuilt output
         id: deploy-web
         working-directory: apps/web
         run: |
-          url="$(vercel deploy --prebuilt --prod --token="${{ secrets.VERCEL_TOKEN }}")"
+          url="$(vercel deploy --prebuilt --prod --token="$VERCEL_TOKEN")"
           echo "url=$url" >> "$GITHUB_OUTPUT"
           echo "Web deployed to $url"
 
