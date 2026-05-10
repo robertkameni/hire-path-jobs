@@ -5,7 +5,7 @@ import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
 import type { Cache } from 'cache-manager';
 import { StructuredLogger } from '../../common/logger/structured.logger.js';
 import { normalizeJobText } from '../../scraper/job-normalizer.js';
-import { ScraperService } from '../../scraper/scraper.service.js';
+import { ScraperService } from '../../scraper/service/scraper.service.js';
 import type { AnalyzeJobDto, UserProfileDto } from '../dto/analyze-job.dto.js';
 import type { JobResponseDto } from '../dto/job-response.dto.js';
 import type { JobRecord } from '../jobs/job-record.types.js';

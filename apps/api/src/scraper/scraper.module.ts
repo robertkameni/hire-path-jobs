@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { JobTextExtractorService } from './job-text-extractor.service.js';
-import { ScraperService } from './scraper.service.js';
-import { ScraperHttpService } from './scraper-http.service.js';
+import { JobTextExtractorService } from './service/job-text-extractor.service.js';
+import { ScraperService } from './service/scraper.service.js';
+import { ScraperHttpService } from './service/scraper-http.service.js';
 
 @Module({
   imports: [ConfigModule],
