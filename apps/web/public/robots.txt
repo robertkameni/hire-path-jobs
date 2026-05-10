@@ -1,0 +1,5 @@
+# https://hire-path-jobs-web.vercel.app
+User-agent: *
+Allow: /
+
+Sitemap: https://hire-path-jobs-web.vercel.app/sitemap.xml
