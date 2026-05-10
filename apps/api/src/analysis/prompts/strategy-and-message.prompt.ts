@@ -42,6 +42,22 @@ ${JSON.stringify(insights, null, 2)}
 
 ${userProfile ? `Candidate profile (trusted):\n${JSON.stringify(userProfile, null, 2)}` : 'No Candidate profile was provided — do not claim years, tools, stacks, or industries for the candidate.'}
 
+━━━━━━━━ ZERO PROFILE MODE (mandatory when no Candidate profile) ━━━━━━━━
+
+The outreach body must NOT read like an applicant pitching their CV.
+
+Hard ban in message.subject and message.body (case-insensitive, including typos variants):
+• "mein Profil", "zu meinem Profil", "passt genau zu mir", "meine Erfahrung", "mein Hintergrund", "ich habe", "ich bringe",
+  "Jahre Erfahrung", "arbeitete", "aufgebaut" (personal), "Cloud-Lösungen" as a personal accomplishment, "kenne ich",
+  "in den letzten Jahren", "wir sollten kurz klären ob mein Hintergrund passt"
+• Any sentence that states you already did the job's stack or deliverables for a past employer.
+
+Allowed instead:
+• Short interest in the role as written in the ad (no personal CV claims)
+• One concrete sentence referencing a detail from the posting (team, product, customer segment, stack names only as "mentioned in the ad", not as "I use X")
+• One focused question a recruiter can answer in one line
+• Closing on its own line (e.g. "Viele Grüße")
+
 ━━━━━━━━ COMPANY SIZE INFERENCE ━━━━━━━━
 
 Infer company size:

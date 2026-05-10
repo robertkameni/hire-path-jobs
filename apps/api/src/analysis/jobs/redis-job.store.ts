@@ -13,6 +13,7 @@ type SerializedJobRecord = {
   status: JobRecord['status'];
   result?: unknown;
   error?: string;
+  errorCode?: string;
   createdAt: string;
   updatedAt: string;
 };
@@ -23,6 +24,7 @@ function serializeRecord(record: JobRecord): string {
     status: record.status,
     result: record.result,
     error: record.error,
+    errorCode: record.errorCode,
     createdAt: record.createdAt.toISOString(),
     updatedAt: record.updatedAt.toISOString(),
   };
@@ -36,6 +38,7 @@ function deserializeRecord(raw: string): JobRecord {
     status: payload.status,
     result: payload.result,
     error: payload.error,
+    errorCode: payload.errorCode,
     createdAt: new Date(payload.createdAt),
     updatedAt: new Date(payload.updatedAt),
   };

@@ -160,7 +160,7 @@ export class AnalysisService {
   }
 
   private async generateStrategyAndMessage(job: ParsedJob, insights: JobInsights, userProfile: unknown) {
-    const raw = await this.aiPort.generateText(strategyAndMessagePrompt(job, insights, userProfile), { temperature: 0.3 });
+    const raw = await this.aiPort.generateText(strategyAndMessagePrompt(job, insights, userProfile), { temperature: 0.15 });
     return this.parseAiResponse(raw, StrategyAndMessageSchema, 'generateStrategyAndMessage');
   }
 }

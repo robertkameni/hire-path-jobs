@@ -16,7 +16,7 @@ import { AnalysisService } from './analysis.service.js';
 
 const MAX_QUEUE_DEPTH = 50;
 // Bump this when prompt semantics change so stale AI outputs are not reused.
-const ANALYSIS_PROMPT_CACHE_VERSION = '2026-05-10-recruiter-outreach-v5';
+const ANALYSIS_PROMPT_CACHE_VERSION = '2026-05-10-recruiter-outreach-v6';
 // Token/cost guardrails for AI provider (char-based approximation).
 const MAX_AI_JOB_TEXT_CHARS = 35000;
 const AI_JOB_TEXT_HEAD_CHARS = 25000;
@@ -86,8 +86,7 @@ export class AnalysisPipelineService {
       const jobFromCache: JobRecord = await this.jobsService.createCompleted(cached);
       return mapJobRecordToJobResponseDto(jobFromCache);
     }
-    const job: JobRecord = await this.jobsService.create();
-    await this.jobsService.setProcessing(job.id);
+    const job: JobRecord = await this.jobsService.createProcessingJob();
     this.logger.event('pipeline_start', { jobId: job.id });
     await this.runPipeline({ jobId: job.id, dto, cacheKey });
     const latestJob: JobRecord = await this.jobsService.get(job.id);

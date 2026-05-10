@@ -1,4 +1,4 @@
-import { Inject, Injectable, Logger, NotFoundException, type OnModuleDestroy } from '@nestjs/common';
+import { Inject, Injectable, InternalServerErrorException, Logger, NotFoundException, type OnModuleDestroy } from '@nestjs/common';
 import type { JobRecord } from './job-record.types.js';
 import type { JobStore } from './job-store.interface.js';
 import { JOB_STORE } from './job-store.token.js';
@@ -28,6 +28,21 @@ export class JobsService implements OnModuleDestroy {
     const record: JobRecord = {
       id: crypto.randomUUID(),
       status: 'queued',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    await this.jobStore.save(record);
+    return record;
+  }
+
+  /** Single write: avoids read-after-write races where an immediate patch could miss the new row (e.g. Redis). */
+  async createProcessingJob(): Promise<JobRecord> {
+    if ((await this.jobStore.getSize()) >= MAX_JOBS) {
+      await this.evictOldest();
+    }
+    const record: JobRecord = {
+      id: crypto.randomUUID(),
+      status: 'processing',
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -79,7 +94,10 @@ export class JobsService implements OnModuleDestroy {
 
   private async patch(id: string, fields: Partial<Pick<JobRecord, 'status' | 'result' | 'error' | 'errorCode'>>): Promise<void> {
     const job = await this.jobStore.get(id);
-    if (!job) return;
+    if (!job) {
+      this.logger.error(`patch failed: job ${id} not found (store read returned undefined)`);
+      throw new InternalServerErrorException(`Job ${id} not found during update`);
+    }
     Object.assign(job, fields, { updatedAt: new Date() });
     await this.jobStore.save(job);
   }
