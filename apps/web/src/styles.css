@@ -1,1 +1,11 @@
 @import "tailwindcss";
+
+html {
+  scrollbar-gutter: stable;
+}
+
+app-root {
+  display: block;
+  min-height: 100vh;
+  background-color: #04110a;
+}
