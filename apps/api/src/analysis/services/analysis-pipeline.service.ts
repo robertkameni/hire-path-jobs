@@ -16,7 +16,7 @@ import { AnalysisService } from './analysis.service.js';
 
 const MAX_QUEUE_DEPTH = 50;
 // Bump this when prompt semantics change so stale AI outputs are not reused.
-const ANALYSIS_PROMPT_CACHE_VERSION = '2026-05-10-recruiter-outreach-v6';
+const ANALYSIS_PROMPT_CACHE_VERSION = '2026-05-10-zero-profile-fallback-bridge-v9';
 // Token/cost guardrails for AI provider (char-based approximation).
 const MAX_AI_JOB_TEXT_CHARS = 35000;
 const AI_JOB_TEXT_HEAD_CHARS = 25000;
@@ -39,7 +39,15 @@ type AnalysisPipelineInput = {
 
 type AnalyzeResult = {
   readonly status?: string;
+  readonly fallbacks?: ReadonlyArray<{ step: string; reason?: string }>;
 };
+
+function shouldCacheAnalysisResult(result: unknown): boolean {
+  if (!result || typeof result !== 'object') return true;
+  const fallbacks = (result as { fallbacks?: ReadonlyArray<{ step: string }> }).fallbacks;
+  if (!Array.isArray(fallbacks) || fallbacks.length === 0) return true;
+  return !fallbacks.some((f) => f.step === 'strategyAndMessage');
+}
 
 @Injectable()
 export class AnalysisPipelineService {
@@ -108,7 +116,15 @@ export class AnalysisPipelineService {
         jobId,
       })) as AnalyzeResult;
 
-      await this.cacheManager.set(cacheKey, result);
+      if (shouldCacheAnalysisResult(result)) {
+        await this.cacheManager.set(cacheKey, result);
+      } else {
+        this.logger.event('cache_skip', {
+          reason: 'strategy_message_fallback',
+          jobId,
+          cacheKeyPrefix: cacheKey.slice(0, 16),
+        });
+      }
 
       if (result.status === 'partial') {
         await this.jobsService.setPartial(jobId, result);

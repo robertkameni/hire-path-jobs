@@ -1,0 +1,48 @@
+Software Developer (PhD / Quant) for Energy Trading Optimization - No Dev Experience Required
+Calypso Ventures GmbH
+Berlin
+Berufseinstieg/Trainee, Feste Anstellung
+Vollzeit
+Erschienen: vor 1 Woche
+Verifiziert
+Bewerbungs-Update verfügbar
+Calypso Ventures GmbH logo
+Software Developer (PhD / Quant) for Energy Trading Optimization - No Dev Experience Required
+Calypso Ventures GmbH
+Introduction
+Calypso Ventures GmbH is an AI startup based in Berlin and Regensburg, founded by two Oxford graduates. We build AI Portfolio optimization software for global commodity trading, specifically for LNG, crude oil and power. Our clients include some of the world's largest energy and trading companies. Our technology not only enables smarter trading decisions but also reduces CO2 emissions equivalent to what 330 million trees absorb annually. We are about to expand to singapore, houston and other places and growing fast.
+
+The Pitch:
+
+You spent years mastering complex problems. Now you want to build things that actually ship. We are looking for sharp quantitative minds from academia who want to become software developers. You don't need to know how to code. We will teach you full-stack development from scratch, working on production software used by some of the biggest names in global energy. What you bring is what we can't teach: the ability to think deeply, learn fast, and solve hard problems.
+
+Tasks
+Learn full-stack development through a structured training program built around your background
+Build and ship real features using Angular, FastAPI, Python, TypeScript, PostgreSQL, MongoDB, and AWS
+Dive into the world of LNG and commodity trading and apply your analytical skills to optimization problems that matter
+Write production code, participate in code reviews, and grow into an independent engineer
+Work directly with the founders and a small, senior team where your contributions are visible from day one
+Profile
+A Master's or PhD in Mathematics, Physics, Computer Science, Engineering, or a similar quantitative field
+The ability to think in structures, models, and systems
+No coding or commodity trading experience needed. Just the drive to learn
+Strong English skills; German is a plus
+We offer
+A real career change: from academia to tech, with full support
+Possibility to come to clients around the globe and switch to a client facing Quant
+Relocation support to make your move easier
+Flat hierarchies, direct access to founders, and a team that actually likes working together
+Free drinks available at any time
+A wide range of professional development opportunities
+Sports activities for you to enjoy at your leisure
+Comprehensive onboarding to help you settle in quickly
+Flat hierarchies for a relaxed working environment
+Your success is rewarded with profit-sharing
+Your ideas are welcome and valued
+Your commitment is recognized with a bonus
+Additional Information
+No prior coding experience? That's the point. This role is designed for people from quantitative academic backgrounds who want to transition into software engineering. If you've spent years solving complex problems in research and are ready to build real products, this is your entry point into tech.
+
+We work with some of the largest energy and trading companies globally. Our WiFi is named Riemann and we have portraits of Gauss, Cantor, Feynman, and Perelman on our office walls.
+
+If you're unsure whether to apply: apply. We'd rather talk to someone curious than miss the right person.
