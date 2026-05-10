@@ -15,7 +15,7 @@
     <p class="text-gray-400 text-sm">
       @if (analysis.isLoading()) { Our AI is extracting insights from the job posting. This may take a few moments. } @else if
       (analysis.needsJobText()) { This site can't be fetched automatically. Paste the job description and try again. } @else { Paste a job posting URL
-      or a job description above to get AI-powered insights, application strategies, and outreach templates. }
+      or a job description above to get AI-powered insights, application strategies, and recruiter validation messages. }
     </p>
   </div>
 </div>
@@ -118,10 +118,11 @@ analysis.fallbacks(); @if (!analysis.hasDisplayableAnalysis()) {
     </ul>
   </div>
   }
-  <!-- 5. Outreach Message -->
+  <!-- 5. Recruiter Validation Message -->
   @if (message) {
   <div class="p-5 sm:p-6 lg:p-8 bg-[#0a1a0d] border border-[#00c752]/40 rounded-2xl">
-    <h2 class="text-xl sm:text-2xl font-bold text-[#00c752] mb-4 flex items-center gap-2">✉️ Outreach Message</h2>
+    <h2 class="text-xl sm:text-2xl font-bold text-[#00c752] mb-4 flex items-center gap-2">✉️ Recruiter Validation Message</h2>
+    <p class="text-sm text-gray-400 mb-4">A short first-contact note based only on the job description. It asks one useful question before applying.</p>
 
     <p class="text-sm text-gray-400 mb-2">Betreff:</p>
     <p class="text-white text-sm font-medium mb-3">{{ message.subject }}</p>
@@ -138,7 +139,7 @@ analysis.fallbacks(); @if (!analysis.hasDisplayableAnalysis()) {
        hover:text-white transition-colors cursor-pointer
        disabled:opacity-50 disabled:cursor-not-allowed"
   >
-    Copy to clipboard
+    Copy message
   </button>
   }
   <!-- 6. Competition -->
@@ -193,7 +194,8 @@ analysis.fallbacks(); @if (!analysis.hasDisplayableAnalysis()) {
     </div>
     } @if (message) {
     <div class="p-5 sm:p-6 lg:p-8 bg-[#0a1a0d] border border-[#00c752]/40 rounded-2xl">
-      <h2 class="text-xl sm:text-2xl font-bold text-[#00c752] mb-4 lg:mb-6 flex items-center gap-2">✉️ Outreach Message</h2>
+      <h2 class="text-xl sm:text-2xl font-bold text-[#00c752] mb-3 flex items-center gap-2">✉️ Recruiter Validation Message</h2>
+      <p class="text-sm text-gray-400 mb-4">A short first-contact note based only on the job description. It asks one useful question before applying.</p>
 
       <div class="p-4 mbe-4 bg-[#00c752]/5 border border-[#00c752]/20 rounded-lg">
         <p class="text-sm text-gray-400 mb-2">Betreff:</p>
@@ -211,7 +213,7 @@ analysis.fallbacks(); @if (!analysis.hasDisplayableAnalysis()) {
              hover:text-white transition-colors cursor-pointer
              disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        Copy to clipboard
+        Copy message
       </button>
     </div>
     }
