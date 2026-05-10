@@ -76,9 +76,7 @@ export class AnalysisResourceService {
       }
 
       if (!isTerminalAnalysisJob(envelope)) {
-        throw new Error(
-          'The API did not return a finished analysis. Use an API build that completes the job on POST, or retry in a moment.',
-        );
+        throw new Error('The API did not return a finished analysis. Use an API build that completes the job on POST, or retry in a moment.');
       }
 
       if (envelope.status === 'failed') {
