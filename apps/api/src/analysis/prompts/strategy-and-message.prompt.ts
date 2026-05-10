@@ -184,6 +184,7 @@ Keep it human:
 • Avoid dense consultant language if a simpler phrase works.
 • End with a natural closing, e.g. "Viele Grüße" or "Beste Grüße".
 • If the candidate name is unknown, use a closing without a name.
+• The closing must be on its own line, separated from the message body by a blank line.
 
 RECRUITER SERIOUSNESS RULE:
 The message must sound like something a recruiter would take seriously and can answer quickly.
@@ -212,10 +213,14 @@ Closing:
 • Email style: end with "Viele Grüße" or "Beste Grüße".
 • LinkedIn style: a short "Danke und viele Grüße" is acceptable.
 • Do not omit the closing.
+• Format the closing exactly as a separate final line:
+
+Viele Grüße
 
 Avoid over-intellectual phrasing in outreach bodies:
 • "Plattform-Governance zwischen Fachbereich, IT und Compliance" is acceptable only if the sentence stays simple.
 • Do not use phrases like "streng reguliertes Prozess- und Datenmodell", "organisationsübergreifende Steuerung", or "nicht-obvious interpretation" in the final message.
+• Do not use corporate-heavy phrases like "strategische Steuerungsfunktion", "Qualitätssicherung" unless explicitly central to the job, or "im ersten Halbjahr" unless the posting mentions that timeframe.
 • Do not make the recruiter feel tested or challenged.
 
 GOOD MESSAGE PATTERN:
