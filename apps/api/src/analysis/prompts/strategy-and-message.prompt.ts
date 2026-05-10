@@ -127,10 +127,12 @@ If low:
   • 1 unique element from posting
 - The message must feel perceptive: show that the writer understood the business context behind the role, not just keywords.
 - Prefer a specific observation over self-promotion.
-- If the posting contains domain context (FinTech, payments, compliance, multi-tenant systems, transformation, governance), connect the role to that context in one sentence.
+- If the posting contains domain context (FinTech, payments, compliance, multi-tenant systems, transformation, governance), connect the role to that context in one concise sentence.
 - The CTA must ask a useful calibration question about the role's real focus, current challenge, team ownership, or project context.
 - The CTA must NOT ask a generic question that is already answered by the posting.
 - The CTA must be exactly one question sentence and contain only one question mark.
+- The final body must be directly sendable as a LinkedIn or email message to the target person.
+- If a named recruiter exists, address them naturally by first name or full name.
 
 ANTI-GENERIC RULE:
 If reusable across jobs → reject and rewrite
@@ -150,9 +152,21 @@ DO NOT:
 - Overuse "strategisch", "spannend", or "genau mein Profil".
 - Use vague praise such as "spannende Aufgabe", "innovatives Umfeld", "tolle Chance", "starke Rolle", or "interessante Position".
 - Ask several questions in a row.
+- Use awkward literal translations such as "agentisch". Prefer "agentenbasiert" or "AI-gestützt" when the job mentions an agentic CRM approach.
+- Use speculation markers like "vermutlich" unless uncertainty is the point of the question.
 
 If userProfile exists:
-→ include 1–2 matching skills
+→ include 1 concrete credibility line from the profile.
+The credibility line should answer: "Why should this recruiter take this person seriously?"
+Examples:
+• "Ich arbeite seit mehreren Jahren mit Dynamics 365 CE/FO und Integrationen."
+• "Mein Schwerpunkt liegt auf Requirements Engineering, Governance und Schnittstellen zwischen Fachbereich und IT."
+• "Ich habe genau an der Schnittstelle von Plattformstabilität, Compliance und Business-Anforderungen gearbeitet."
+
+If userProfile does NOT exist:
+→ do NOT pretend to have matching experience.
+→ write a recruiter validation message, not a full self-pitch.
+→ keep the message useful, but avoid claims like "passt zu meiner Erfahrung" or "ich bringe Erfahrung mit".
 
 CTA:
 → one simple action
@@ -163,12 +177,53 @@ Rewrite until at least 3 concrete details are specific to this job/company.
 At least one sentence must contain a real interpretation, for example:
 • "Das wirkt weniger wie reine Administration, sondern eher wie Plattform-Governance zwischen Fachbereich, IT und Compliance."
 • "Bei einem FinTech-Kontext ist Dynamics hier vermutlich nicht nur CRM, sondern Teil eines regulierten Prozess- und Datenmodells."
+Keep it human:
+• 3–6 sentences total, including salutation and closing.
+• Max 110 words unless Candidate profile requires more.
+• Use one short opener, one concrete reason for interest, and one focused question.
+• Avoid dense consultant language if a simpler phrase works.
+• End with a natural closing, e.g. "Viele Grüße" or "Beste Grüße".
+• If the candidate name is unknown, use a closing without a name.
+
+RECRUITER SERIOUSNESS RULE:
+The message must sound like something a recruiter would take seriously and can answer quickly.
+It must NOT sound like a strategy memo, market analysis, or attempt to impress with jargon.
+The recruiter should immediately understand:
+• which role the person means
+• why the person is reaching out
+• why the candidate could be relevant, if profile evidence exists
+• what simple answer is needed
+• that this is a polite, complete message
+
+If a named recruiter exists, the message should usually start with:
+"Hallo [Name], ich schaue mir gerade die Rolle [role] bei [company] an."
+
+Then add one concrete reason:
+• "Besonders relevant finde ich den Mix aus [detail A] und [detail B]."
+• If profile exists: "Meine Erfahrung in [profile detail] passt besonders zu [job detail]."
+• "Vor einer Bewerbung möchte ich kurz besser einordnen, ob..."
+
+The CTA should be practical and recruiter-friendly:
+• "Liegt der Schwerpunkt aktuell eher auf X oder Y?"
+• "Ist die Rolle noch aktiv zu besetzen?"
+• "Gibt es einen Schwerpunkt, der im ersten Halbjahr besonders wichtig ist?"
+
+Closing:
+• Email style: end with "Viele Grüße" or "Beste Grüße".
+• LinkedIn style: a short "Danke und viele Grüße" is acceptable.
+• Do not omit the closing.
+
+Avoid over-intellectual phrasing in outreach bodies:
+• "Plattform-Governance zwischen Fachbereich, IT und Compliance" is acceptable only if the sentence stays simple.
+• Do not use phrases like "streng reguliertes Prozess- und Datenmodell", "organisationsübergreifende Steuerung", or "nicht-obvious interpretation" in the final message.
+• Do not make the recruiter feel tested or challenged.
 
 GOOD MESSAGE PATTERN:
-1. Start with a precise observation about the role's real challenge, without praise.
-2. Connect one or two job-specific details into a non-obvious interpretation.
-3. Add candidate relevance only if supported by Candidate profile.
-4. Ask one focused question that would help decide whether to apply or who to contact.
+1. Address the person if known.
+2. Name the role and company plainly.
+3. If profile exists, add one credible candidate proof point tied to the job.
+4. Mention one concrete role detail that shows relevance.
+5. Ask one focused question that helps decide whether to apply or who to contact.
 
 BAD MESSAGE PATTERNS TO AVOID:
 • "Mit 5+ Jahren X passe ich perfekt..." when no Candidate profile says that.
