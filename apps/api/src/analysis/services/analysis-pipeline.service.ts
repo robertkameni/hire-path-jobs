@@ -76,22 +76,9 @@ export class AnalysisPipelineService {
     this.inFlightJobIdByCacheKey.set(cacheKey, job.id);
     await this.jobsService.setProcessing(job.id);
     this.logger.event('pipeline_start', { jobId: job.id });
-    // Always process asynchronously and return quickly with a job id.
-    // Long AI runs (especially with pasted jobText) can exceed serverless
-    // execution limits if handled synchronously in the POST request.
-    void this.runPipeline({ jobId: job.id, dto, cacheKey })
-      .catch(async (err: unknown) => {
-        const formatted = this.formatPipelineError(err);
-        this.logger.event('pipeline_unhandled', {
-          jobId: job.id,
-          message: formatted.message,
-          errorCode: formatted.code,
-        });
-        await this.jobsService.setFailed(job.id, formatted.message, formatted.code);
-      })
-      .finally(() => {
-        this.inFlightJobIdByCacheKey.delete(cacheKey);
-      });
+    await this.runPipeline({ jobId: job.id, dto, cacheKey }).finally(() => {
+      this.inFlightJobIdByCacheKey.delete(cacheKey);
+    });
     const latestJob: JobRecord = await this.jobsService.get(job.id);
     return mapJobRecordToJobResponseDto(latestJob);
   }
