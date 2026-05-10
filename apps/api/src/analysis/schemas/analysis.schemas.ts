@@ -35,6 +35,8 @@ export const ParsedJobSchema = z.object({
   remote: z.boolean().optional(),
 });
 
+export type ParsedJob = z.infer<typeof ParsedJobSchema>;
+
 export const JobInsightsSchema = z.object({
   competitionLevel: z.enum(['low', 'medium', 'high']),
   competitionReason: shortString,
@@ -67,6 +69,8 @@ export const OutreachMessageSchema = z.object({
   body: z.string().min(20).max(2000),
   tone: z.enum(['formal', 'friendly', 'direct']),
 });
+
+export type OutreachMessage = z.infer<typeof OutreachMessageSchema>;
 
 export const StrategyAndMessageSchema = z.object({
   strategy: ContactStrategySchema,
