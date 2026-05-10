@@ -40,7 +40,7 @@ ${JSON.stringify(job, null, 2)}
 ${JSON.stringify(insights, null, 2)}
 </untrusted_insights_data>
 
-${userProfile ? `Candidate profile (trusted):\n${JSON.stringify(userProfile, null, 2)}` : ''}
+${userProfile ? `Candidate profile (trusted):\n${JSON.stringify(userProfile, null, 2)}` : 'No Candidate profile was provided — do not claim years, tools, stacks, or industries for the candidate.'}
 
 ━━━━━━━━ COMPANY SIZE INFERENCE ━━━━━━━━
 

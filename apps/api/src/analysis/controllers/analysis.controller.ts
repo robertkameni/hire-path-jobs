@@ -15,7 +15,7 @@ export class AnalysisController {
   @ApiOperation({
     summary: 'Analyze a job posting',
     description:
-      'Accepts a job URL. Starts the pipeline (scrape → AI) in the background and returns the job immediately; poll GET /analysis/:id until status is completed, partial, or failed.',
+      'Runs scrape → AI in the request and normally returns terminal status on this response. Duplicate parallel POSTs with the same cache key are queued. If clients still poll GET /analysis/:id, use Cache-Control/no-store URLs to avoid stale 304.',
   })
   @ApiBody({
     type: AnalyzeJobDto,
@@ -28,7 +28,7 @@ export class AnalysisController {
   })
   @ApiResponse({
     status: 200,
-    description: 'Job created or cache hit — body includes jobId and status (processing until done; use GET to poll)',
+    description: 'Job outcome — normally completed/partial/failed in this payload; overlapping duplicate POSTs serialize per cache key',
     type: JobResponseDto,
   })
   @ApiResponse({

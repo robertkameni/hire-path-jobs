@@ -13,6 +13,7 @@ import {
   type ParsedJobSchema,
   StrategyAndMessageSchema,
 } from '../schemas/analysis.schemas.js';
+import { effectiveUserProfile } from '../utils/effective-user-profile.js';
 
 type ParsedJob = z.infer<typeof ParsedJobSchema>;
 type JobInsights = z.infer<typeof JobInsightsSchema>;
@@ -33,7 +34,14 @@ function buildParseFailureResult(reason: string | undefined, durationMs: number)
   };
 }
 
-function buildFallbackMessage(job: ParsedJob): OutreachMessage {
+function buildFallbackMessage(job: ParsedJob, hasTrustedProfile: boolean): OutreachMessage {
+  if (!hasTrustedProfile) {
+    return {
+      subject: `Frage zur Rolle ${job.title} bei ${job.company}`,
+      body: `Hallo,\n\nich schaue mir die Stelle „${job.title}“ bei ${job.company} an. Bevor ich mich bewerbe, hätte ich eine kurze Rückfrage zum aktuellen Schwerpunkt der Rolle im Team.\n\nViele Grüße`,
+      tone: 'friendly',
+    };
+  }
   const skillLine =
     job.skills.length > 0 ? ` Mein Hintergrund in ${job.skills.slice(0, 2).join(' und ')} passt direkt zu den Anforderungen dieser Stelle.` : '';
   return {
@@ -51,6 +59,7 @@ export class AnalysisService {
 
   async analyze(input: { jobText: string; userProfile?: unknown; jobId?: string }) {
     const { jobId } = input;
+    const userProfile = effectiveUserProfile(input.userProfile);
     this.logger.event('pipeline_start', { jobId });
     const timings: Record<string, number> = {};
     const fallbacks: Fallback[] = [];
@@ -70,9 +79,7 @@ export class AnalysisService {
     }
     const { job, insights } = parseResult.data;
 
-    const strategyAndMessageResult = await this.runStep('strategyAndMessage', () =>
-      this.generateStrategyAndMessage(job, insights, input.userProfile),
-    );
+    const strategyAndMessageResult = await this.runStep('strategyAndMessage', () => this.generateStrategyAndMessage(job, insights, userProfile));
 
     timings.strategyAndMessage = strategyAndMessageResult.durationMs;
 
@@ -84,7 +91,7 @@ export class AnalysisService {
         step: 'strategyAndMessage',
         reason: strategyAndMessageResult.error ?? 'Strategy+message step failed',
       });
-      message = buildFallbackMessage(job);
+      message = buildFallbackMessage(job, userProfile !== undefined);
     } else {
       strategy = strategyAndMessageResult.data.strategy;
       message = strategyAndMessageResult.data.message;

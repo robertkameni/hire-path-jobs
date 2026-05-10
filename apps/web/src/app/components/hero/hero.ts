@@ -13,6 +13,7 @@ export class Hero {
   isJobTextOpen = signal(false);
 
   async handleAnalyze() {
+    if (this.analysis.isLoading()) return;
     const url = this.jobUrl().trim();
     const text = this.jobText().trim();
 

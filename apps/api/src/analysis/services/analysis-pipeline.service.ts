@@ -11,11 +11,12 @@ import type { JobResponseDto } from '../dto/job-response.dto.js';
 import type { JobRecord } from '../jobs/job-record.types.js';
 import { JobsService } from '../jobs/jobs.service.js';
 import { mapJobRecordToJobResponseDto } from '../mappers/job-response.mapper.js';
+import { effectiveUserProfile } from '../utils/effective-user-profile.js';
 import { AnalysisService } from './analysis.service.js';
 
 const MAX_QUEUE_DEPTH = 50;
 // Bump this when prompt semantics change so stale AI outputs are not reused.
-const ANALYSIS_PROMPT_CACHE_VERSION = '2026-05-10-recruiter-outreach-v4';
+const ANALYSIS_PROMPT_CACHE_VERSION = '2026-05-10-recruiter-outreach-v5';
 // Token/cost guardrails for AI provider (char-based approximation).
 const MAX_AI_JOB_TEXT_CHARS = 35000;
 const AI_JOB_TEXT_HEAD_CHARS = 25000;
@@ -43,7 +44,8 @@ type AnalyzeResult = {
 @Injectable()
 export class AnalysisPipelineService {
   private logger = new StructuredLogger(AnalysisPipelineService.name);
-  private readonly inFlightJobIdByCacheKey = new Map<string, string>();
+  /** Serializes overlapping submits for the same cache key so parallel POSTs do not return stale `processing` bodies. */
+  private readonly submitChainByCacheKey = new Map<string, Promise<unknown>>();
 
   constructor(
     private readonly analysisService: AnalysisService,
@@ -58,29 +60,36 @@ export class AnalysisPipelineService {
   }
 
   async submit(dto: AnalyzeJobDto): Promise<JobResponseDto> {
+    const cacheKey: string = this.buildCacheKey(dto);
+    const previous = this.submitChainByCacheKey.get(cacheKey) ?? Promise.resolve();
+    const current: Promise<JobResponseDto> = previous.then(
+      (): Promise<JobResponseDto> => this.submitExclusive(dto, cacheKey),
+      (): Promise<JobResponseDto> => this.submitExclusive(dto, cacheKey),
+    );
+    this.submitChainByCacheKey.set(cacheKey, current);
+    current.finally(() => {
+      if (this.submitChainByCacheKey.get(cacheKey) === current) {
+        this.submitChainByCacheKey.delete(cacheKey);
+      }
+    });
+    return current;
+  }
+
+  private async submitExclusive(dto: AnalyzeJobDto, cacheKey: string): Promise<JobResponseDto> {
     const pending: number = await this.jobsService.countPending();
     if (pending >= MAX_QUEUE_DEPTH) {
       throw new HttpException('Queue at capacity — try again shortly', HttpStatus.TOO_MANY_REQUESTS);
     }
-    const cacheKey: string = this.buildCacheKey(dto);
     const cached: unknown = await this.cacheManager.get(cacheKey);
     if (cached) {
       this.logger.event('cache_hit', { cacheKey: cacheKey.slice(0, 16) });
       const jobFromCache: JobRecord = await this.jobsService.createCompleted(cached);
       return mapJobRecordToJobResponseDto(jobFromCache);
     }
-    const existingJobId: string | undefined = this.inFlightJobIdByCacheKey.get(cacheKey);
-    if (existingJobId) {
-      const existingJob: JobRecord = await this.jobsService.get(existingJobId);
-      return mapJobRecordToJobResponseDto(existingJob);
-    }
     const job: JobRecord = await this.jobsService.create();
-    this.inFlightJobIdByCacheKey.set(cacheKey, job.id);
     await this.jobsService.setProcessing(job.id);
     this.logger.event('pipeline_start', { jobId: job.id });
-    await this.runPipeline({ jobId: job.id, dto, cacheKey }).finally(() => {
-      this.inFlightJobIdByCacheKey.delete(cacheKey);
-    });
+    await this.runPipeline({ jobId: job.id, dto, cacheKey });
     const latestJob: JobRecord = await this.jobsService.get(job.id);
     return mapJobRecordToJobResponseDto(latestJob);
   }
@@ -96,7 +105,7 @@ export class AnalysisPipelineService {
 
       const result: AnalyzeResult = (await this.analysisService.analyze({
         jobText,
-        userProfile: dto.userProfile,
+        userProfile: effectiveUserProfile(dto.userProfile),
         jobId,
       })) as AnalyzeResult;
 
@@ -116,7 +125,8 @@ export class AnalysisPipelineService {
 
   private buildCacheKey(dto: AnalyzeJobDto): string {
     const jobTextHash = dto.jobText?.trim() ? createHash('sha256').update(normalizeJobText(dto.jobText.trim())).digest('hex') : 'scrape';
-    const payload: string = [ANALYSIS_PROMPT_CACHE_VERSION, dto.jobUrl, jobTextHash, JSON.stringify(dto.userProfile ?? null)].join(':');
+    const profileKey = JSON.stringify(effectiveUserProfile(dto.userProfile) ?? null);
+    const payload: string = [ANALYSIS_PROMPT_CACHE_VERSION, dto.jobUrl, jobTextHash, profileKey].join(':');
     return createHash('sha256').update(payload).digest('hex');
   }
 

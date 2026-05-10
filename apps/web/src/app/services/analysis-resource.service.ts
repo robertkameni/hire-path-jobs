@@ -41,6 +41,7 @@ export class AnalysisResourceService {
   readonly fallbacks = computed(() => this.result()?.fallbacks ?? []);
 
   async submitJob(url: string, jobText?: string): Promise<void> {
+    if (this.isLoading()) return;
     this.isLoading.set(true);
     this.errorMessage.set(null);
     this.needsJobText.set(false);
@@ -71,7 +72,11 @@ export class AnalysisResourceService {
           throw new Error('Analysis timed out while waiting for result. Try again or poll the job later.');
         }
         await new Promise<void>((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
-        job = await firstValueFrom(this.http.get<JobResponse>(`${this.baseUrl()}/analysis/${postRes.jobId}`));
+        job = await firstValueFrom(
+          this.http.get<JobResponse>(`${this.baseUrl()}/analysis/${postRes.jobId}`, {
+            params: { _nocache: `${Date.now()}-${Math.random().toString(36).slice(2)}` },
+          }),
+        );
       }
       if (job.status === 'failed') {
         const msg = job.error ?? 'Analysis failed';
