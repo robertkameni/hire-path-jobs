@@ -17,12 +17,16 @@ import {
 } from '../schemas/analysis.schemas.js';
 import { buildFallbackMessage, buildParseFailureResult } from '../utils/analysis-fallbacks.js';
 import { effectiveUserProfile } from '../utils/effective-user-profile.js';
-import { buildRecruiterValidationSubject } from '../utils/recruiter-validation-subject.js';
+import { applyRecruiterValidationSubjectWhenAnonymous } from '../utils/recruiter-validation-subject.js';
 
 type JobInsights = z.infer<typeof JobInsightsSchema>;
 type ContactStrategy = z.infer<typeof ContactStrategySchema>;
 
 type Fallback = { step: string; reason?: string };
+
+function pipelineStatusFromFallbacks(fallbacks: Fallback[]): 'complete' | 'partial' {
+  return fallbacks.length === 0 ? 'complete' : 'partial';
+}
 
 @Injectable()
 export class AnalysisService {
@@ -33,6 +37,7 @@ export class AnalysisService {
   async analyze(input: { jobText: string; userProfile?: unknown; jobId?: string }) {
     const { jobId } = input;
     const userProfile = effectiveUserProfile(input.userProfile);
+    const hasTrustedProfile = userProfile !== undefined;
     this.logger.event('pipeline_start', { jobId });
     const timings: Record<string, number> = {};
     const fallbacks: Fallback[] = [];
@@ -52,7 +57,9 @@ export class AnalysisService {
     }
     const { job, insights } = parseResult.data;
 
-    const strategyAndMessageResult = await this.runStep('strategyAndMessage', () => this.generateStrategyAndMessage(job, insights, userProfile));
+    const strategyAndMessageResult = await this.runStep('strategyAndMessage', () =>
+      this.generateStrategyAndMessage(job, insights, userProfile, hasTrustedProfile),
+    );
 
     timings.strategyAndMessage = strategyAndMessageResult.durationMs;
 
@@ -64,21 +71,17 @@ export class AnalysisService {
         step: 'strategyAndMessage',
         reason: strategyAndMessageResult.error ?? 'Strategy+message step failed',
       });
-      message = buildFallbackMessage(job, userProfile !== undefined);
+      message = buildFallbackMessage(job, hasTrustedProfile);
     } else {
       strategy = strategyAndMessageResult.data.strategy;
-      message = strategyAndMessageResult.data.message;
-      if (userProfile === undefined) {
-        message = {
-          ...message,
-          subject: buildRecruiterValidationSubject(job),
-        };
-      }
+      message = applyRecruiterValidationSubjectWhenAnonymous(job, strategyAndMessageResult.data.message, hasTrustedProfile);
     }
+
+    const status = pipelineStatusFromFallbacks(fallbacks);
 
     this.logger.event('pipeline_complete', {
       jobId,
-      status: fallbacks.length === 0 ? 'complete' : 'partial',
+      status,
       fallbackSteps: fallbacks.map((f) => f.step),
       ...Object.fromEntries(Object.entries(timings).map(([k, v]) => [`${k}Ms`, v])),
     });
@@ -88,7 +91,7 @@ export class AnalysisService {
       insights,
       strategy,
       message,
-      status: fallbacks.length === 0 ? 'complete' : 'partial',
+      status,
       fallbacks,
       timings,
     };
@@ -138,12 +141,15 @@ export class AnalysisService {
     return this.parseAiResponse(raw, ParsedJobAndInsightsSchema, 'parseJobAndTruth');
   }
 
-  private async generateStrategyAndMessage(job: ParsedJob, insights: JobInsights, userProfile: unknown) {
-    const hasProfile = userProfile !== undefined;
+  private async generateStrategyAndMessage(job: ParsedJob, insights: JobInsights, userProfile: unknown, hasTrustedProfile: boolean) {
     const raw = await this.aiPort.generateText(
-      hasProfile ? strategyAndMessagePrompt(job, insights, userProfile) : strategyAndMessageZeroProfilePrompt(job, insights),
-      { temperature: hasProfile ? 0.15 : 0 },
+      hasTrustedProfile ? strategyAndMessagePrompt(job, insights, userProfile) : strategyAndMessageZeroProfilePrompt(job, insights),
+      { temperature: hasTrustedProfile ? 0.15 : 0 },
     );
-    return this.parseAiResponse(raw, hasProfile ? StrategyAndMessageSchema : StrategyAndMessageZeroProfileSchema, 'generateStrategyAndMessage');
+    return this.parseAiResponse(
+      raw,
+      hasTrustedProfile ? StrategyAndMessageSchema : StrategyAndMessageZeroProfileSchema,
+      'generateStrategyAndMessage',
+    );
   }
 }

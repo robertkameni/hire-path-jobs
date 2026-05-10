@@ -1,3 +1,5 @@
+import type { OutreachMessage, ParsedJob } from '../schemas/analysis.schemas.js';
+
 /** Inbox-friendly subject for “validation before apply” mails (long English titles truncate). */
 
 const SUBJECT_MAX_LEN = 88;
@@ -22,4 +24,10 @@ export function buildRecruiterValidationSubject(job: { title: string; company: s
     role = `${head.slice(0, Math.max(0, budget - 1))}…`;
   }
   return `${PREFIX}${role}${suffix}`;
+}
+
+/** When the caller has no trusted profile, force the recruiter-validation subject; otherwise leave the model’s subject. */
+export function applyRecruiterValidationSubjectWhenAnonymous(job: ParsedJob, message: OutreachMessage, hasTrustedProfile: boolean): OutreachMessage {
+  if (hasTrustedProfile) return message;
+  return { ...message, subject: buildRecruiterValidationSubject(job) };
 }

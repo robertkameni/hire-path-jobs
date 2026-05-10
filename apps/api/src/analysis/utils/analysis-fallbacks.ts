@@ -1,5 +1,5 @@
 import type { OutreachMessage, ParsedJob } from '../schemas/analysis.schemas.js';
-import { buildRecruiterValidationSubject } from './recruiter-validation-subject.js';
+import { applyRecruiterValidationSubjectWhenAnonymous } from './recruiter-validation-subject.js';
 
 export function buildParseFailureResult(reason: string | undefined, durationMs: number) {
   return {
@@ -88,11 +88,15 @@ function buildZeroProfileFallbackBody(job: ParsedJob): string {
 
 export function buildFallbackMessage(job: ParsedJob, hasTrustedProfile: boolean): OutreachMessage {
   if (!hasTrustedProfile) {
-    return {
-      subject: buildRecruiterValidationSubject(job),
-      body: buildZeroProfileFallbackBody(job),
-      tone: 'friendly',
-    };
+    return applyRecruiterValidationSubjectWhenAnonymous(
+      job,
+      {
+        subject: '_',
+        body: buildZeroProfileFallbackBody(job),
+        tone: 'friendly',
+      },
+      false,
+    );
   }
   const skillLine =
     job.skills.length > 0 ? ` Mein Hintergrund in ${job.skills.slice(0, 2).join(' und ')} passt direkt zu den Anforderungen dieser Stelle.` : '';
