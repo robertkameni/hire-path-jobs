@@ -6,13 +6,15 @@ import type { Cache } from 'cache-manager';
 import { StructuredLogger } from '../../common/logger/structured.logger.js';
 import { normalizeJobText } from '../../scraper/job-normalizer.js';
 import { ScraperService } from '../../scraper/scraper.service.js';
-import type { AnalyzeJobDto } from '../dto/analyze-job.dto.js';
+import type { AnalyzeJobDto, UserProfileDto } from '../dto/analyze-job.dto.js';
 import type { JobResponseDto } from '../dto/job-response.dto.js';
 import type { JobRecord } from '../jobs/job-record.types.js';
 import { JobsService } from '../jobs/jobs.service.js';
 import { mapJobRecordToJobResponseDto } from '../mappers/job-response.mapper.js';
+import { buildParseFailureResult } from '../utils/analysis-fallbacks.js';
 import { effectiveUserProfile } from '../utils/effective-user-profile.js';
-import { AnalysisService } from './analysis.service.js';
+import { JobDescriptionAnalysisService } from './job-description-analysis.service.js';
+import { StrategyAndMessageService } from './strategy-and-message.service.js';
 
 const MAX_QUEUE_DEPTH = 50;
 // Bump this when prompt semantics change so stale AI outputs are not reused.
@@ -42,6 +44,12 @@ type AnalyzeResult = {
   readonly fallbacks?: ReadonlyArray<{ step: string; reason?: string }>;
 };
 
+type AnalyzePipelineFallback = { step: string; reason?: string };
+
+function pipelineStatusFromFallbacks(fallbacks: AnalyzePipelineFallback[]): 'complete' | 'partial' {
+  return fallbacks.length === 0 ? 'complete' : 'partial';
+}
+
 function shouldCacheAnalysisResult(result: unknown): boolean {
   if (!result || typeof result !== 'object') return true;
   const fallbacks = (result as { fallbacks?: ReadonlyArray<{ step: string }> }).fallbacks;
@@ -56,7 +64,8 @@ export class AnalysisPipelineService {
   private readonly submitChainByCacheKey = new Map<string, Promise<unknown>>();
 
   constructor(
-    private readonly analysisService: AnalysisService,
+    private readonly jobDescriptionAnalysis: JobDescriptionAnalysisService,
+    private readonly strategyAndMessage: StrategyAndMessageService,
     private readonly scraperService: ScraperService,
     private readonly jobsService: JobsService,
     @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
@@ -110,11 +119,8 @@ export class AnalysisPipelineService {
       const normalizedJobText = normalizeJobText(providedJobText ?? scrapedJobText ?? '');
       const jobText = truncateForAi(normalizedJobText);
 
-      const result: AnalyzeResult = (await this.analysisService.analyze({
-        jobText,
-        userProfile: effectiveUserProfile(dto.userProfile),
-        jobId,
-      })) as AnalyzeResult;
+      const userProfile = effectiveUserProfile(dto.userProfile);
+      const result: AnalyzeResult = (await this.runAnalyzeAndOutreach(jobId, jobText, userProfile)) as AnalyzeResult;
 
       if (shouldCacheAnalysisResult(result)) {
         await this.cacheManager.set(cacheKey, result);
@@ -136,6 +142,59 @@ export class AnalysisPipelineService {
       const formatted = this.formatPipelineError(err);
       await this.jobsService.setFailed(jobId, formatted.message, formatted.code);
     }
+  }
+
+  /** Parse job posting text, then generate strategy + outreach; same payload shape as the former `AnalysisService.analyze`. */
+  private async runAnalyzeAndOutreach(jobId: string, jobText: string, userProfile: UserProfileDto | undefined): Promise<unknown> {
+    const hasTrustedProfile = userProfile !== undefined;
+    const timings: Record<string, number> = {};
+    const fallbacks: AnalyzePipelineFallback[] = [];
+
+    const parseResult = await this.jobDescriptionAnalysis.parsePosting(jobText);
+
+    if (!parseResult.fallback) {
+      timings.parseJobAndTruth = parseResult.durationMs;
+    } else {
+      this.logger.errorEvent('pipeline_aborted', {
+        jobId,
+        step: 'parseJobAndTruth',
+        reason: parseResult.error,
+      });
+
+      return buildParseFailureResult(parseResult.error ?? 'Parse step failed', parseResult.durationMs);
+    }
+
+    const { job, insights } = parseResult.data;
+
+    const sm = await this.strategyAndMessage.runWithFallbacks(job, insights, userProfile, hasTrustedProfile);
+
+    timings.strategyAndMessage = sm.durationMs;
+
+    if (sm.strategyStepFallback !== null) {
+      fallbacks.push({
+        step: 'strategyAndMessage',
+        reason: sm.strategyStepFallback.reason,
+      });
+    }
+
+    const status = pipelineStatusFromFallbacks(fallbacks);
+
+    this.logger.event('pipeline_complete', {
+      jobId,
+      status,
+      fallbackSteps: fallbacks.map((f) => f.step),
+      ...Object.fromEntries(Object.entries(timings).map(([k, v]) => [`${k}Ms`, v])),
+    });
+
+    return {
+      job,
+      insights,
+      strategy: sm.strategy,
+      message: sm.message,
+      status,
+      fallbacks,
+      timings,
+    };
   }
 
   private buildCacheKey(dto: AnalyzeJobDto): string {

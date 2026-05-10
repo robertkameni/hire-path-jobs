@@ -9,8 +9,10 @@ import type { JobStore } from './jobs/job-store.interface.js';
 import { JOB_STORE } from './jobs/job-store.token.js';
 import { JobsService } from './jobs/jobs.service.js';
 import { RedisJobStore } from './jobs/redis-job.store.js';
-import { AnalysisService } from './services/analysis.service.js';
 import { AnalysisPipelineService } from './services/analysis-pipeline.service.js';
+import { JobDescriptionAnalysisService } from './services/job-description-analysis.service.js';
+import { StrategyAndMessageService } from './services/strategy-and-message.service.js';
+
 @Module({
   imports: [AiModule, ScraperModule],
   controllers: [AnalysisController],
@@ -28,7 +30,8 @@ import { AnalysisPipelineService } from './services/analysis-pipeline.service.js
         return new InMemoryJobStore();
       },
     },
-    AnalysisService,
+    JobDescriptionAnalysisService,
+    StrategyAndMessageService,
     AnalysisPipelineService,
     JobsService,
   ],
