@@ -3,7 +3,10 @@ node_modules
 dist
 .vscode/
 apps/web/.vscode
-.github/
+.github/*
+!.github/workflows/
+.github/workflows/*
+!.github/workflows/ci-deploy.yml
 
 
 # Environment variables
