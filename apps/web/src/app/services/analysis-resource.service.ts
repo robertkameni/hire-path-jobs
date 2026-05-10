@@ -5,8 +5,8 @@ import { firstValueFrom } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { formatError } from '../shared/utils/format-error.utils';
 
-/** One backoff GET only — the API awaits the pipeline on POST; polling was for legacy / flaky job-store races. */
-const POST_NON_TERMINAL_RETRY_MS = 1200;
+const POLL_INTERVAL_MS = 2000;
+const POLL_MAX_WAIT_MS = 180000;
 
 function isTerminalAnalysisJob(res: JobResponse): boolean {
   if (res.status === 'completed' || res.status === 'partial' || res.status === 'failed') return true;
@@ -67,20 +67,25 @@ export class AnalysisResourceService {
       let envelope: JobResponse = postRes;
 
       if (!isTerminalAnalysisJob(envelope)) {
-        await new Promise<void>((resolve) => setTimeout(resolve, POST_NON_TERMINAL_RETRY_MS));
-        envelope = await firstValueFrom(
-          this.http.get<JobResponse>(`${this.baseUrl()}/analysis/${postRes.jobId}`, {
-            params: { _nocache: `${Date.now()}-${Math.random().toString(36).slice(2)}` },
-          }),
-        );
-      }
-
-      if (!isTerminalAnalysisJob(envelope)) {
-        throw new Error('The API did not return a finished analysis. Use an API build that completes the job on POST, or retry in a moment.');
+        const deadline = Date.now() + POLL_MAX_WAIT_MS;
+        while (!isTerminalAnalysisJob(envelope)) {
+          if (Date.now() > deadline) {
+            throw new Error('Analysis timed out waiting for the job to finish. Ensure the API is running and completes analysis on POST, or retry.');
+          }
+          await new Promise<void>((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
+          envelope = await firstValueFrom(
+            this.http.get<JobResponse>(`${this.baseUrl()}/analysis/${postRes.jobId}`, {
+              params: { _nocache: `${Date.now()}-${Math.random().toString(36).slice(2)}` },
+            }),
+          );
+        }
       }
 
       if (envelope.status === 'failed') {
-        const msg = envelope.error ?? 'Analysis failed';
+        const detail = envelope.error?.trim();
+        const code = envelope.errorCode;
+        const msg =
+          detail && detail.length > 0 ? detail : code ? `Analysis failed (${code}).` : 'Analysis failed — no details from server. Check API logs.';
         if (envelope.errorCode === 'SCRAPE_BLOCKED' || envelope.errorCode === 'SCRAPE_FAILED') {
           this.needsJobText.set(true);
         }
