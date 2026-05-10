@@ -14,6 +14,8 @@ import { mapJobRecordToJobResponseDto } from '../mappers/job-response.mapper.js'
 import { AnalysisService } from './analysis.service.js';
 
 const MAX_QUEUE_DEPTH = 50;
+// Bump this when prompt semantics change so stale AI outputs are not reused.
+const ANALYSIS_PROMPT_CACHE_VERSION = '2026-05-10-recruiter-outreach-v2';
 // Token/cost guardrails for AI provider (char-based approximation).
 const MAX_AI_JOB_TEXT_CHARS = 35000;
 const AI_JOB_TEXT_HEAD_CHARS = 25000;
@@ -114,7 +116,7 @@ export class AnalysisPipelineService {
 
   private buildCacheKey(dto: AnalyzeJobDto): string {
     const jobTextHash = dto.jobText?.trim() ? createHash('sha256').update(normalizeJobText(dto.jobText.trim())).digest('hex') : 'scrape';
-    const payload: string = dto.jobUrl + jobTextHash + JSON.stringify(dto.userProfile ?? null);
+    const payload: string = [ANALYSIS_PROMPT_CACHE_VERSION, dto.jobUrl, jobTextHash, JSON.stringify(dto.userProfile ?? null)].join(':');
     return createHash('sha256').update(payload).digest('hex');
   }
 
