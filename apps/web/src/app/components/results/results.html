@@ -54,7 +54,7 @@ analysis.fallbacks(); @if (!analysis.hasDisplayableAnalysis()) {
   <!-- 1. Ghost Risk -->
   @if (insights) {
   <div class="p-5 sm:p-6 lg:p-8 bg-[#0a1a0d] border border-[#00c752]/40 rounded-2xl">
-    <h3 class="text-lg font-bold mb-3 flex items-center text-[#00c752] gap-2">⚠️ {{ insights.ghostRisk }} Ghost Risk</h3>
+    <h2 class="text-lg font-bold mb-3 flex items-center text-[#00c752] gap-2">⚠️ {{ insights.ghostRisk }} Ghost Risk</h2>
 
     <p class="text-gray-300 text-sm mb-3">{{ insights.ghostRiskReason }}</p>
 
@@ -64,7 +64,7 @@ analysis.fallbacks(); @if (!analysis.hasDisplayableAnalysis()) {
   <!-- 2. Verdict -->
   @if (insights?.verdict) {
   <div class="p-5 sm:p-6 lg:p-8 bg-[#0a1a0d] border border-[#00c752]/40 rounded-2xl">
-    <h3 class="text-lg font-semibold text-[#00c752] mb-4">📋 Verdict</h3>
+    <h2 class="text-lg font-semibold text-[#00c752] mb-4">📋 Verdict</h2>
 
     <div class="p-3 rounded-lg bg-[#00c752]/10 border border-[#00c752]/30 mb-3">
       <span
@@ -106,7 +106,7 @@ analysis.fallbacks(); @if (!analysis.hasDisplayableAnalysis()) {
   <!-- 4. Red Flags -->
   @if (insights?.redFlags?.length) {
   <div class="p-5 sm:p-6 lg:p-8 bg-[#0a1a0d] border border-[#00c752]/40 rounded-2xl">
-    <h3 class="text-lg font-semibold text-[#00c752] mb-4">🚩 Red Flags</h3>
+    <h2 class="text-lg font-semibold text-[#00c752] mb-4">🚩 Red Flags</h2>
 
     <ul class="space-y-2 text-sm text-gray-300">
       @for (flag of insights?.redFlags; track flag) {
@@ -147,7 +147,7 @@ analysis.fallbacks(); @if (!analysis.hasDisplayableAnalysis()) {
   <!-- 6. Competition -->
   @if (insights?.competitionLevel) {
   <div class="p-5 sm:p-6 lg:p-8 bg-[#0a1a0d] border border-[#00c752]/40 rounded-2xl">
-    <h3 class="text-lg font-semibold text-[#00c752] mb-4 flex items-center gap-2">👥 Competition</h3>
+    <h2 class="text-lg font-semibold text-[#00c752] mb-4 flex items-center gap-2">👥 Competition</h2>
 
     <div class="space-y-2">
       <div class="flex justify-between text-sm">
@@ -227,19 +227,19 @@ analysis.fallbacks(); @if (!analysis.hasDisplayableAnalysis()) {
   <div class="flex flex-col gap-6 lg:gap-8 w-full lg:w-[320px] xl:w-90">
     @if (insights) {
     <div class="p-5 sm:p-6 lg:p-8 bg-[#0a1a0d] border border-[#00c752]/40 rounded-2xl">
-      <h3 class="text-lg font-bold mb-3 flex items-center gap-2 text-[#00c752]">⚠️ {{ insights.ghostRisk }} Ghost Risk</h3>
+      <h2 class="text-lg font-bold mb-3 flex items-center gap-2 text-[#00c752]">⚠️ {{ insights.ghostRisk }} Ghost Risk</h2>
       <p class="text-gray-300 text-sm mb-3">{{ insights.ghostRiskReason }}</p>
       <p class="text-sm text-gray-400">Confidence: {{ insights.ghostRiskConfidence }}%</p>
     </div>
     } @if (insights?.verdict) {
     <div class="p-5 sm:p-6 lg:p-8 bg-[#0a1a0d] border border-[#00c752]/40 rounded-2xl">
-      <h3 class="text-lg font-bold text-[#00c752] mb-4">📋 Verdict</h3>
+      <h2 class="text-lg font-bold text-[#00c752] mb-4">📋 Verdict</h2>
 
       <p class="text-sm text-gray-300">{{ insights?.verdict?.reason }}</p>
     </div>
     } @if (insights?.redFlags?.length) {
     <div class="p-5 sm:p-6 lg:p-8 bg-[#0a1a0d] border border-[#00c752]/40 rounded-2xl">
-      <h3 class="text-lg font-bold text-[#00c752] mb-4">🚩 Red Flags</h3>
+      <h2 class="text-lg font-bold text-[#00c752] mb-4">🚩 Red Flags</h2>
 
       <ul class="space-y-2 text-sm text-gray-300">
         @for (flag of insights?.redFlags; track flag) {
@@ -252,7 +252,7 @@ analysis.fallbacks(); @if (!analysis.hasDisplayableAnalysis()) {
     </div>
     } @if (insights?.competitionLevel) {
     <div class="p-5 sm:p-6 lg:p-8 bg-[#0a1a0d] border border-[#00c752]/40 rounded-2xl">
-      <h3 class="text-lg font-bold text-[#00c752] mb-4 flex items-center gap-2">👥 Competition</h3>
+      <h2 class="text-lg font-bold text-[#00c752] mb-4 flex items-center gap-2">👥 Competition</h2>
 
       <div class="w-full h-2 bg-white/5 border rounded-full overflow-hidden">
         <div

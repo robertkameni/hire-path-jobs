@@ -1,0 +1,30 @@
+{
+  "linkset": [
+    {
+      "anchor": "https://hire-path-jobs-web.vercel.app/api",
+      "item": [
+        {
+          "href": "https://hire-path-jobs-web.vercel.app/api/analysis"
+        }
+      ],
+      "service-desc": [
+        {
+          "href": "https://hire-path-jobs-web.vercel.app/api/docs-json",
+          "type": "application/json"
+        }
+      ],
+      "service-doc": [
+        {
+          "href": "https://hire-path-jobs-web.vercel.app/api/docs",
+          "type": "text/html"
+        }
+      ],
+      "status": [
+        {
+          "href": "https://hire-path-jobs-web.vercel.app/api/health",
+          "type": "application/json"
+        }
+      ]
+    }
+  ]
+}

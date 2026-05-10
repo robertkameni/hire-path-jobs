@@ -1,5 +1,8 @@
 # https://hire-path-jobs-web.vercel.app
+# Custom domain: update Sitemap URL and Content-Signal scope if you change origin.
 User-agent: *
 Allow: /
+
+Content-Signal: ai-train=no, search=yes, ai-input=no
 
 Sitemap: https://hire-path-jobs-web.vercel.app/sitemap.xml

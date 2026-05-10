@@ -20,6 +20,7 @@
     "@hire-path-jobs/shared-types": "file:../../libs/shared-types",
     "@ngrx/signals": "^21.1.0",
     "@tailwindcss/postcss": "^4.2.2",
+    "@vercel/functions": "^3.5.1",
     "rxjs": "~7.8.2",
     "tsconfig-paths": "^4.2.0",
     "tslib": "^2.8.1"
