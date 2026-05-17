@@ -19,6 +19,83 @@ Built with **Angular** (web) + **NestJS** (API) + **TypeScript** + **DeepSeek**.
 
 If a site blocks automated fetching (Indeed / LinkedIn / StepStone / Xing, etc.), you can retry the same request with `jobText` (paste the job description) and the backend will **skip scraping**.
 
+Per-IP throttling (`ThrottlerGuard`) may return HTTP **429** before the pipeline runs.
+
+### Sequence diagram
+
+Backend flow for `POST /api/analysis` — implemented in `AnalysisPipelineService`. Duplicate POSTs with the **same cache key** are serialized (`submitChainByCacheKey`). Any exception inside `runPipeline` ends as **`failed`** (`setFailed`); scrape-specific **`HttpException`** bodies become **`SCRAPE_BLOCKED`** / **`SCRAPE_FAILED`** via `formatPipelineError` (still HTTP **200** on POST). The Angular client prompts for pasted **`jobText`** when those scrape codes occur.
+
+```mermaid
+sequenceDiagram
+  autonumber
+  participant Client as Client (Angular)
+  participant API as NestJS POST /analysis
+  participant Pipe as AnalysisPipelineService
+  participant Jobs as JobsService
+  participant Cache as Cache
+  participant Scraper as ScraperService
+  participant Parse as JobDescriptionAnalysisService
+  participant Strat as StrategyAndMessageService
+
+  Client->>API: POST body jobUrl?, jobText?, userProfile?
+  API->>Pipe: submit(dto)
+
+  alt Queue depth ≥ MAX_QUEUE_DEPTH
+    Pipe-->>Client: HTTP 429 Queue at capacity
+  else Request proceeds
+    Pipe->>Jobs: countPending()
+    Pipe->>Cache: get(cacheKey)
+
+    alt Cache hit
+      Cache-->>Pipe: cached analyze result
+      Pipe->>Jobs: createCompleted(cached)
+      Pipe-->>Client: HTTP 200 JobResponse (typically completed)
+    else Cache miss
+      Pipe->>Jobs: createProcessingJob()
+      alt jobText provided
+        Pipe->>Pipe: normalize(jobText), skip scraping
+      else jobUrl only
+        Pipe->>Scraper: fetchJobText(jobUrl)
+        alt Scrape throws (blocked / fetch error)
+          Scraper-->>Pipe: HttpException
+          Pipe->>Jobs: setFailed(message, errorCode)
+          Pipe-->>Client: HTTP 200 status failed — retry with jobText
+        end
+      end
+      Pipe->>Parse: parsePosting(jobText)
+      alt Parse succeeds (JSON + Zod)
+        Parse-->>Pipe: job + insights
+        Pipe->>Strat: runWithFallbacks(...)
+        alt Strategy step succeeds
+          Strat-->>Pipe: strategy + message
+        else Strategy fallback
+          Strat-->>Pipe: strategy null, fallback message + fallbacks[]
+        end
+      else Parse fails (wrapped step failure)
+        Parse-->>Pipe: partial payload (parseJobAndTruth fallback)
+      end
+      alt shouldCacheAnalysisResult(result)
+        Pipe->>Cache: set(cacheKey, result)
+      end
+      alt Inner result status partial
+        Pipe->>Jobs: setPartial(jobId, result)
+      else Inner result status complete
+        Pipe->>Jobs: setCompleted(jobId, result)
+      end
+      Pipe-->>Client: HTTP 200 JobResponse completed or partial
+    end
+  end
+
+  opt Terminal status after polling
+    loop Until terminal or client timeout
+      Client->>API: GET /analysis/:jobId
+      API->>Pipe: getJob(id)
+      Pipe->>Jobs: get(id)
+      API-->>Client: JobResponse
+    end
+  end
+```
+
 ---
 
 ## Project structure
@@ -147,17 +224,39 @@ Start the API, then open:
 
 When completed/partial, `result` contains `job`, `insights`, `strategy`, and `message`.
 
-**Error responses:**
+Validation: provide **`jobUrl`** or **`jobText`** (or both). If you omit `jobText`, `jobUrl` must be a valid `http`/`https` URL. If you omit `jobUrl`, `jobText` must be at least **200** characters (`AnalyzeJobDto`).
 
-| Status | `error` field     | Meaning                                                            |
-| ------ | ----------------- | ------------------------------------------------------------------ |
-| `400`  | —                 | Validation error (e.g. missing or invalid `jobUrl`)                |
-| `502`  | `SCRAPE_BLOCKED`  | The site actively blocks automated access (e.g. Indeed, LinkedIn)  |
-| `502`  | `SCRAPE_FAILED`   | Could not fetch the URL (network error, redirect loop, empty page) |
-| `502`  | `AI_INVALID_JSON` | AI provider returned malformed JSON                                |
-| `502`  | `AI_SCHEMA_ERROR` | AI provider response did not match the expected schema             |
-| `502`  | `Bad Gateway`     | AI provider returned an error or timed out                         |
-| `429`  | —                 | Rate limit exceeded (10 requests / 60 s per IP by default)         |
+**HTTP status codes**
+
+The POST handler uses **`200 OK`** whenever the server returns a **`JobResponse`** envelope (including **`status: "failed"`** scrapes). Transport-level failures use non-200 codes below.
+
+| HTTP   | When                                                                                                                                 |
+| ------ | ------------------------------------------------------------------------------------------------------------------------------------ |
+| **`200`** | Body is a **`JobResponse`** — always inspect **`status`** (`completed`, `partial`, `failed`, …).                                      |
+| **`400`** | **`ValidationPipe`** rejected the body (missing URL/text pair, invalid URL when URL-only, `jobText` too short when URL omitted, etc.). |
+| **`429`** | Per-IP throttle (`THROTTLE_LIMIT` / `THROTTLE_TTL_SECONDS`) **or** analysis queue full (**`MAX_QUEUE_DEPTH`** pending jobs).          |
+| **`404`** | Only **`GET /api/analysis/:id`** — job id unknown or expired (~30 minutes TTL in `JobsService`).                                     |
+| **`500`** | Unexpected server error (should be rare on POST; surfaced via **`AllExceptionsFilter`**).                                           |
+
+**Job outcome inside the JSON body** (`POST` with HTTP 200)
+
+Scrape failures are **`failed`** jobs with typed codes — they are **not** HTTP 502 on this route.
+
+| `status`    | `errorCode`                             | Meaning                                                                                                |
+| ----------- | --------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| **`failed`** | **`SCRAPE_BLOCKED`**                    | Site blocks automated access (Indeed, LinkedIn, aggregators, etc.). Retry with pasted **`jobText`**.      |
+| **`failed`** | **`SCRAPE_FAILED`**                     | Fetch/extraction failed (network, empty HTML, blocked response). Retry with **`jobText`** if possible. |
+| **`failed`** | _(optional)_                            | Other pipeline errors — **`error`** carries the message; **`errorCode`** may be omitted.               |
+| **`partial`** | — | AI step fallbacks — see **`result.fallbacks`** (`parseJobAndTruth`, `strategyAndMessage`). Includes invalid JSON / Zod mismatch at parse; strategy failures still return a templated **`message`**. |
+| **`completed`** | —                                     | No fallback steps — full structured **`strategy`** where applicable.                                   |
+
+AI provider issues (timeouts, 5xx, circuit breaker open, invalid JSON from the model) are handled inside timed steps: they typically yield **`partial`** (parse/strategy fallback) rather than dedicated **`errorCode`** values.
+
+---
+
+### `GET /api/analysis/:id`
+
+Returns the stored **`JobResponse`** for **`jobId`**. **`404`** if the record does not exist or was swept after TTL.
 
 ---
 
@@ -214,7 +313,7 @@ The scraper fetches server-rendered HTML and strips noise (scripts, nav, footer,
 
 **Works with:** Lever, Ashby, Workable, Greenhouse, Ratbacher, Bundesagentur für Arbeit, and most static job boards.
 
-**Blocked by:** Indeed, LinkedIn, Glassdoor, and other sites that use heavy bot-detection or client-side rendering. These return `SCRAPE_BLOCKED`.
+**Blocked by:** Indeed, LinkedIn, Glassdoor, and other sites that use heavy bot-detection or client-side rendering. Those URLs typically finish as **`status: "failed"`** with **`errorCode: "SCRAPE_BLOCKED"`** in the **`POST /api/analysis`** JSON body (HTTP **200**).
 
 In that case, retry with `jobText` (paste the job description section). The backend skips scraping and continues normally.
 

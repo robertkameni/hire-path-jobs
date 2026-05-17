@@ -33,9 +33,9 @@ export class AnalysisController {
   })
   @ApiResponse({
     status: 400,
-    description: 'Validation error — jobUrl is required and must be a valid URL',
+    description: 'Validation error — provide jobUrl and/or jobText (see AnalyzeJobDto constraints)',
   })
-  @ApiResponse({ status: 429, description: 'Rate limit exceeded' })
+  @ApiResponse({ status: 429, description: 'Too many requests — IP throttle or analysis queue at capacity' })
   async submit(@Body() dto: AnalyzeJobDto): Promise<JobResponseDto> {
     return this.analysisPipelineService.submit(dto);
   }
