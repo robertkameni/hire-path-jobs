@@ -1,7 +1,15 @@
-.navbar-btn {
-  @media (max-width: 320px) {
+nav {
+  @media (max-width: 375px) {
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
+
+    .navbar-btn {
+      width: 100%;
+    }
+
+    .navbar-btn {
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
   }
 }
