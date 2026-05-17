@@ -2,6 +2,7 @@
   "name": "hire-path-jobs",
   "version": "0.0.1",
   "private": true,
+  "license": "UNLICENSED",
   "workspaces": [
     "apps/*",
     "libs/*"

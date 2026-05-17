@@ -353,4 +353,6 @@ npm run biome:ci
 
 ## License
 
-MIT
+Proprietary — **All rights reserved.** Copyright © 2026 Robert Kameni.
+
+This project is **not** open source. You may not use, copy, modify, distribute, or sublicense the code or documentation without prior written permission from the copyright holder.
