@@ -1,5 +1,5 @@
 export const environment = {
   production: false,
-  /** Dev server proxies to Nest (`proxy.conf.json`). */
-  apiBaseUrl: '/api',
+  /** Direct API URL — SSR dev server does not reliably proxy /api; CORS allows localhost:4200. */
+  apiBaseUrl: 'http://localhost:3000/api',
 };

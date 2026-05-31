@@ -29,4 +29,9 @@ export class JobResponseDto {
 
   @ApiProperty()
   updatedAt: string;
+
+  @ApiPropertyOptional({
+    description: 'Present on POST responses — Bearer token required for GET /analysis/:id',
+  })
+  jobAccessToken?: string;
 }

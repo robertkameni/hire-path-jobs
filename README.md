@@ -15,9 +15,13 @@ Built with **Angular** (web) + **NestJS** (API) + **TypeScript** + **DeepSeek**.
    - **Parse job + insights** (ghost risk, competition level, salary fairness, red flags, verdict)
    - **Contact strategy**
    - **Outreach message**
-5. The API returns a terminal job response (`completed`, `partial`, or `failed`) from the POST request
+5. On a **cache miss**, the API enqueues work and returns **`202 Accepted`** with `jobAccessToken` for polling. On a **cache hit**, it returns **`200 OK`** immediately with the full result.
 
 If a site blocks automated fetching (Indeed / LinkedIn / StepStone / Xing, etc.), you can retry the same request with `jobText` (paste the job description) and the backend will **skip scraping**.
+
+`GET /api/analysis/:id` requires `Authorization: Bearer {jobAccessToken}` from the POST response.
+
+When `UPSTASH_REDIS_URL` is set, run the BullMQ worker alongside the API (`npm run start:api:worker`). Without it, the API processes jobs in-process after returning 202 (local dev fallback).
 
 Per-IP throttling (`ThrottlerGuard`) may return HTTP **429** before the pipeline runs.
 
@@ -174,6 +178,10 @@ Create a `.env` file in the project root:
 ```env
 DEEPSEEK_API_KEY=your_api_key_here
 DEEPSEEK_MODEL=deepseek-chat   # optional, this is the default
+JOB_ACCESS_SECRET=replace_with_at_least_32_random_characters
+UPSTASH_REDIS_URL=rediss://default:token@host.upstash.io:6379   # optional — enables BullMQ queue
+UPSTASH_REDIS_REST_URL=https://...   # optional — shared job store + analysis cache
+UPSTASH_REDIS_REST_TOKEN=...         # optional
 ```
 
 ---
@@ -184,11 +192,16 @@ DEEPSEEK_MODEL=deepseek-chat   # optional, this is the default
 # API (dev) from repo root
 npm run start:api
 
+# BullMQ worker (required in production when UPSTASH_REDIS_URL is set)
+npm run start:api:worker
+
 # Web (dev) from repo root
 npm run start:web
 ```
 
 The API server is available at `http://localhost:3000` (API routes under `/api`).
+
+The web dev server (`http://localhost:4200`) calls the API at `http://localhost:3000/api` (see `environment.ts`). Start **both** processes for local analysis.
 
 ---
 
@@ -218,9 +231,9 @@ Start the API, then open:
 
 **Response:**
 
-- `POST /api/analysis` runs the scrape/AI pipeline and returns `{ jobId, status, result, ... }`
-- `status` is usually `completed`, `partial`, or `failed`
-- `GET /api/analysis/:id` can still be used to retrieve a stored job response
+- **Cache hit:** `200 OK` with `status` `completed` and full `result`, plus `jobAccessToken`
+- **Cache miss:** `202 Accepted` with `status` `queued` and `jobAccessToken` — poll `GET /api/analysis/:id` with `Authorization: Bearer {jobAccessToken}` every 2–3s until terminal
+- Terminal `status` values: `completed`, `partial`, or `failed`
 
 When completed/partial, `result` contains `job`, `insights`, `strategy`, and `message`.
 
@@ -228,15 +241,15 @@ Validation: provide **`jobUrl`** or **`jobText`** (or both). If you omit `jobTex
 
 **HTTP status codes**
 
-The POST handler uses **`200 OK`** whenever the server returns a **`JobResponse`** envelope (including **`status: "failed"`** scrapes). Transport-level failures use non-200 codes below.
-
 | HTTP   | When                                                                                                                                 |
 | ------ | ------------------------------------------------------------------------------------------------------------------------------------ |
-| **`200`** | Body is a **`JobResponse`** — always inspect **`status`** (`completed`, `partial`, `failed`, …).                                      |
-| **`400`** | **`ValidationPipe`** rejected the body (missing URL/text pair, invalid URL when URL-only, `jobText` too short when URL omitted, etc.). |
-| **`429`** | Per-IP throttle (`THROTTLE_LIMIT` / `THROTTLE_TTL_SECONDS`) **or** analysis queue full (**`MAX_QUEUE_DEPTH`** pending jobs).          |
-| **`404`** | Only **`GET /api/analysis/:id`** — job id unknown or expired (~30 minutes TTL in `JobsService`).                                     |
-| **`500`** | Unexpected server error (should be rare on POST; surfaced via **`AllExceptionsFilter`**).                                           |
+| **`200`** | Cache hit on POST, or successful GET poll — body is a **`JobResponse`**. Always inspect **`status`**.                                |
+| **`202`** | Cache miss on POST — job enqueued; poll GET with **`Authorization: Bearer {jobAccessToken}`**.                                       |
+| **`400`** | **`ValidationPipe`** rejected the body (missing URL/text pair, invalid URL, `jobText` too short, oversized `userProfile`, etc.).     |
+| **`403`** | **`GET /api/analysis/:id`** — missing or invalid Bearer **`jobAccessToken`**.                                                        |
+| **`429`** | Per-IP throttle **or** analysis queue full (**`MAX_QUEUE_DEPTH`** pending jobs).                                                     |
+| **`404`** | **`GET /api/analysis/:id`** — job id unknown or expired (~30 minutes TTL).                                                           |
+| **`500`** | Unexpected server error (surfaced via **`AllExceptionsFilter`**).                                                                    |
 
 **Job outcome inside the JSON body** (`POST` with HTTP 200)
 
@@ -256,7 +269,7 @@ AI provider issues (timeouts, 5xx, circuit breaker open, invalid JSON from the m
 
 ### `GET /api/analysis/:id`
 
-Returns the stored **`JobResponse`** for **`jobId`**. **`404`** if the record does not exist or was swept after TTL.
+Returns the stored **`JobResponse`** for **`jobId`**. Requires **`Authorization: Bearer {jobAccessToken}`** from the POST response. **`403`** if the token is missing or invalid. **`404`** if the record does not exist or was swept after TTL.
 
 ---
 

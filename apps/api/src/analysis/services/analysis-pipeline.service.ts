@@ -1,16 +1,21 @@
 /** biome-ignore-all lint/style/useImportType: Needed for NestJS DI (emitDecoratorMetadata) to resolve JobTextExtractorService and ScraperHttpService at runtime. */
 import { createHash } from 'node:crypto';
+import { InjectQueue } from '@nestjs/bullmq';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Inject, Injectable, Optional } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import type { Queue } from 'bullmq';
 import type { Cache } from 'cache-manager';
 import { StructuredLogger } from '../../common/logger/structured.logger.js';
 import { normalizeJobText } from '../../scraper/job-normalizer.js';
 import { ScraperService } from '../../scraper/service/scraper.service.js';
+import { signJobAccessToken } from '../auth/job-access-token.js';
 import type { AnalyzeJobDto, UserProfileDto } from '../dto/analyze-job.dto.js';
 import type { JobResponseDto } from '../dto/job-response.dto.js';
 import type { JobRecord } from '../jobs/job-record.types.js';
 import { JobsService } from '../jobs/jobs.service.js';
-import { mapJobRecordToJobResponseDto } from '../mappers/job-response.mapper.js';
+import { mapJobRecordToJobResponseDto, mapJobRecordToPostJobResponseDto } from '../mappers/job-response.mapper.js';
+import { ANALYSIS_QUEUE_NAME, type AnalysisQueueJobPayload } from '../queue/analysis-queue.constants.js';
 import { buildParseFailureResult } from '../utils/analysis-fallbacks.js';
 import { effectiveUserProfile } from '../utils/effective-user-profile.js';
 import { JobDescriptionAnalysisService } from './job-description-analysis.service.js';
@@ -33,7 +38,7 @@ function truncateForAi(text: string): string {
   return `${head}\n\n[... truncated ...]\n\n${tail}`;
 }
 
-type AnalysisPipelineInput = {
+export type AnalysisPipelineInput = {
   readonly jobId: string;
   readonly dto: AnalyzeJobDto;
   readonly cacheKey: string;
@@ -60,15 +65,17 @@ function shouldCacheAnalysisResult(result: unknown): boolean {
 @Injectable()
 export class AnalysisPipelineService {
   private logger = new StructuredLogger(AnalysisPipelineService.name);
-  /** Serializes overlapping submits for the same cache key so parallel POSTs do not return stale `processing` bodies. */
-  private readonly submitChainByCacheKey = new Map<string, Promise<unknown>>();
+  /** Serializes overlapping submits for the same cache key so parallel POSTs do not return stale bodies. */
+  private readonly submitChainByCacheKey = new Map<string, Promise<JobResponseDto>>();
 
   constructor(
     private readonly jobDescriptionAnalysis: JobDescriptionAnalysisService,
     private readonly strategyAndMessage: StrategyAndMessageService,
     private readonly scraperService: ScraperService,
     private readonly jobsService: JobsService,
+    private readonly configService: ConfigService,
     @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
+    @Optional() @InjectQueue(ANALYSIS_QUEUE_NAME) private readonly analysisQueue?: Queue<AnalysisQueueJobPayload>,
   ) {}
 
   async getJob(id: string): Promise<JobResponseDto> {
@@ -78,7 +85,7 @@ export class AnalysisPipelineService {
 
   async submit(dto: AnalyzeJobDto): Promise<JobResponseDto> {
     const cacheKey: string = this.buildCacheKey(dto);
-    const previous = this.submitChainByCacheKey.get(cacheKey) ?? Promise.resolve();
+    const previous = this.submitChainByCacheKey.get(cacheKey) ?? Promise.resolve({} as JobResponseDto);
     const current: Promise<JobResponseDto> = previous.then(
       (): Promise<JobResponseDto> => this.submitExclusive(dto, cacheKey),
       (): Promise<JobResponseDto> => this.submitExclusive(dto, cacheKey),
@@ -97,20 +104,43 @@ export class AnalysisPipelineService {
     if (pending >= MAX_QUEUE_DEPTH) {
       throw new HttpException('Queue at capacity — try again shortly', HttpStatus.TOO_MANY_REQUESTS);
     }
+
     const cached: unknown = await this.cacheManager.get(cacheKey);
     if (cached) {
       this.logger.event('cache_hit', { cacheKey: cacheKey.slice(0, 16) });
       const jobFromCache: JobRecord = await this.jobsService.createCompleted(cached);
-      return mapJobRecordToJobResponseDto(jobFromCache);
+      return mapJobRecordToPostJobResponseDto(jobFromCache, this.createAccessToken(jobFromCache.id));
     }
-    const job: JobRecord = await this.jobsService.createProcessingJob();
-    this.logger.event('pipeline_start', { jobId: job.id });
-    await this.runPipeline({ jobId: job.id, dto, cacheKey });
-    const latestJob: JobRecord = await this.jobsService.get(job.id);
-    return mapJobRecordToJobResponseDto(latestJob);
+
+    const job: JobRecord = await this.jobsService.create();
+    const payload: AnalysisQueueJobPayload = { jobId: job.id, dto, cacheKey };
+    this.logger.event('pipeline_enqueued', { jobId: job.id });
+
+    if (this.analysisQueue) {
+      await this.analysisQueue.add('analyze', payload, {
+        jobId: job.id,
+        removeOnComplete: true,
+        removeOnFail: false,
+      });
+    } else {
+      void this.runPipelineInProcess(payload);
+    }
+
+    return mapJobRecordToPostJobResponseDto(job, this.createAccessToken(job.id));
   }
 
-  private async runPipeline(input: AnalysisPipelineInput): Promise<void> {
+  /** Dev fallback when BullMQ is not configured — same process, non-blocking POST. */
+  private async runPipelineInProcess(payload: AnalysisQueueJobPayload): Promise<void> {
+    try {
+      await this.jobsService.setProcessing(payload.jobId);
+      await this.runPipeline(payload);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      this.logger.errorEvent('pipeline_in_process_failed', { jobId: payload.jobId, error: message });
+    }
+  }
+
+  async runPipeline(input: AnalysisPipelineInput): Promise<void> {
     const { jobId, dto, cacheKey } = input;
     try {
       const providedJobText = dto.jobText?.trim();
@@ -144,8 +174,8 @@ export class AnalysisPipelineService {
     }
   }
 
-  /** Parse job posting text, then generate strategy + outreach; same payload shape as the former `AnalysisService.analyze`. */
-  private async runAnalyzeAndOutreach(jobId: string, jobText: string, userProfile: UserProfileDto | undefined): Promise<unknown> {
+  /** Parse job posting text, then generate strategy + outreach. */
+  async runAnalyzeAndOutreach(jobId: string, jobText: string, userProfile: UserProfileDto | undefined): Promise<unknown> {
     const hasTrustedProfile = userProfile !== undefined;
     const timings: Record<string, number> = {};
     const fallbacks: AnalyzePipelineFallback[] = [];
@@ -197,11 +227,16 @@ export class AnalysisPipelineService {
     };
   }
 
-  private buildCacheKey(dto: AnalyzeJobDto): string {
+  buildCacheKey(dto: AnalyzeJobDto): string {
     const jobTextHash = dto.jobText?.trim() ? createHash('sha256').update(normalizeJobText(dto.jobText.trim())).digest('hex') : 'scrape';
     const profileKey = JSON.stringify(effectiveUserProfile(dto.userProfile) ?? null);
     const payload: string = [ANALYSIS_PROMPT_CACHE_VERSION, dto.jobUrl, jobTextHash, profileKey].join(':');
     return createHash('sha256').update(payload).digest('hex');
+  }
+
+  private createAccessToken(jobId: string): string {
+    const secret = this.configService.getOrThrow<string>('JOB_ACCESS_SECRET');
+    return signJobAccessToken(jobId, secret);
   }
 
   private formatPipelineError(err: unknown): {

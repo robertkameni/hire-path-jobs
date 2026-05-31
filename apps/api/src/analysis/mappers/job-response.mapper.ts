@@ -13,3 +13,11 @@ export function mapJobRecordToJobResponseDto(job: JobRecord): JobResponseDto {
     updatedAt: job.updatedAt.toISOString(),
   };
 }
+
+/** POST responses include a client-bound access token; GET responses omit it. */
+export function mapJobRecordToPostJobResponseDto(job: JobRecord, jobAccessToken: string): JobResponseDto {
+  return {
+    ...mapJobRecordToJobResponseDto(job),
+    jobAccessToken,
+  };
+}

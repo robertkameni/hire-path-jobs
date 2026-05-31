@@ -1,6 +1,7 @@
 import { ApiHideProperty, ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
+  ArrayMaxSize,
   IsArray,
   IsOptional,
   IsString,
@@ -22,6 +23,7 @@ export class UserProfileDto {
   })
   @IsOptional()
   @IsString()
+  @MaxLength(100)
   role?: string;
 
   @ApiPropertyOptional({
@@ -30,7 +32,9 @@ export class UserProfileDto {
   })
   @IsOptional()
   @IsArray()
+  @ArrayMaxSize(20)
   @IsString({ each: true })
+  @MaxLength(80, { each: true })
   skills?: string[];
 }
 

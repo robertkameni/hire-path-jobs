@@ -114,14 +114,7 @@ export class ScraperHttpService {
 
   async fetchHtml(url: string): Promise<string> {
     this.logger.log(`Fetching job posting from: ${url}`);
-    this.validateUrl(url);
-    const host = new URL(url).hostname.toLowerCase();
-    if (BLOCKED_DOMAINS.has(host)) {
-      throw new BadGatewayException({
-        error: 'SCRAPE_BLOCKED',
-        message: 'This site blocks automated access. We cannot fetch the job from this site automatically.',
-      });
-    }
+    this.assertInitialScrapeHost(url);
     try {
       const response = await axios.get(url, {
         headers: {
@@ -136,7 +129,7 @@ export class ScraperHttpService {
         httpsAgent: SCRAPER_HTTPS_AGENT,
         beforeRedirect: (redirectConfig) => {
           if (redirectConfig.url) {
-            this.validateUrl(redirectConfig.url);
+            this.assertRedirectScrapeHost(redirectConfig.url);
           }
         },
       });
@@ -160,6 +153,27 @@ export class ScraperHttpService {
         error: 'SCRAPE_FAILED',
         message: 'Could not fetch the job URL. If this site blocks automated access, paste the job description instead.',
       });
+    }
+  }
+
+  /** Initial fetch: blocked job boards return SCRAPE_BLOCKED for client UX. */
+  private assertInitialScrapeHost(url: string): void {
+    this.validateUrl(url);
+    const host = new URL(url).hostname.toLowerCase();
+    if (BLOCKED_DOMAINS.has(host)) {
+      throw new BadGatewayException({
+        error: 'SCRAPE_BLOCKED',
+        message: 'This site blocks automated access. We cannot fetch the job from this site automatically.',
+      });
+    }
+  }
+
+  /** Redirect targets: reject blocked/private hosts before following. */
+  private assertRedirectScrapeHost(url: string): void {
+    this.validateUrl(url);
+    const host = new URL(url).hostname.toLowerCase();
+    if (BLOCKED_DOMAINS.has(host)) {
+      throw new BadRequestException('Redirect to a blocked host is not allowed.');
     }
   }
 

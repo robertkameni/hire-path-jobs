@@ -1,3 +1,4 @@
+import { BullModule } from '@nestjs/bullmq';
 import type { CacheManagerOptions } from '@nestjs/cache-manager';
 import { CacheModule } from '@nestjs/cache-manager';
 import { type MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
@@ -11,10 +12,32 @@ const ANALYSIS_CACHE_KEYV_NAMESPACE = 'hirepath-analysis-cache';
 import { APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule, type ThrottlerModuleOptions } from '@nestjs/throttler';
 import Joi from 'joi';
-import { AnalysisModule } from './analysis/analysis.module.js';
+import { registerAnalysisModule } from './analysis/analysis.module.js';
 import { AllExceptionsFilter } from './common/filters/http-exception.filter.js';
 import { CorrelationIdMiddleware } from './common/middleware/correlation-id.middleware.js';
+import { jobAccessSecretSchema } from './config/env.validation.js';
 import { AppController } from './controllers/app.controller.js';
+
+function buildBullModuleImport(): ReturnType<typeof BullModule.forRootAsync> | null {
+  const redisUrl = process.env.UPSTASH_REDIS_URL?.trim();
+  if (!redisUrl) return null;
+
+  return BullModule.forRootAsync({
+    inject: [ConfigService],
+    useFactory: (config: ConfigService) => {
+      const url = config.get<string>('UPSTASH_REDIS_URL')?.trim() ?? redisUrl;
+      return {
+        connection: {
+          url,
+          maxRetriesPerRequest: null,
+          ...(url.startsWith('rediss://') ? { tls: {} } : {}),
+        },
+      };
+    },
+  });
+}
+
+const bullRootModule = buildBullModuleImport();
 
 @Module({
   imports: [
@@ -37,6 +60,8 @@ import { AppController } from './controllers/app.controller.js';
         SCRAPER_MAX_TEXT_CHARS: Joi.number().default(12000),
         UPSTASH_REDIS_REST_URL: Joi.string().uri().optional(),
         UPSTASH_REDIS_REST_TOKEN: Joi.string().optional(),
+        UPSTASH_REDIS_URL: Joi.string().uri().optional(),
+        JOB_ACCESS_SECRET: jobAccessSecretSchema(),
         DISABLE_UPSTASH: Joi.string().valid('true', 'false').default('false'),
       }),
     }),
@@ -82,7 +107,8 @@ import { AppController } from './controllers/app.controller.js';
         };
       },
     }),
-    AnalysisModule,
+    ...(bullRootModule ? [bullRootModule] : []),
+    registerAnalysisModule(),
   ],
   controllers: [AppController],
   providers: [

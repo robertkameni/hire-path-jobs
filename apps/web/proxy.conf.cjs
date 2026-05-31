@@ -1,15 +1,7 @@
-'use strict';
-
-/**
- * Proxies `/api` from `ng serve` to Nest.
- * Override when your API port differs from 3000, e.g.:
- * PowerShell: $env:API_DEV_URL='http://127.0.0.1:3005'; npm run start
- */
-const target = process.env.API_DEV_URL ?? 'http://127.0.0.1:3000';
-
+/** Proxies /api/* to the NestJS backend during `ng serve` (see environment.ts apiBaseUrl). */
 module.exports = {
   '/api': {
-    target,
+    target: 'http://localhost:3000',
     secure: false,
     changeOrigin: true,
   },
