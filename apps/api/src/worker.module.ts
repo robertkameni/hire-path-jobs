@@ -27,7 +27,6 @@ function buildBullRootModule(): ReturnType<typeof BullModule.forRootAsync> | nul
 
 const bullRootModule = buildBullRootModule();
 
-/** Lean Nest context for BullMQ worker — no HTTP server. */
 @Module({
   imports: [
     ConfigModule.forRoot({

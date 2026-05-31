@@ -1,7 +1,5 @@
 import type { OutreachMessage, ParsedJob } from '../schemas/analysis.schemas.js';
 
-/** Inbox-friendly subject for “validation before apply” mails (long English titles truncate). */
-
 const SUBJECT_MAX_LEN = 88;
 const PREFIX = 'Frage zur Rolle ';
 
@@ -11,7 +9,6 @@ function softenCompanyLegalForm(company: string): string {
   return stripped.length > 0 ? stripped : t;
 }
 
-/** Returns e.g. `Frage zur Rolle … bei Calypso Ventures`. */
 export function buildRecruiterValidationSubject(job: { title: string; company: string }): string {
   const company = softenCompanyLegalForm(job.company);
   const fullTitle = job.title.trim();

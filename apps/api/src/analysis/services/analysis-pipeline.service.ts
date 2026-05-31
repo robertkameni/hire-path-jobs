@@ -22,9 +22,8 @@ import { JobDescriptionAnalysisService } from './job-description-analysis.servic
 import { StrategyAndMessageService } from './strategy-and-message.service.js';
 
 const MAX_QUEUE_DEPTH = 50;
-// Bump this when prompt semantics change so stale AI outputs are not reused.
+// Bump when prompt semantics change so stale AI outputs are not reused.
 const ANALYSIS_PROMPT_CACHE_VERSION = '2026-05-10-zero-profile-fallback-bridge-v9';
-// Token/cost guardrails for AI provider (char-based approximation).
 const MAX_AI_JOB_TEXT_CHARS = 35000;
 const AI_JOB_TEXT_HEAD_CHARS = 25000;
 const AI_JOB_TEXT_TAIL_CHARS = 10000;
@@ -65,7 +64,6 @@ function shouldCacheAnalysisResult(result: unknown): boolean {
 @Injectable()
 export class AnalysisPipelineService {
   private logger = new StructuredLogger(AnalysisPipelineService.name);
-  /** Serializes overlapping submits for the same cache key so parallel POSTs do not return stale bodies. */
   private readonly submitChainByCacheKey = new Map<string, Promise<JobResponseDto>>();
 
   constructor(
@@ -129,7 +127,6 @@ export class AnalysisPipelineService {
     return mapJobRecordToPostJobResponseDto(job, this.createAccessToken(job.id));
   }
 
-  /** Dev fallback when BullMQ is not configured — same process, non-blocking POST. */
   private async runPipelineInProcess(payload: AnalysisQueueJobPayload): Promise<void> {
     try {
       await this.jobsService.setProcessing(payload.jobId);
@@ -174,7 +171,6 @@ export class AnalysisPipelineService {
     }
   }
 
-  /** Parse job posting text, then generate strategy + outreach. */
   async runAnalyzeAndOutreach(jobId: string, jobText: string, userProfile: UserProfileDto | undefined): Promise<unknown> {
     const hasTrustedProfile = userProfile !== undefined;
     const timings: Record<string, number> = {};

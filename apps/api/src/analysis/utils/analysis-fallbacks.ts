@@ -19,7 +19,6 @@ function shortJobTitleForFallback(title: string): string {
   return head.length <= 72 ? head : `${head.slice(0, 71)}…`;
 }
 
-/** Keeps fallback mail bodies readable when bullet points from the ad are long. */
 function clipForFallbackSentence(s: string, max: number): string {
   const t = s.trim();
   if (t.length <= max) return t;

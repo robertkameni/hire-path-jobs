@@ -156,7 +156,6 @@ export class ScraperHttpService {
     }
   }
 
-  /** Initial fetch: blocked job boards return SCRAPE_BLOCKED for client UX. */
   private assertInitialScrapeHost(url: string): void {
     this.validateUrl(url);
     const host = new URL(url).hostname.toLowerCase();
@@ -168,7 +167,6 @@ export class ScraperHttpService {
     }
   }
 
-  /** Redirect targets: reject blocked/private hosts before following. */
   private assertRedirectScrapeHost(url: string): void {
     this.validateUrl(url);
     const host = new URL(url).hostname.toLowerCase();

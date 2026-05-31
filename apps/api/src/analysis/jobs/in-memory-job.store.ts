@@ -2,9 +2,6 @@ import { Injectable } from '@nestjs/common';
 import type { JobRecord } from './job-record.types.js';
 import type { JobStore } from './job-store.interface.js';
 
-/**
- * Process-local job storage. Use when UPSTASH_REDIS_* is unset (e.g. local dev).
- */
 @Injectable()
 export class InMemoryJobStore implements JobStore {
   private readonly map = new Map<string, JobRecord>();

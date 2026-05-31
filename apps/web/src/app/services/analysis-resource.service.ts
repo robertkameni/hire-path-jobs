@@ -36,7 +36,6 @@ export class AnalysisResourceService {
 
   readonly needsJobText = signal(false);
 
-  /** Tab-scoped token from POST — never persisted to storage. */
   private readonly jobAccessToken = signal<string | null>(null);
 
   readonly pollPhase = signal<AnalysisPollPhase>('idle');

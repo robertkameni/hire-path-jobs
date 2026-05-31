@@ -11,7 +11,6 @@ const getStringProp = (value: unknown, key: string): string | undefined => {
 
 export const formatError = (err: unknown): string => {
   if (err instanceof HttpErrorResponse) {
-    // err.error can be a string, object, ProgressEvent, etc.
     const body = err.error;
 
     if (typeof body === 'string' && body.trim()) return body;

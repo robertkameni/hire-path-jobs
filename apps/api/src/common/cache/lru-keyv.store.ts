@@ -1,9 +1,5 @@
 import { LRUCache } from 'lru-cache';
 
-/**
- * In-memory LRU Keyv adapter for local/dev when Upstash is not configured.
- * Uses lru-cache v11+ API ({ ttl } on set, delete, clear).
- */
 export class LruKeyvStore {
   opts: { dialect: string };
   namespace?: string;

@@ -4,7 +4,6 @@ function signDigest(jobId: string, secret: string): string {
   return createHmac('sha256', secret).update(jobId).digest('base64url');
 }
 
-/** Returns `{jobId}.{hmac}` suitable for Bearer authorization on GET /analysis/:id. */
 export function signJobAccessToken(jobId: string, secret: string): string {
   return `${jobId}.${signDigest(jobId, secret)}`;
 }

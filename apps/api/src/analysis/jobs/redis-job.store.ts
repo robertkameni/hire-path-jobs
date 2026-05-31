@@ -44,9 +44,6 @@ function deserializeRecord(raw: string): JobRecord {
   };
 }
 
-/**
- * Shared job storage using Upstash Redis (REST). Configure UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN.
- */
 export class RedisJobStore implements JobStore {
   constructor(private readonly redis: Redis) {}
 

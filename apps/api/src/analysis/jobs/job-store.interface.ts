@@ -1,8 +1,5 @@
 import type { JobRecord } from './job-record.types.js';
 
-/**
- * Persistence port for analysis job records. Implementations may be sync (in-memory) or async (Redis).
- */
 export interface JobStore {
   get(id: string): Promise<JobRecord | undefined>;
   save(record: JobRecord): Promise<void>;

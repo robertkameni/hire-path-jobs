@@ -2,10 +2,7 @@ import type { Redis } from '@upstash/redis';
 
 const DEFAULT_KEY_PATTERN = 'hirepath-analysis-cache:*';
 
-/**
- * Keyv storage adapter backed by Upstash Redis REST. Used by global CacheModule for cross-instance cache hits.
- * clear() uses SCAN (not KEYS) to avoid blocking Redis on large keyspaces.
- */
+// clear() uses SCAN (not KEYS) to avoid blocking Redis on large keyspaces.
 export class UpstashKeyvStore {
   opts: { dialect: string };
   namespace?: string;

@@ -65,7 +65,6 @@ const bullRootModule = buildBullModuleImport();
         DISABLE_UPSTASH: Joi.string().valid('true', 'false').default('false'),
       }),
     }),
-    // Rate limiting (TTL in seconds as per NestJS docs)
     ThrottlerModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService): ThrottlerModuleOptions => ({

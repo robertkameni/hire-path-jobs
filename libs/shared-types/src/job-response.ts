@@ -70,6 +70,5 @@ export interface JobResponse {
   error?: string;
   createdAt: string;
   updatedAt: string;
-  /** Present on POST responses only — required for authorized GET polling. */
   jobAccessToken?: string;
 }
