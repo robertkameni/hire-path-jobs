@@ -22,6 +22,7 @@ import { JobDescriptionAnalysisService } from './job-description-analysis.servic
 import { StrategyAndMessageService } from './strategy-and-message.service.js';
 
 const MAX_QUEUE_DEPTH = 50;
+const MAX_BULLMQ_QUEUE_DEPTH = 100;
 // Bump when prompt semantics change so stale AI outputs are not reused.
 const ANALYSIS_PROMPT_CACHE_VERSION = '2026-05-10-zero-profile-fallback-bridge-v9';
 const MAX_AI_JOB_TEXT_CHARS = 35000;
@@ -110,9 +111,16 @@ export class AnalysisPipelineService {
       return mapJobRecordToPostJobResponseDto(jobFromCache, this.createAccessToken(jobFromCache.id));
     }
 
+    if (this.analysisQueue) {
+      const { waiting, active, delayed } = await this.analysisQueue.getJobCounts();
+      const bullMqQueueDepth = waiting + active + delayed;
+      if (bullMqQueueDepth >= MAX_BULLMQ_QUEUE_DEPTH) {
+        throw new HttpException('Analysis queue is saturated — try again shortly', HttpStatus.TOO_MANY_REQUESTS);
+      }
+    }
+
     const job: JobRecord = await this.jobsService.create();
     const payload: AnalysisQueueJobPayload = { jobId: job.id, dto, cacheKey };
-    this.logger.event('pipeline_enqueued', { jobId: job.id });
 
     if (this.analysisQueue) {
       await this.analysisQueue.add('analyze', payload, {
@@ -120,7 +128,9 @@ export class AnalysisPipelineService {
         removeOnComplete: true,
         removeOnFail: false,
       });
+      this.logger.event('pipeline_enqueued', { jobId: job.id });
     } else {
+      this.logger.event('pipeline_enqueued', { jobId: job.id });
       void this.runPipelineInProcess(payload);
     }
 

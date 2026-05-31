@@ -57,7 +57,7 @@ export class AnalyzeJobDto {
     example: 'https://jobs.lever.co/acme/123',
     description: 'Publicly accessible URL of the job posting to analyze.',
   })
-  @ValidateIf((o: AnalyzeJobDto) => !o.jobText?.trim())
+  @ValidateIf((o: AnalyzeJobDto) => !!o.jobUrl?.trim())
   @IsUrl({ protocols: ['http', 'https'], require_protocol: true })
   jobUrl?: string;
 
@@ -65,7 +65,7 @@ export class AnalyzeJobDto {
     example: 'The job text to analyze',
     description: 'If provided, the job text will be used instead of scraping the job URL.',
   })
-  @ValidateIf((o: AnalyzeJobDto) => !o.jobUrl?.trim())
+  @ValidateIf((o: AnalyzeJobDto) => !!o.jobText?.trim())
   @IsString()
   @MinLength(200)
   @MaxLength(120000)

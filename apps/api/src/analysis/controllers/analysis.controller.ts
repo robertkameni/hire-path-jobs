@@ -1,5 +1,6 @@
 import { Body, Controller, Get, HttpStatus, Param, Post, Res, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiBody, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import type { Response } from 'express';
 import { AnalyzeJobDto } from '../dto/analyze-job.dto.js';
 import { JobResponseDto } from '../dto/job-response.dto.js';
@@ -53,6 +54,7 @@ export class AnalysisController {
   }
 
   @Get(':id')
+  @Throttle({ default: { limit: 120, ttl: 60_000 } })
   @UseGuards(JobAccessGuard)
   @ApiBearerAuth()
   @ApiOperation({

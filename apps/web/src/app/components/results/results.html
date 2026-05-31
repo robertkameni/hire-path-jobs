@@ -38,9 +38,16 @@ analysis.fallbacks(); @if (!analysis.hasDisplayableAnalysis()) {
     <ul class="space-y-2 text-sm text-gray-300">
       @for (fb of fallbacks; track fb.step) {
       <li>
-        <span class="text-[#00c752]">{{ fb.step }}</span>
+        <span
+          class="text-[#00c752]"
+          [textContent]="sanitizedText(fb.step)"
+        ></span>
         @if (fb.reason) {
-        <span class="text-gray-400"> — {{ fb.reason }}</span>
+        <span class="text-gray-400"> — </span
+        ><span
+          class="text-gray-400"
+          [textContent]="sanitizedText(fb.reason)"
+        ></span>
         }
       </li>
       }
@@ -59,7 +66,10 @@ analysis.fallbacks(); @if (!analysis.hasDisplayableAnalysis()) {
   <div class="p-5 sm:p-6 lg:p-8 bg-[#0a1a0d] border border-[#00c752]/40 rounded-2xl">
     <h2 class="text-lg font-bold mb-3 flex items-center text-[#00c752] gap-2">⚠️ {{ insights.ghostRisk }} Ghost Risk</h2>
 
-    <p class="text-gray-300 text-sm mb-3">{{ insights.ghostRiskReason }}</p>
+    <p
+      class="text-gray-300 text-sm mb-3"
+      [textContent]="sanitizedText(insights.ghostRiskReason)"
+    ></p>
 
     <p class="text-sm text-gray-400">Confidence: {{ insights.ghostRiskConfidence }}%</p>
   </div>
@@ -79,7 +89,10 @@ analysis.fallbacks(); @if (!analysis.hasDisplayableAnalysis()) {
       </span>
     </div>
 
-    <p class="text-sm text-gray-300">{{ insights?.verdict?.reason }}</p>
+    <p
+      class="text-sm text-gray-300"
+      [textContent]="sanitizedText(insights?.verdict?.reason)"
+    ></p>
   </div>
   }
   <!-- 3. Recommended Strategy -->
@@ -87,23 +100,26 @@ analysis.fallbacks(); @if (!analysis.hasDisplayableAnalysis()) {
   <div class="p-5 sm:p-6 lg:p-8 bg-[#0a1a0d] border border-white/5 rounded-2xl">
     <h2 class="text-xl sm:text-2xl font-bold text-[#00c752] mb-4 flex items-center gap-2">🎯 Recommended Strategy</h2>
 
-    <h3 class="text-base sm:text-lg font-semibold text-white mb-2">{{ strategy.targetRole }}</h3>
+    <h3
+      class="text-base sm:text-lg font-semibold text-white mb-2"
+      [textContent]="sanitizedText(strategy.targetRole)"
+    ></h3>
 
     <p class="text-gray-300 text-sm mb-2">Contact channels:</p>
     <ul class="space-y-1 text-sm text-gray-300 mb-3">
       @for (ch of strategy.contactChannels; track ch) {
-      <li>• {{ ch }}</li>
+      <li>• <span [textContent]="sanitizedText(ch)"></span></li>
       }
     </ul>
 
     <p class="text-gray-300 text-sm mb-2">Talking points:</p>
     <ul class="space-y-1 text-sm text-gray-300">
       @for (pt of strategy.talkingPoints; track pt) {
-      <li>• {{ pt }}</li>
+      <li>• <span [textContent]="sanitizedText(pt)"></span></li>
       }
     </ul>
 
-    <p class="text-gray-400 text-sm mt-3">Timing: {{ strategy.timing }}</p>
+    <p class="text-gray-400 text-sm mt-3">Timing: <span [textContent]="sanitizedText(strategy.timing)"></span></p>
   </div>
   }
   <!-- 4. Red Flags -->
@@ -115,7 +131,7 @@ analysis.fallbacks(); @if (!analysis.hasDisplayableAnalysis()) {
       @for (flag of insights?.redFlags; track flag) {
       <li class="flex gap-2">
         <span class="text-red-400">•</span>
-        <span>{{ flag }}</span>
+        <span [textContent]="sanitizedText(flag)"></span>
       </li>
       }
     </ul>
@@ -130,10 +146,16 @@ analysis.fallbacks(); @if (!analysis.hasDisplayableAnalysis()) {
     </p>
 
     <p class="text-sm text-gray-400 mb-2">Betreff:</p>
-    <p class="text-white text-sm font-medium mb-3">{{ message.subject }}</p>
+    <p
+      class="text-white text-sm font-medium mb-3"
+      [textContent]="sanitizedText(message.subject)"
+    ></p>
 
     <p class="text-sm text-gray-400 mb-2">Nachricht:</p>
-    <p class="text-white text-sm whitespace-pre-wrap leading-relaxed">{{ message.body }}</p>
+    <p
+      class="text-white text-sm whitespace-pre-wrap leading-relaxed"
+      [textContent]="sanitizedText(message.body)"
+    ></p>
   </div>
   <button
     type="button"
@@ -178,23 +200,26 @@ analysis.fallbacks(); @if (!analysis.hasDisplayableAnalysis()) {
       <h2 class="text-xl sm:text-2xl font-bold text-[#00c752] mb-4 lg:mb-6 flex items-center gap-2">🎯 Recommended Strategy</h2>
 
       <div class="p-4 bg-white/5 border rounded-lg">
-        <h3 class="text-base sm:text-lg font-semibold text-white mb-2">{{ strategy.targetRole }}</h3>
+        <h3
+          class="text-base sm:text-lg font-semibold text-white mb-2"
+          [textContent]="sanitizedText(strategy.targetRole)"
+        ></h3>
 
         <p class="text-gray-300 text-sm mb-2">Contact channels:</p>
         <ul class="space-y-1 text-sm text-gray-300 mb-3">
           @for (ch of strategy.contactChannels; track ch) {
-          <li>• {{ ch }}</li>
+          <li>• <span [textContent]="sanitizedText(ch)"></span></li>
           }
         </ul>
 
         <p class="text-gray-300 text-sm mb-2">Talking points:</p>
         <ul class="space-y-1 text-sm text-gray-300">
           @for (pt of strategy.talkingPoints; track pt) {
-          <li>• {{ pt }}</li>
+          <li>• <span [textContent]="sanitizedText(pt)"></span></li>
           }
         </ul>
 
-        <p class="text-gray-400 text-sm mt-3">Timing: {{ strategy.timing }}</p>
+        <p class="text-gray-400 text-sm mt-3">Timing: <span [textContent]="sanitizedText(strategy.timing)"></span></p>
       </div>
     </div>
     } @if (message) {
@@ -206,10 +231,16 @@ analysis.fallbacks(); @if (!analysis.hasDisplayableAnalysis()) {
 
       <div class="p-4 mbe-4 bg-[#00c752]/5 border border-[#00c752]/20 rounded-lg">
         <p class="text-sm text-gray-400 mb-2">Betreff:</p>
-        <p class="text-white text-sm font-medium mb-3">{{ message.subject }}</p>
+        <p
+          class="text-white text-sm font-medium mb-3"
+          [textContent]="sanitizedText(message.subject)"
+        ></p>
 
         <p class="text-sm text-gray-400 mb-2">Nachricht:</p>
-        <p class="text-white text-sm whitespace-pre-wrap leading-relaxed">{{ message.body }}</p>
+        <p
+          class="text-white text-sm whitespace-pre-wrap leading-relaxed"
+          [textContent]="sanitizedText(message.body)"
+        ></p>
       </div>
       <button
         type="button"
@@ -231,14 +262,20 @@ analysis.fallbacks(); @if (!analysis.hasDisplayableAnalysis()) {
     @if (insights) {
     <div class="p-5 sm:p-6 lg:p-8 bg-[#0a1a0d] border border-[#00c752]/40 rounded-2xl">
       <h2 class="text-lg font-bold mb-3 flex items-center gap-2 text-[#00c752]">⚠️ {{ insights.ghostRisk }} Ghost Risk</h2>
-      <p class="text-gray-300 text-sm mb-3">{{ insights.ghostRiskReason }}</p>
+      <p
+        class="text-gray-300 text-sm mb-3"
+        [textContent]="sanitizedText(insights.ghostRiskReason)"
+      ></p>
       <p class="text-sm text-gray-400">Confidence: {{ insights.ghostRiskConfidence }}%</p>
     </div>
     } @if (insights?.verdict) {
     <div class="p-5 sm:p-6 lg:p-8 bg-[#0a1a0d] border border-[#00c752]/40 rounded-2xl">
       <h2 class="text-lg font-bold text-[#00c752] mb-4">📋 Verdict</h2>
 
-      <p class="text-sm text-gray-300">{{ insights?.verdict?.reason }}</p>
+      <p
+        class="text-sm text-gray-300"
+        [textContent]="sanitizedText(insights?.verdict?.reason)"
+      ></p>
     </div>
     } @if (insights?.redFlags?.length) {
     <div class="p-5 sm:p-6 lg:p-8 bg-[#0a1a0d] border border-[#00c752]/40 rounded-2xl">
@@ -248,7 +285,7 @@ analysis.fallbacks(); @if (!analysis.hasDisplayableAnalysis()) {
         @for (flag of insights?.redFlags; track flag) {
         <li class="flex gap-2">
           <span class="text-red-400">•</span>
-          <span>{{ flag }}</span>
+          <span [textContent]="sanitizedText(flag)"></span>
         </li>
         }
       </ul>

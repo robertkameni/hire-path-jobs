@@ -1,11 +1,35 @@
 import { join } from 'node:path';
 import { AngularNodeAppEngine, createNodeRequestHandler, isMainModule, writeResponseToNodeResponse } from '@angular/ssr/node';
 import express from 'express';
+import helmet from 'helmet';
 
 const browserDistFolder = join(import.meta.dirname, '../browser');
 
 const app = express();
 const angularApp = new AngularNodeAppEngine();
+
+const angularFrameworkScriptHashes: string[] = [];
+const angularFrameworkStyleHashes: string[] = [];
+
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      useDefaults: true,
+      directives: {
+        'default-src': ["'self'"],
+        'script-src': ["'self'", ...angularFrameworkScriptHashes],
+        'style-src': ["'self'", ...angularFrameworkStyleHashes],
+        'connect-src': ["'self'"],
+        'font-src': ["'self'"],
+        'form-action': ["'self'"],
+        'frame-ancestors': ["'none'"],
+        'img-src': ["'self'", 'data:'],
+        'object-src': ["'none'"],
+      },
+    },
+    xContentTypeOptions: true,
+  }),
+);
 
 app.use(
   express.static(browserDistFolder, {

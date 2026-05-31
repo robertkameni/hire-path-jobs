@@ -127,3 +127,4 @@ In task mode:
 - explain only important runtime decisions
 - avoid long summaries unless requested
 - always keep up-to-date all documentation files
+- only add comments in code, if they bring real value to them, if not, then dont add any comments

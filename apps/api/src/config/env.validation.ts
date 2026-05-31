@@ -8,7 +8,14 @@ export function jobAccessSecretSchema(): Joi.StringSchema {
     .when('NODE_ENV', {
       is: 'production',
       // biome-ignore lint/suspicious/noThenProperty: Joi `.when()` conditional API
-      then: Joi.required(),
+      then: Joi.required().custom((value: string) => {
+        if (value === DEV_JOB_ACCESS_SECRET) {
+          throw new Error(
+            'FATAL: JOB_ACCESS_SECRET cannot be the development default in production. ' + 'Set a unique secret with at least 32 random characters.',
+          );
+        }
+        return value;
+      }),
       otherwise: Joi.string().default(DEV_JOB_ACCESS_SECRET),
     });
 }
