@@ -1,5 +1,12 @@
 import type { OutreachMessage, ParsedJob } from '../schemas/analysis.schemas.js';
+import { decodeHtmlEntitiesDeep } from './ai-structured-step.js';
 import { applyRecruiterValidationSubjectWhenAnonymous } from './recruiter-validation-subject.js';
+
+const entityCounter = { count: 0 };
+
+function safeDecodeText(text: string): string {
+  return decodeHtmlEntitiesDeep(text, entityCounter) as string;
+}
 
 export function buildParseFailureResult(reason: string | undefined, durationMs: number) {
   return {
@@ -14,15 +21,22 @@ export function buildParseFailureResult(reason: string | undefined, durationMs: 
 }
 
 function shortJobTitleForFallback(title: string): string {
-  const t = title.trim();
+  const decoded = safeDecodeText(title);
+  const t = decoded.trim();
   const head = /\s-\s/.test(t) ? (t.split(/\s-\s/).at(0)?.trim() ?? t) : t;
-  return head.length <= 72 ? head : `${head.slice(0, 71)}…`;
+  if (head.length <= 72) return head;
+  const cut = head.slice(0, 71);
+  const lastSpace = cut.lastIndexOf(' ');
+  return `${lastSpace > 4 ? cut.slice(0, lastSpace) : cut}…`;
 }
 
 function clipForFallbackSentence(s: string, max: number): string {
-  const t = s.trim();
+  const decoded = safeDecodeText(s);
+  const t = decoded.trim();
   if (t.length <= max) return t;
-  return `${t.slice(0, Math.max(0, max - 1))}…`;
+  const cut = t.slice(0, max - 1);
+  const lastSpace = cut.lastIndexOf(' ');
+  return `${lastSpace > 10 ? cut.slice(0, lastSpace) : cut}…`;
 }
 
 function buildZeroProfileFallbackBridge(job: ParsedJob): string {
@@ -39,7 +53,10 @@ function buildZeroProfileFallbackBridge(job: ParsedJob): string {
     const taskPart = resp.length > 0 ? `Als Aufgabenfelder werden etwa ${resp.join(' sowie ')} beschrieben.` : '';
     const reqPart = req.length > 0 ? `Hervorgehoben werden zudem Punkte wie ${req.join(' bzw. ')}.` : '';
     const out = `Aus der Ausschreibung lese ich Folgendes: ${taskPart} ${reqPart}`.trim().replace(/\s+/g, ' ');
-    return out.length <= 720 ? out : `${out.slice(0, 719)}…`;
+    if (out.length <= 720) return out;
+    const cut = out.slice(0, 719);
+    const lastSpace = cut.lastIndexOf(' ');
+    return `${lastSpace > 10 ? cut.slice(0, lastSpace) : cut}\u2026`;
   }
 
   const skills = job.skills
@@ -77,7 +94,8 @@ function buildZeroProfileFallbackQuestion(job: ParsedJob): string {
 
 function buildZeroProfileFallbackBody(job: ParsedJob): string {
   const shortTitle = shortJobTitleForFallback(job.title);
-  const block1 = `ich interessiere mich für die ausgeschriebene Position „${shortTitle}“ bei ${job.company}. Bevor ich mich bewerbe, möchte ich die Rolle inhaltlich noch besser einordnen und stelle dazu eine konkrete Nachfrage.`;
+  const company = safeDecodeText(job.company);
+  const block1 = `ich interessiere mich für die ausgeschriebene Position „${shortTitle}" bei ${company}. Bevor ich mich bewerbe, möchte ich die Rolle inhaltlich noch besser einordnen und stelle dazu eine konkrete Nachfrage.`;
 
   const bridge = buildZeroProfileFallbackBridge(job);
   const question = buildZeroProfileFallbackQuestion(job);
@@ -97,11 +115,13 @@ export function buildFallbackMessage(job: ParsedJob, hasTrustedProfile: boolean)
       false,
     );
   }
+  const title = safeDecodeText(job.title);
+  const company = safeDecodeText(job.company);
   const skillLine =
     job.skills.length > 0 ? ` Mein Hintergrund in ${job.skills.slice(0, 2).join(' und ')} passt direkt zu den Anforderungen dieser Stelle.` : '';
   return {
-    subject: `${job.title} — ${job.company}`,
-    body: `Hallo, ich bin auf die Stelle als ${job.title} bei ${job.company} aufmerksam geworden und möchte mich vor einer formellen Bewerbung direkt melden.${skillLine} Sind Sie die richtige Ansprechperson für diese Position, oder können Sie mich an jemanden weiterleiten?`,
+    subject: `${title} — ${company}`,
+    body: `Hallo, ich bin auf die Stelle als ${title} bei ${company} aufmerksam geworden und möchte mich vor einer formellen Bewerbung direkt melden.${skillLine} Sind Sie die richtige Ansprechperson für diese Position, oder können Sie mich an jemanden weiterleiten?`,
     tone: 'direct',
   };
 }
