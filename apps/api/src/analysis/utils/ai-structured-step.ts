@@ -5,7 +5,7 @@ import type { StructuredLogger } from '../../common/logger/structured.logger.js'
 
 const HTML_NUMERIC_ENTITY_RE = /&#(\d+);|&#x([\da-fA-F]+);/g;
 
-function decodeNumericHtmlEntities(text: string, counter: { count: number }): string {
+function decodeNumericHtmlEntities(text: string, counter: { count: number; }): string {
   return text.replace(HTML_NUMERIC_ENTITY_RE, (_match, dec, hex) => {
     counter.count++;
     const codePoint = dec !== undefined ? Number.parseInt(dec, 10) : Number.parseInt(hex, 16);
@@ -13,7 +13,7 @@ function decodeNumericHtmlEntities(text: string, counter: { count: number }): st
   });
 }
 
-function decodeHtmlEntitiesDeep(value: unknown, counter: { count: number }): unknown {
+export function decodeHtmlEntitiesDeep(value: unknown, counter: { count: number; }): unknown {
   if (typeof value === 'string') {
     return decodeNumericHtmlEntities(value, counter);
   }
@@ -24,6 +24,22 @@ function decodeHtmlEntitiesDeep(value: unknown, counter: { count: number }): unk
     return Object.fromEntries(Object.entries(value).map(([key, val]) => [key, decodeHtmlEntitiesDeep(val, counter)]));
   }
   return value;
+}
+
+/**
+ * Defense-in-depth: decodes any HTML entities that slipped through parseAiJsonResponse().
+ * This should normally be a no-op — if it fires, Fix 2 missed something.
+ */
+export function ensureDecodedResultGuard(result: unknown, logWarn: (msg: string) => void): unknown {
+  const counter = { count: 0 };
+  const decoded = decodeHtmlEntitiesDeep(result, counter);
+  if (counter.count > 0) {
+    logWarn(
+      `[entity-guard] Response result contained ${counter.count} HTML entities that slipped through parseAiJsonResponse(). ` +
+      'This indicates a code path bypassing the central decoder.',
+    );
+  }
+  return decoded;
 }
 
 export function parseAiJsonResponse<T>(logger: StructuredLogger, raw: string, schema: z.ZodType<T>, step: string): T {
@@ -50,8 +66,8 @@ export function parseAiJsonResponse<T>(logger: StructuredLogger, raw: string, sc
 }
 
 export type AiTimedStepResult<T> =
-  | { data: T; fallback: false; durationMs: number }
-  | { data: null; fallback: true; durationMs: number; error: string };
+  | { data: T; fallback: false; durationMs: number; }
+  | { data: null; fallback: true; durationMs: number; error: string; };
 
 export async function runAiTimedStep<T>(logger: StructuredLogger, stepName: string, fn: () => Promise<T>): Promise<AiTimedStepResult<T>> {
   const start = performance.now();
