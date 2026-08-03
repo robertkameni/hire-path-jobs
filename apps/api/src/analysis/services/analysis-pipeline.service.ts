@@ -24,7 +24,7 @@ import { StrategyAndMessageService } from './strategy-and-message.service.js';
 const MAX_QUEUE_DEPTH = 50;
 const MAX_BULLMQ_QUEUE_DEPTH = 100;
 // Bump when prompt semantics change so stale AI outputs are not reused.
-const ANALYSIS_PROMPT_CACHE_VERSION = '2026-05-10-zero-profile-fallback-bridge-v9';
+const ANALYSIS_PROMPT_CACHE_VERSION = '2026-08-04-entity-encoding-fix-v1';
 const MAX_AI_JOB_TEXT_CHARS = 35000;
 const AI_JOB_TEXT_HEAD_CHARS = 25000;
 const AI_JOB_TEXT_TAIL_CHARS = 10000;
