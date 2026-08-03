@@ -82,16 +82,16 @@ analysis.fallbacks(); @if (!analysis.hasDisplayableAnalysis()) {
     <div class="p-3 rounded-lg bg-[#00c752]/10 border border-[#00c752]/30 mb-3">
       <span
         class="text-sm font-semibold"
-        [class.text-red-400]="!insights?.verdict?.apply"
-        [class.text-[#00c752]]="insights?.verdict?.apply"
+        [class.text-red-400]="!insights.verdict.apply"
+        [class.text-[#00c752]]="insights.verdict.apply"
       >
-        {{ insights?.verdict?.apply ? '✅ Apply' : '❌ Skip' }}
+        {{ insights.verdict.apply ? '✅ Apply' : '❌ Skip' }}
       </span>
     </div>
 
     <p
       class="text-sm text-gray-300"
-      [textContent]="sanitizedText(insights?.verdict?.reason)"
+      [textContent]="sanitizedText(insights.verdict.reason)"
     ></p>
   </div>
   }
@@ -145,29 +145,28 @@ analysis.fallbacks(); @if (!analysis.hasDisplayableAnalysis()) {
       A short first-contact note based only on the job description. It asks one useful question before applying.
     </p>
 
-    <p class="text-sm text-gray-400 mb-2">Betreff:</p>
     <p
       class="text-white text-sm font-medium mb-3"
       [textContent]="sanitizedText(message.subject)"
     ></p>
 
-    <p class="text-sm text-gray-400 mb-2">Nachricht:</p>
     <p
       class="text-white text-sm whitespace-pre-wrap leading-relaxed"
       [textContent]="sanitizedText(message.body)"
     ></p>
+
+    <button
+      type="button"
+      (click)="copyToClipboard(message)"
+      class="w-full sm:w-auto flex items-center justify-center gap-2 mt-4
+         px-5 sm:px-8 py-3 h-11 text-sm font-semibold
+         bg-[#00c752] text-[#04110a] rounded-lg
+         hover:text-white transition-colors cursor-pointer
+         disabled:opacity-50 disabled:cursor-not-allowed"
+    >
+      Copy message
+    </button>
   </div>
-  <button
-    type="button"
-    (click)="copyToClipboard(message)"
-    class="w-full sm:w-auto flex items-center justify-center gap-2
-       px-5 sm:px-8 py-3 sm:py-0 h-11 text-sm font-semibold
-       bg-[#00c752] text-[#04110a] rounded-lg
-       hover:text-white transition-colors cursor-pointer
-       disabled:opacity-50 disabled:cursor-not-allowed"
-  >
-    Copy message
-  </button>
   }
   <!-- 6. Competition -->
   @if (insights?.competitionLevel) {
@@ -229,24 +228,21 @@ analysis.fallbacks(); @if (!analysis.hasDisplayableAnalysis()) {
         A short first-contact note based only on the job description. It asks one useful question before applying.
       </p>
 
-      <div class="p-4 mbe-4 bg-[#00c752]/5 border border-[#00c752]/20 rounded-lg">
-        <p class="text-sm text-gray-400 mb-2">Betreff:</p>
-        <p
-          class="text-white text-sm font-medium mb-3"
-          [textContent]="sanitizedText(message.subject)"
-        ></p>
+      <p
+        class="text-white text-sm font-medium mb-3"
+        [textContent]="sanitizedText(message.subject)"
+      ></p>
 
-        <p class="text-sm text-gray-400 mb-2">Nachricht:</p>
-        <p
-          class="text-white text-sm whitespace-pre-wrap leading-relaxed"
-          [textContent]="sanitizedText(message.body)"
-        ></p>
-      </div>
+      <p
+        class="text-white text-sm whitespace-pre-wrap leading-relaxed mb-4"
+        [textContent]="sanitizedText(message.body)"
+      ></p>
+
       <button
         type="button"
         (click)="copyToClipboard(message)"
         class="w-full sm:w-auto flex items-center justify-center gap-2
-             px-5 sm:px-8 py-3 sm:py-0 h-11 text-sm font-semibold
+             px-5 sm:px-8 py-3 h-11 text-sm font-semibold
              bg-[#00c752] text-[#04110a] rounded-lg
              hover:text-white transition-colors cursor-pointer
              disabled:opacity-50 disabled:cursor-not-allowed"
@@ -274,7 +270,7 @@ analysis.fallbacks(); @if (!analysis.hasDisplayableAnalysis()) {
 
       <p
         class="text-sm text-gray-300"
-        [textContent]="sanitizedText(insights?.verdict?.reason)"
+        [textContent]="sanitizedText(insights.verdict.reason)"
       ></p>
     </div>
     } @if (insights?.redFlags?.length) {

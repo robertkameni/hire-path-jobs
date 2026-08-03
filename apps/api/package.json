@@ -8,6 +8,7 @@
     "start": "node dist/main.js",
     "start:worker": "node dist/worker.main.js",
     "build": "tsc -p tsconfig.json",
+    "test": "vitest run",
     "dev": "npm run build && concurrently -k \"npm run dev:tsc\" \"npm run dev:node\"",
     "dev:tsc": "tsc -p tsconfig.json --watch --preserveWatchOutput",
     "dev:node": "node --watch dist/main.js",
@@ -44,6 +45,7 @@
   "devDependencies": {
     "@types/node": "^25.6.0",
     "concurrently": "^9.2.1",
-    "typescript": "^6.0.2"
+    "typescript": "^6.0.2",
+    "vitest": "^4.1.4"
   }
 }
