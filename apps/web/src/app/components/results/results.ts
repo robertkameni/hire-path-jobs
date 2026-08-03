@@ -22,7 +22,9 @@ export class Results {
   private readonly sanitizer = inject(DomSanitizer);
 
   copyToClipboard(message: JobResponse): void {
-    const text = `Subject: ${message.subject}\n\n${message.body}`;
+    const subject = decodeNumericEntities(message.subject ?? '');
+    const body = decodeNumericEntities(message.body ?? '');
+    const text = `Subject: ${subject}\n\n${body}`;
     this.copyStore.copyToClipboard(text);
   }
 
