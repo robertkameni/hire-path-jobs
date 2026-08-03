@@ -28,7 +28,7 @@ export function decodeHtmlEntitiesDeep(value: unknown, counter: { count: number;
 
 /**
  * Defense-in-depth: decodes any HTML entities that slipped through parseAiJsonResponse().
- * This should normally be a no-op — if it fires, Fix 2 missed something.
+ * This should normally be a no-op — if it fires, the primary decoder missed something.
  */
 export function ensureDecodedResultGuard(result: unknown, logWarn: (msg: string) => void): unknown {
   const counter = { count: 0 };
