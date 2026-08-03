@@ -32,6 +32,10 @@
   ],
   "rewrites": [
     {
+      "source": "/hire-path-job/:path*",
+      "destination": "https://hire-path-jobs-web.vercel.app/:path*"
+    },
+    {
       "source": "/api/:path*",
       "destination": "https://hire-path-jobs-api.vercel.app/api/:path*"
     }

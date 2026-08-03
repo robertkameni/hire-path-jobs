@@ -3,23 +3,20 @@ import { AngularNodeAppEngine, createNodeRequestHandler, isMainModule, writeResp
 import express from 'express';
 import helmet from 'helmet';
 
+const SUBPATH = '/hire-path-job';
 const browserDistFolder = join(import.meta.dirname, '../browser');
 
-const app = express();
 const angularApp = new AngularNodeAppEngine();
 
-const angularFrameworkScriptHashes: string[] = [];
-const angularFrameworkStyleHashes: string[] = [];
-
-app.use(
-  helmet({
+function helmetConfig() {
+  return helmet({
     contentSecurityPolicy: {
       useDefaults: true,
       directives: {
         'default-src': ["'self'"],
-        'script-src': ["'self'", ...angularFrameworkScriptHashes],
-        'style-src': ["'self'", ...angularFrameworkStyleHashes],
-        'connect-src': ["'self'"],
+        'script-src': ["'self'", "'unsafe-inline'"],
+        'style-src': ["'self'", "'unsafe-inline'"],
+        'connect-src': ["'self'", 'http://localhost:3000', 'https://hire-path-jobs-api.vercel.app'],
         'font-src': ["'self'"],
         'form-action': ["'self'"],
         'frame-ancestors': ["'none'"],
@@ -28,10 +25,13 @@ app.use(
       },
     },
     xContentTypeOptions: true,
-  }),
-);
+  });
+}
 
-app.use(
+const subApp = express();
+subApp.use(helmetConfig());
+
+subApp.use(
   express.static(browserDistFolder, {
     maxAge: '1y',
     index: false,
@@ -39,17 +39,17 @@ app.use(
   }),
 );
 
-app.use((req, res, next) => {
+subApp.use((req, res, next) => {
   angularApp
     .handle(req)
     .then((response) => (response ? writeResponseToNodeResponse(response, res) : next()))
     .catch(next);
 });
 
-/**
- * Start the server if this module is the main entry point, or it is ran via PM2.
- * The server listens on the port defined by the `PORT` environment variable, or defaults to 4000.
- */
+const app = express();
+app.use(SUBPATH, subApp);
+app.use(subApp);
+
 if (isMainModule(import.meta.url) || process.env.pm_id) {
   const port = process.env.PORT || 4000;
   app.listen(port, (error) => {
@@ -57,7 +57,7 @@ if (isMainModule(import.meta.url) || process.env.pm_id) {
       throw error;
     }
 
-    console.log(`Node Express server listening on http://localhost:${port}`);
+    console.log(`Node Express server listening on http://localhost:${port}${SUBPATH}`);
   });
 }
 

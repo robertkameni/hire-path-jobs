@@ -36,6 +36,7 @@
           },
           "configurations": {
             "production": {
+              "baseHref": "/hire-path-job/",
               "fileReplacements": [
                 {
                   "replace": "src/environments/environment.ts",
