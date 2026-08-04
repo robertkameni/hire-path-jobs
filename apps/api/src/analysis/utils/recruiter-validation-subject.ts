@@ -1,4 +1,5 @@
 import type { OutreachMessage, ParsedJob } from '../schemas/analysis.schemas.js';
+import { decodeHtmlEntitiesDeep } from './ai-structured-step.js';
 
 const SUBJECT_MAX_LEN = 88;
 const PREFIX = 'Frage zur Rolle ';
@@ -9,17 +10,21 @@ function softenCompanyLegalForm(company: string): string {
   return stripped.length > 0 ? stripped : t;
 }
 
+function truncateAtWordBoundary(text: string, maxLen: number): string {
+  if (text.length <= maxLen) return text;
+  const cut = text.slice(0, maxLen);
+  const lastSpace = cut.lastIndexOf(' ');
+  return `${lastSpace > 4 ? cut.slice(0, lastSpace) : cut}…`;
+}
+
 export function buildRecruiterValidationSubject(job: { title: string; company: string }): string {
+  const decodedTitle = (decodeHtmlEntitiesDeep(job.title, { count: 0 }) as string).trim();
   const company = softenCompanyLegalForm(job.company);
-  const fullTitle = job.title.trim();
-  const head = /\s-\s/.test(fullTitle) ? (fullTitle.split(/\s-\s/).at(0)?.trim() ?? fullTitle) : fullTitle;
+  const head = /\s-\s/.test(decodedTitle) ? (decodedTitle.split(/\s-\s/).at(0)?.trim() ?? decodedTitle) : decodedTitle;
   const suffix = ` bei ${company}`;
   let budget = SUBJECT_MAX_LEN - PREFIX.length - suffix.length;
   if (budget < 14) budget = 14;
-  let role = head;
-  if (role.length > budget) {
-    role = `${head.slice(0, Math.max(0, budget - 1))}…`;
-  }
+  const role = head.length > budget ? truncateAtWordBoundary(head, budget - 1) : head;
   return `${PREFIX}${role}${suffix}`;
 }
 
