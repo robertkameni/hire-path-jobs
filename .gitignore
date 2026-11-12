@@ -7,6 +7,7 @@ apps/web/.vscode
 !.github/workflows/
 .github/workflows/*
 !.github/workflows/ci-deploy.yml
+!.github/workflows/actions-storage-housekeeping.yml
 
 
 # Environment variables

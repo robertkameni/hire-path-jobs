@@ -1,0 +1,83 @@
+name: Actions storage housekeeping
+
+on:
+  schedule:
+    - cron: '0 6 * * 0'
+  workflow_dispatch:
+
+permissions:
+  actions: write
+
+jobs:
+  prune:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Prune caches and artifacts
+        uses: actions/github-script@ed597411d8f9240738a8c5541c3e0603e6e320b # v8.0.0
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const keepCaches = 1;
+            const keepArtifacts = 3;
+            const keepRuns = 10;
+
+            const caches = [];
+            for (let page = 1; ; page++) {
+              const { data } = await github.rest.actions.getActionsCacheList({
+                owner,
+                repo,
+                per_page: 100,
+                page,
+              });
+              caches.push(...data.actions_caches);
+              if (data.actions_caches.length < 100) break;
+            }
+            caches.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+            for (const cache of caches.slice(keepCaches)) {
+              await github.rest.actions.deleteActionsCacheById({
+                owner,
+                repo,
+                cache_id: cache.id,
+              });
+            }
+
+            const artifacts = [];
+            for (let page = 1; ; page++) {
+              const { data } = await github.rest.actions.listArtifactsForRepo({
+                owner,
+                repo,
+                per_page: 100,
+                page,
+              });
+              artifacts.push(...data.artifacts.filter((artifact) => !artifact.expired));
+              if (data.artifacts.length < 100) break;
+            }
+            artifacts.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+            for (const artifact of artifacts.slice(keepArtifacts)) {
+              await github.rest.actions.deleteArtifact({
+                owner,
+                repo,
+                artifact_id: artifact.id,
+              });
+            }
+
+            const runs = [];
+            for (let page = 1; ; page++) {
+              const { data } = await github.rest.actions.listWorkflowRunsForRepo({
+                owner,
+                repo,
+                per_page: 100,
+                page,
+              });
+              runs.push(...data.workflow_runs);
+              if (data.workflow_runs.length < 100) break;
+            }
+            runs.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+            for (const run of runs.slice(keepRuns)) {
+              await github.rest.actions.deleteWorkflowRun({
+                owner,
+                repo,
+                run_id: run.id,
+              });
+            }
